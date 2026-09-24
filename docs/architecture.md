@@ -91,7 +91,10 @@ two-monitor transitions remain mandatory Phase 3 checks.
 
 ## Collector
 
-Rust is the runtime backend. Use `NETLINK_SOCK_DIAG` TCP dumps for IPv4 and
+The local preview now defaults to the Ruby/Spinel port in `backend/ruby/`.
+The Rust implementation in `backend/src/` remains the reference and an explicit
+launcher option. Ruby owns collection policy; C adapters expose netlink and
+libmaxminddb. See [Ruby validation](ruby-validation.md) for current evidence. Use `NETLINK_SOCK_DIAG` TCP dumps for IPv4 and
 IPv6; validate multipart lengths, sequence, errors, truncation and interrupted
 dumps. An interrupted dump is not a valid empty snapshot. Do not add `ss`
 parsing as a silent production fallback; `ss` is a development reference.
@@ -149,7 +152,7 @@ Missing GeoIP must not discard connection rows.
 
 **Integration constraint:** the installed `SplitParser` exposes a delimiter,
 but no buffer-size ceiling. Checking a completed line in QML does not bound
-memory before its newline. Enforce producer limits in Rust and gate release
+memory before its newline. Enforce producer limits in both collectors and gate release
 on a bounded framing solution and oversized/unterminated-output tests in
 Phase 3/4. Do not claim a hostile or corrupted backend is sandboxed by
 `SplitParser`. A framing adapter or host support may be needed; no nonexistent

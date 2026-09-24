@@ -54,8 +54,9 @@ can select an older version directly if needed.
 Downloads use verified HTTPS with HTTPS-only redirects, a 15-second socket
 timeout and a 120-second download deadline checked between reads. Compressed
 and uncompressed files are bounded to 64 MiB. Validation has a 30-second timeout
-and uses the same safe Rust reader as collection, including structural and
-build-timestamp validation. Hashes record provenance; locally computed hashes
+and invokes the selected backend's reader, including structural and
+build-timestamp validation. The Ruby backend uses libmaxminddb over a sealed
+local copy; Rust uses its existing in-memory reader. Hashes record provenance; locally computed hashes
 are not independent provider signatures. An optional expected SHA-256 rejects
 mismatched archives before decompression.
 

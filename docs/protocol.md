@@ -1,6 +1,6 @@
 # Collector protocol v1
 
-Implemented by `backend/`, Linux only, and consumed by `Collector.qml` through
+Implemented by `backend/ruby/` (default) and `backend/src/` (Rust reference), Linux only, and consumed by `Collector.qml` through
 `Protocol.js`.
 
 ## Invocation and framing
@@ -133,8 +133,11 @@ Replacement waits for the previous process to exit.
 ## GeoIP and address scope
 
 No database is bundled. An explicitly supplied country MMDB is read once,
-limited to 64 MiB, structurally verified with `maxminddb` safe decoding, and
-cached in memory. Database states are `missing`, `unreadable`, `invalid`, `ready`.
+limited to 64 MiB, structurally verified and cached in memory. Rust uses the
+`maxminddb` crate. Ruby uses libmaxminddb against a sealed anonymous copy of the
+file; its adapter checks search-tree cycles/depth and decodes referenced records
+before exposing the reader. Replacing or truncating the source cannot change
+an already loaded database. Database states are `missing`, `unreadable`, `invalid`, `ready`.
 `buildEpochSeconds` and derived `releaseMonth` come from database metadata;
 `stale` means build age exceeds 90 days. This is a build month, not independently
 verified provider-release provenance. `lookupErrors` is a cumulative count of

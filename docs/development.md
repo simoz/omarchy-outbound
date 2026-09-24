@@ -1,6 +1,7 @@
 # Development
 
-The QML service runs the Rust collector through Quickshell. Python is also used by the explicit GeoIP installer and city search; neither Python nor Node
+The QML service runs the Ruby/Spinel collector through Quickshell.
+The Rust collector remains available for explicit comparison. Python is also used by the explicit GeoIP installer and city search; neither Python nor Node
 is a runtime collection dependency.
 
 ## Run the live interface
@@ -11,7 +12,10 @@ is a runtime collection dependency.
 OUTBOUND_DATABASE=/absolute/path/to/country.mmdb ./run-ui.sh
 ```
 
-The launcher builds the release collector and opens a fresh isolated preview.
+The launcher builds the Ruby collector when sources change and opens a fresh
+isolated preview. It prints the selected executable on stderr and overrides a
+saved preview backend path; `OUTBOUND_BACKEND` is still an explicit override.
+Use `OUTBOUND_ENGINE=rust ./run-ui.sh` to build and run the Rust reference.
 Open settings to change the backend/database paths, sample interval (1–60 s),
 manual origin or data source; pause/resume and retry are also available there.
 Preview settings last for that session. Installed collection settings are saved
@@ -159,12 +163,71 @@ be intentional. Do not overwrite an existing plugin. Summon/hide through the
 normal shell IPC, and disable the temporary plugin after testing. There is no
 backend required to run the simulated UI.
 
-## Build and try the Rust collector
+## Build the Ruby/Spinel collector
+
+The default backend lives in `backend/ruby/`. Ruby handles protocol, ownership,
+address scope, identity, GeoIP cache, aggregation and output bounds. Small C
+adapters handle the Linux netlink ABI and libmaxminddb. The executable needs
+neither a Ruby interpreter nor Rust. This is a development port, not a release
+or a claim of performance parity on every architecture.
+
+Build requirements: Linux, C compiler, `make`, `flock`, Spinel revision
+`66ae8c07f2d94f86f31fe7902650e796a79895fc`, and static libmaxminddb 1.12.2.
+The launcher does not download or install these tools. A local preparation
+outside system directories is:
+
+```bash
+ruby_tools=$(mktemp -d /tmp/outbound-ruby-tools.XXXXXX)
+git clone https://github.com/matz/spinel.git "$ruby_tools/spinel"
+git -C "$ruby_tools/spinel" checkout --detach 66ae8c07f2d94f86f31fe7902650e796a79895fc
+make -C "$ruby_tools/spinel" deps
+make -C "$ruby_tools/spinel" -j4
+git clone --depth 1 --branch 1.12.2 https://github.com/maxmind/libmaxminddb.git "$ruby_tools/maxmind"
+cmake -S "$ruby_tools/maxmind" -B "$ruby_tools/maxmind/build" \
+  -DBUILD_TESTING=OFF -DMAXMINDDB_BUILD_BINARIES=OFF \
+  -DCMAKE_INSTALL_PREFIX="$ruby_tools/maxmind-install"
+cmake --build "$ruby_tools/maxmind/build" -j4
+cmake --install "$ruby_tools/maxmind/build"
+export SPINEL="$ruby_tools/spinel/bin/spinel"
+export MAXMIND_PREFIX="$ruby_tools/maxmind-install"
+./run-ui.sh
+```
+
+Fetching tools requires network access; tests use local fixtures and loopback.
+`MAXMIND_PREFIX` supplies `include/` and `lib/libmaxminddb.a`. If omitted, the
+builder uses `pkg-config` to locate a system static library. `SPINEL` defaults
+to `spinel` on PATH. Build output goes to ignored `backend/ruby/build/`;
+`backend/ruby/build.sh --force` rebuilds even if sources are unchanged. Keep the
+tool directories to rebuild after edits. An unchanged compiled binary remains
+usable after they are removed.
+
+```bash
+./run-backend.sh                       # one real Ruby snapshot
+backend/ruby/check.sh                  # native, Ruby and protocol checks
+OUTBOUND_RUST_BACKEND="$PWD/backend/target/release/outbound-engine" \
+  backend/ruby/check.sh                # also compare controlled sockets/errors
+python3 -B tests/check_transport.py
+python3 -B tests/check_geoip_ui.py
+```
+
+The test suite covers IPv4/IPv6 controlled endpoints, the actual UI schema,
+repeated samples, PID reuse, shared descriptors, Unicode names, output/owner
+bounds, scope policy, missing/corrupt/immutable GeoIP, negative caching,
+shutdown and malformed input. It needs ordinary loopback/netlink access;
+a sandbox denial is a failed integration check, not an empty success.
+
+The compiled binary statically includes libmaxminddb and dynamically links
+system glibc, libm and libcrypt. Redistribution must include libmaxminddb's
+Apache-2.0 license/NOTICE and Spinel/runtime notices as applicable; no release
+bundle or universal glibc baseline is established here. See
+[Ruby validation](ruby-validation.md) for the tested environment and limits.
+
+## Build and try the Rust reference collector
 
 From the repository root, on Linux with Rust/Cargo installed:
 
 ```bash
-./run-backend.sh
+OUTBOUND_ENGINE=rust ./run-backend.sh
 ```
 
 The launcher builds the release binary when needed, requests one snapshot and
@@ -172,7 +235,7 @@ exits. It also works when invoked by absolute path from another directory.
 Arguments are forwarded to the collector, for example:
 
 ```bash
-./run-backend.sh --database /path/to/country.mmdb
+OUTBOUND_ENGINE=rust ./run-backend.sh --database /path/to/country.mmdb
 ```
 
 The equivalent manual commands are:
@@ -217,7 +280,8 @@ unverified. See [backend-validation.md](backend-validation.md).
 python3 -B tests/check_transport.py
 ```
 
-Build the release binary first. The test uses real Quickshell processes with
+Build the Ruby binary first. `OUTBOUND_TEST_NATIVE_BACKEND` can select another
+executable for comparison. The test uses real Quickshell processes with
 local fixture helpers, then the real collector. It checks pause/resume, view
 registration, late responses, bounded retries, missing executables, malformed,
 incompatible and oversized output, and shell-crash cleanup. It does not install
@@ -232,7 +296,7 @@ cargo test --manifest-path backend/Cargo.toml --locked --test geo
 python3 -B tests/check_geoip_ui.py
 ```
 
-The UI check requires a built release backend and installed Quickshell. It uses
+The UI check requires a built Ruby backend and installed Quickshell. It uses
 a synthetic local database and fixture installer, without downloads or personal
 data changes. It exercises the globe button, successful reload, failure and
 cancellation when the last open view closes.
@@ -255,7 +319,7 @@ an expected visibility limitation, not bypassed. Do not run it on an environment
 where local socket creation is forbidden and infer a kernel-wide limitation.
 
 The [recorded ARM64 results](feasibility.md) cover Linux collection only.
-Python is a development aid; the runtime collector will be Rust.
+Python is a development aid; the default runtime collector is now Ruby/Spinel.
 
 ## Documentation and Python checks
 
@@ -278,11 +342,10 @@ The other project's backend test and runtime-preparation commands do not apply.
 
 ## Later-phase validation
 
-An isolated [Ruby/Spinel feasibility probe](../experiments/spinel/README.md)
-checks Linux ARM64 and x86_64 backend building blocks without replacing the Rust
-collector or changing the plugin runtime. Its first production-protocol increment
-ports command validation and shutdown to Ruby; the linked guide includes an
-independent protocol test and optional comparison with the Rust collector.
+The earlier [Ruby/Spinel feasibility probe](../experiments/spinel/README.md)
+records ARM64/x86_64 building-block experiments. The current port lives in
+`backend/ruby/` and is the default for the local launchers; those earlier
+x86_64 results do not validate the full port.
 
 - Phase 1: manifest validation with `omarchy plugin validate .`; QML lint using
   `/usr/lib/qt6/bin/qmllint -I /usr/share/omarchy/shell` on the actual QML files;

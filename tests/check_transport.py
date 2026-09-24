@@ -39,7 +39,7 @@ for line in sys.stdin:
 ''')
 helper.chmod(0o755)
 for mode in (sys.argv[1:] or ["normal", "missing", "malformed", "incompatible", "oversized", "retry", "late", "native", "crash"]):
-    executable = repository / "backend/target/release/outbound-engine" if mode == "native" else preview / "missing" if mode == "missing" else helper
+    executable = Path(os.environ.get("OUTBOUND_TEST_NATIVE_BACKEND", repository / "backend/ruby/build/outbound-engine")) if mode == "native" else preview / "missing" if mode == "missing" else helper
     pid_file = preview / (mode + "-pids")
     env = dict(os.environ, OUTBOUND_TEST_PID_FILE=str(pid_file), QT_QPA_PLATFORM="offscreen", QT_QPA_PLATFORMTHEME="basic", OUTBOUND_TRANSPORT_TEST=mode, OUTBOUND_TEST_BACKEND=str(executable))
     if mode == "crash":

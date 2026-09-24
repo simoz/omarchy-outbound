@@ -11,3 +11,6 @@ __pycache__/
 
 # Rust build output
 /backend/target/
+
+# Compiled Ruby/Spinel backend and native adapters
+/backend/ruby/build/

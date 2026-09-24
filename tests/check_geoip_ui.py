@@ -94,7 +94,7 @@ try:
             pid = Path(data) / "pid"
             env = dict(os.environ, XDG_DATA_HOME=data, GEO_MODE=mode, GEO_PID=str(pid),
                        GEO_FIXTURE=str(preview / "synthetic.mmdb"),
-                       GEO_BACKEND=str(repository / "backend/target/release/outbound-engine"),
+                       GEO_BACKEND=os.environ.get("OUTBOUND_TEST_NATIVE_BACKEND", str(repository / "backend/ruby/build/outbound-engine")),
                        QT_QPA_PLATFORM="offscreen", QT_QPA_PLATFORMTHEME="basic")
             result = subprocess.run(["qs", "-p", str(preview), "--no-color"], env=env, text=True, capture_output=True, timeout=15)
             output = result.stdout + result.stderr
