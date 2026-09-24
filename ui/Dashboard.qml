@@ -19,6 +19,12 @@ FocusScope {
     signal closeRequested()
     signal copyRequested(string text)
     Theme { id: theme }
+    Shortcut {
+        sequence: "F1"
+        enabled: root.active && !settings.opened
+        onActivated: keyboardHelp.visible ? keyboardHelp.close() : keyboardHelp.open()
+    }
+    KeyboardHelp { id: keyboardHelp; width: Math.min(680, root.width - 24); height: Math.min(580, root.height - 24); x: (root.width - width) / 2; y: (root.height - height) / 2 }
     Keys.onEscapePressed: function(event) { closeRequested(); event.accepted = true; }
     Connections {
         target: root.Window.window
@@ -67,6 +73,7 @@ FocusScope {
                     enabled: !root.service.reducedMotion
                     onClicked: globe.rotating = !globe.rotating
                 }
+                ActionButton { objectName: "keyboardHelpButton"; text: "?"; implicitWidth: 30; hint: "Keyboard guide (F1)"; onClicked: keyboardHelp.open() }
                 ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Display and simulated data settings"; onClicked: settings.open() }
                 ActionButton { visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
                 ActionButton { text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }

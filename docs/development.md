@@ -37,6 +37,10 @@ must not become GeoIP expectations for the production collector. No download,
 socket collection, DNS lookup or external process is initiated by the plugin.
 The surrounding Omarchy theme components retain their usual host behavior.
 
+Open the keyboard guide with F1 or the header’s ? button. Escape closes the
+guide and restores focus; arrow keys and Page Up/Down scroll it. Hover tooltips
+are omitted; controls retain accessible names.
+
 Tab/Shift+Tab move through controls, Enter/Space activate buttons, and Escape
 closes the view. The focused globe accepts arrow keys and Home; search fields
 retain those keys for editing. Drag rotates the globe; choose a country in the

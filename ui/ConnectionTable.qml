@@ -59,9 +59,6 @@ Item {
             padding: 2
             focusPolicy: Qt.StrongFocus
             Accessible.name: modelData.app + ", " + modelData.ip + ", port " + modelData.port + ", " + root.service.countryName(modelData.country) + ", " + modelData.state
-            C.ToolTip.visible: hovered
-            C.ToolTip.text: Accessible.name
-            C.ToolTip.delay: 650
             onClicked: root.service.selection = modelData.id
             onActiveFocusChanged: if (activeFocus) {
                 list.currentIndex = index;

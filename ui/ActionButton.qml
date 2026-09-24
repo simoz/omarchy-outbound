@@ -12,9 +12,6 @@ C.Button {
     hoverEnabled: true
     focusPolicy: Qt.StrongFocus
     Accessible.name: hint
-    C.ToolTip.visible: hovered && hint !== ""
-    C.ToolTip.text: hint
-    C.ToolTip.delay: 500
     contentItem: Label {
         id: label
         text: root.text

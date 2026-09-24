@@ -53,9 +53,6 @@ Item {
             height: root.rowHeight
             focusPolicy: Qt.StrongFocus
             Accessible.name: root.labelFor(modelData.value) + ", " + modelData.count + " sockets, " + percentage + " percent"
-            C.ToolTip.visible: hovered
-            C.ToolTip.text: Accessible.name
-            C.ToolTip.delay: 650
             onClicked: root.chosen(modelData.value)
             onActiveFocusChanged: if (activeFocus) {
                 list.currentIndex = index;

@@ -192,8 +192,6 @@ FocusScope {
             hoverEnabled: true
             focusPolicy: Qt.StrongFocus
             Accessible.name: "Filter simulated destinations: " + modelData.name
-            C.ToolTip.visible: hovered
-            C.ToolTip.text: Accessible.name
             onClicked: root.service.chooseCountry(modelData.code)
             background: Item {
                 Rectangle {

@@ -27,6 +27,26 @@ Item {
             closeSpy.clear();
             copySpy.clear();
         }
+        function test_keyboard_guide_restores_focus_and_keeps_escape_local() {
+            dashboard.searchField.forceActiveFocus();
+            keyClick(Qt.Key_F1);
+            var help = findChild(dashboard, "outboundKeyboardHelp");
+            tryCompare(help, "opened", true);
+            var guideScroll = findChild(help, "keyboardHelpScroll");
+            keyClick(Qt.Key_PageDown);
+            verify(guideScroll.contentY > 0);
+            keyClick(Qt.Key_Escape);
+            tryCompare(help, "opened", false);
+            compare(closeSpy.count, 0);
+            verify(dashboard.searchField.activeFocus);
+            keyClick(Qt.Key_B);
+            compare(service.query, "b");
+            keyClick(Qt.Key_F1);
+            tryCompare(help, "opened", true);
+            compare(guideScroll.contentY, 0);
+            keyClick(Qt.Key_F1);
+            tryCompare(help, "opened", false);
+        }
         function test_keyboard_search_and_escape() {
             dashboard.searchField.forceActiveFocus();
             keyClick(Qt.Key_B);
