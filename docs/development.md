@@ -1,7 +1,7 @@
 # Development
 
-The QML service runs the Rust collector through Quickshell. Python and Node are
-development tools, not runtime collection dependencies.
+The QML service runs the Rust collector through Quickshell. Python is also used by the explicit GeoIP installer; neither Python nor Node
+is a runtime collection dependency.
 
 ## Run the live interface
 
@@ -18,7 +18,11 @@ Preview settings last for that session. Installed collection settings are saved
 through the host's inline plugin configuration; display toggles are session-only.
 The bar alone samples every 10 s; an open panel/window uses the configured interval.
 Pausing, switching to simulated data or removing every view stops the process.
-No database or origin is fetched automatically.
+No database or origin is fetched automatically. Click **Install GeoIP** on the
+globe, or **Install / update managed GeoIP** in settings, to download DB-IP Lite.
+The installer requires Python 3.11+, validates the database with the built
+collector, and reloads it on success. Closing the last open view cancels a
+running download. See [geoip.md](geoip.md) for paths, notices and the CLI.
 
 For an installed plugin, place the built binary at
 `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/bin/outbound-engine`, or set its
@@ -100,7 +104,7 @@ ln -s /usr/share/omarchy/shell "$outbound_imports/qs"
 ```
 
 For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
-`ui/`, `assets/`, `fixtures/`) into an unused
+`ui/`, `assets/`, `fixtures/`, `tools/update_geoip.py`) into an unused
 `~/.config/omarchy/plugins/io.github.simoz.outbound/`, rescan with
 `omarchy-shell shell rescanPlugins`, and enable with
 `omarchy plugin enable io.github.simoz.outbound`. This changes the bar and must
@@ -172,6 +176,19 @@ registration, late responses, bounded retries, missing executables, malformed,
 incompatible and oversized output, and shell-crash cleanup. It does not install
 a plugin or print observed connection details. See
 [integration-validation.md](integration-validation.md) for real-host results.
+
+## GeoIP installer checks
+
+```bash
+python3 -B -m unittest discover -s tests -p 'test_geoip_update.py'
+cargo test --manifest-path backend/Cargo.toml --locked --test geo
+python3 -B tests/check_geoip_ui.py
+```
+
+The UI check requires a built release backend and installed Quickshell. It uses
+a synthetic local database and fixture installer, without downloads or personal
+data changes. It exercises the globe button, successful reload, failure and
+cancellation when the last open view closes.
 
 ## Reproduce the socket experiment
 

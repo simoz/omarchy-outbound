@@ -8,9 +8,15 @@ by application, remote IP and country. Ownership is best-effort; partial coverag
 and missing GeoIP are shown explicitly. Simulated data remains an explicit mode.
 
 Run `./run-ui.sh` to build the collector and open an isolated live preview.
-No plugin installation or database download is performed. Settings accepts a
-local country MMDB and an optional manual origin for globe arcs. Without an
-origin, the globe shows destination countries only.
+No plugin installation or automatic database download is performed. If GeoIP
+is missing, click **Install GeoIP** on the globe. The local DB-IP Lite database
+is downloaded only on request, validated and reloaded automatically. Settings
+also accepts a custom MMDB and an optional manual origin for globe arcs.
+Without an origin, the globe shows destination countries only.
+
+Outbound source code is MIT. DB-IP Lite data is separately licensed under
+[CC BY 4.0](https://db-ip.com/db/lite.php), with attribution in the UI and installed
+notices. See [GeoIP installation and updates](docs/geoip.md).
 
 The interface provides a bar counter, panel and expanded window, coordinated
 filters, search, copy IP, keyboard help and Omarchy theme colors. The same scene
@@ -34,7 +40,7 @@ payload capture, active network probing, or persistent connection history is
 planned.
 
 For a local preview, follow the development guide. The runtime prototype needs
-Omarchy Quattro's built-in bar and Quickshell; Python and Node are development
-tools only. This working tree has not been published as an installable release.
+Omarchy Quattro's built-in bar and Quickshell; Python 3 is needed for the optional GeoIP installer; Node is a development
+tool. Neither is needed by the socket collector. This working tree has not been published as an installable release.
 
 Next: resource/performance validation and distribution (Phases 4–5).

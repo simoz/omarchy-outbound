@@ -249,6 +249,33 @@ FocusScope {
         font.pixelSize: theme.size * 0.65
         color: theme.subdued
     }
+    Column {
+        anchors.centerIn: parent
+        width: Math.min(360, parent.width - 40)
+        spacing: 8
+        visible: !root.service.demoMode && (root.service.needsGeoIp || root.service.geoInstalling || root.service.geoInstallError !== "")
+        Rectangle {
+            width: parent.width
+            height: installContent.implicitHeight + 24
+            color: theme.background
+            Frame { anchors.fill: parent; emphasized: true }
+            Column {
+                id: installContent
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                spacing: 8
+                Label { width: parent.width; text: "COUNTRY GEOLOCATION"; color: theme.accent }
+                Label { width: parent.width; wrapMode: Text.Wrap; text: root.service.geoInstallError || "Install the local country database to show destinations on the globe." }
+                ActionButton {
+                    objectName: "installGeoIpButton"
+                    width: parent.width
+                    text: root.service.geoInstalling ? "Downloading and validating…" : "Install GeoIP"
+                    enabled: !root.service.geoInstalling
+                    onClicked: root.service.installGeoIp()
+                }
+                Label { width: parent.width; wrapMode: Text.Wrap; text: "IP Geolocation by DB-IP · CC BY 4.0"; font.pixelSize: theme.size * 0.8 }
+            }
+        }
+    }
     Timer {
         interval: 33; repeat: true
         running: root.active && root.rotating && !root.service.reducedMotion

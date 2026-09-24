@@ -1,5 +1,6 @@
 use outbound_engine::{
     engine::Engine,
+    geo::Geo,
     protocol::{self, Action, Input},
 };
 use std::{
@@ -10,13 +11,18 @@ use std::{
 
 fn run() -> io::Result<()> {
     let mut database = None;
+    let mut check_database = false;
     let mut args = std::env::args_os().skip(1);
     while let Some(arg) = args.next() {
         if arg == "--help" {
             eprintln!(
-                "outbound-engine [--database FILE.mmdb]\nReads version-1 JSON commands from stdin; emits snapshots on stdout.\nNo automatic sampling, downloads or privilege elevation. EOF exits."
+                "outbound-engine [--database FILE.mmdb] [--check-database]\nReads version-1 JSON commands from stdin; emits snapshots on stdout.\nNo automatic sampling, downloads or privilege elevation. EOF exits."
             );
             return Ok(());
+        }
+        if arg == "--check-database" && !check_database {
+            check_database = true;
+            continue;
         }
         if arg != "--database" || database.is_some() {
             return Err(io::ErrorKind::InvalidInput.into());
@@ -24,6 +30,20 @@ fn run() -> io::Result<()> {
         database = Some(PathBuf::from(
             args.next().ok_or(io::ErrorKind::InvalidInput)?,
         ));
+    }
+    if check_database {
+        let path = database.as_deref().ok_or(io::ErrorKind::InvalidInput)?;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|_| io::ErrorKind::InvalidData)?
+            .as_secs();
+        let geo = Geo::load(Some(path), now);
+        if !geo.is_country_database() {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        serde_json::to_writer(io::stdout().lock(), &geo.status)?;
+        println!();
+        return Ok(());
     }
     let mut engine = Engine::new(database.as_deref())?;
     let mut input = BufReader::with_capacity(4096, io::stdin().lock());

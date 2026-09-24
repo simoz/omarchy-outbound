@@ -65,8 +65,11 @@ C.Popup {
             Label { visible:!root.service.demoMode; Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.service.coverageStatus; font.pixelSize:theme.size*0.85 }
             Label { text:"Backend executable · absolute path" }
             SearchField { id:backend; objectName:"backendPathField"; Layout.fillWidth:true; placeholderText:"Default: ~/.local/share/outbound/bin/outbound-engine"; Accessible.name:"Backend executable path" }
-            Label { text:"Country MMDB · optional local file" }
-            SearchField { id:database; Layout.fillWidth:true; placeholderText:"/path/to/country.mmdb"; Accessible.name:"Local GeoIP database path" }
+            Label { text:"Country MMDB · blank uses managed database" }
+            SearchField { id:database; Layout.fillWidth:true; placeholderText:"Default: managed DB-IP Lite database"; Accessible.name:"Local GeoIP database path" }
+            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
+            ActionButton { Layout.fillWidth:true; visible:!root.service.demoMode; enabled:!root.service.geoInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
+            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.geoInstallError !== ""; text:root.service.geoInstallError }
             Label { text:"Manual origin · leave both blank for markers only"; Layout.fillWidth:true; wrapMode:Text.Wrap }
             RowLayout {
                 Layout.fillWidth:true
@@ -83,10 +86,10 @@ C.Popup {
             ActionButton { Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
             ActionButton { Layout.fillWidth:true; text:"Glow: " + (root.service.glow ? "on" : "off"); selected:root.service.glow; onClicked:root.service.glow=!root.service.glow }
             ActionButton { Layout.fillWidth:true; text:"Scanlines: " + (root.service.scanlines ? "on" : "off"); selected:root.service.scanlines; onClicked:root.service.scanlines=!root.service.scanlines }
-            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Country markers are approximate. Direction is unknown. Shared sockets can belong to several applications. No GeoIP downloads."; font.pixelSize:theme.size*0.85 }
+            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Country markers are approximate. Direction is unknown. Shared sockets can belong to several applications. No automatic GeoIP downloads."; font.pixelSize:theme.size*0.85 }
             Label {
                 Layout.fillWidth:true; wrapMode:Text.Wrap; font.pixelSize:theme.size*0.85
-                text:"Made with Natural Earth. For DB-IP Lite: IP Geolocation by DB-IP · CC BY 4.0."
+                text:"Made with Natural Earth. Managed database: IP Geolocation by DB-IP · CC BY 4.0. Outbound code: MIT."
             }
             ActionButton { Layout.fillWidth:true; text:"DB-IP data and attribution"; onClicked:Qt.openUrlExternally("https://db-ip.com/db/lite.php") }
             ActionButton { Layout.fillWidth:true; text:"CC BY 4.0 license"; onClicked:Qt.openUrlExternally("https://creativecommons.org/licenses/by/4.0/") }

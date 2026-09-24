@@ -44,6 +44,15 @@ Other codes: `invalidCommand`, `invalidRequestId`, `commandTooLarge`,
 `commandTooDeep`, `unterminatedCommand`. Invalid requests are not reflected.
 Shutdown acknowledges `{"version":1,"kind":"stopped","requestId":"stop-1"}`.
 
+## Database validation command
+
+`outbound-engine --check-database --database /absolute/path/to/country.mmdb`
+performs bounded local validation without opening socket diagnostics or reading
+stdin. It requires a verified country database with IPv6 support (covering both
+address families), and emits its database status as one JSON line. Invalid or
+unreadable files return a nonzero exit. The installer uses this separate mode;
+the snapshot protocol remains version 1.
+
 ## Snapshot fields
 
 | Field | Meaning |

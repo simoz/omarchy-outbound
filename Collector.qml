@@ -10,7 +10,7 @@ Item {
     property var service: null
     readonly property bool wanted: service !== null && service.demanded
     readonly property string executable: service && service.backendPath ? service.backendPath : (Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share") + "/outbound/bin/outbound-engine"
-    readonly property string database: service ? service.databasePath : ""
+    readonly property string database: service && service.databasePath ? service.databasePath : (Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share") + "/outbound/data/current/country.mmdb"
     property bool ready: false
     Component.onCompleted: { ready = true; startLater(); }
     property bool busy: false
@@ -29,6 +29,61 @@ Item {
     property int killStage: 0
     readonly property bool retryWaiting: retryTimer.running
     readonly property var processId: process.processId
+
+    property bool geoInstalling: false
+    property string geoInstallError: ""
+    property bool geoCancelled: false
+    property string geoOriginalPath: ""
+    function installGeoIp() {
+        if (geoInstalling || !service || service.demoMode || service.openViews === 0) return;
+        geoInstallError = ""; geoCancelled = false; geoInstalling = true;
+        geoOriginalPath = service.databasePath;
+        installer.command = ["python3", "-B", decodeURIComponent(Qt.resolvedUrl("tools/update_geoip.py").toString().slice(7)), "--backend", executable];
+        installDeadline.restart();
+        installer.running = true;
+    }
+    function cancelGeoIp() {
+        if (!geoInstalling) return;
+        geoCancelled = true;
+        if (installer.processId > 0) installer.signal(15);
+        installKill.restart();
+    }
+    Connections {
+        target: root.service
+        function onOpenViewsChanged() { if (root.service.openViews === 0) root.cancelGeoIp(); }
+        function onDemoModeChanged() { if (root.service.demoMode) root.cancelGeoIp(); }
+    }
+    Timer { id: installDeadline; interval: 165000; onTriggered: root.cancelGeoIp() }
+    Timer { id: installKill; interval: 500; onTriggered: if (installer.processId > 0) installer.signal(9) }
+    Process {
+        id: installer
+        property bool started: false
+        stdout: SplitParser { splitMarker: ""; onRead: function(data) {} }
+        stderr: SplitParser { splitMarker: ""; onRead: function(data) {} }
+        onStarted: { started = true; if (root.geoCancelled) root.cancelGeoIp(); }
+        onRunningChanged: {
+            if (running) started = false;
+            else if (!started && root.geoInstalling) {
+                root.geoInstalling = false; installDeadline.stop(); installKill.stop();
+                root.geoInstallError = "Installer unavailable. Python 3 is required.";
+            }
+        }
+        // qmllint disable signal-handler-parameters
+        onExited: function(exitCode) {
+            root.geoInstalling = false; installDeadline.stop(); installKill.stop();
+            if (root.destroying) return;
+            if (root.geoCancelled) root.geoInstallError = "GeoIP installation cancelled.";
+            else if (exitCode !== 0) root.geoInstallError = "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details.";
+            else {
+                if (root.service.databasePath === root.geoOriginalPath) {
+                    var origin = root.service.origin;
+                    root.geoInstallError = root.service.configure(root.service.backendPath, "", origin ? String(origin.lat) : "", origin ? String(origin.lon) : "", String(root.service.intervalSeconds));
+                }
+                root.retry();
+            }
+        }
+        // qmllint enable signal-handler-parameters
+    }
 
     function startLater() {
         var token = generation;
@@ -98,7 +153,7 @@ Item {
     }
     onExecutableChanged: if (ready) retry()
     onDatabaseChanged: if (ready) retry()
-    Component.onDestruction: { destroying = true; stop(); if (process.processId > 0) process.signal(15); }
+    Component.onDestruction: { destroying = true; cancelGeoIp(); stop(); if (process.processId > 0) process.signal(15); }
     Timer { id: poll; interval: root.service ? root.service.pollInterval : 2000; onTriggered: root.request() }
     Timer { id: retryTimer; onTriggered: root.start() }
     Timer { id: watchdog; interval: 5000; onTriggered: root.failed("Backend response timed out.", false) }

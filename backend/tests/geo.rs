@@ -86,3 +86,30 @@ fn local_lookup_age_validation_and_no_special_geolocation() {
     fs::remove_file(&path).unwrap();
     assert_eq!(Geo::load(Some(&path), 1800000000).status.state, "missing");
 }
+
+#[test]
+fn check_database_cli_validates_without_collecting_sockets() {
+    let temp = common::Temp::new();
+    let path = temp.0.join("country.mmdb");
+    fs::write(&path, database("IT", 1704067200)).unwrap();
+    let run = || {
+        std::process::Command::new(env!("CARGO_BIN_EXE_outbound-engine"))
+            .args(["--check-database", "--database"])
+            .arg(&path)
+            .output()
+            .unwrap()
+    };
+    let result = run();
+    assert!(result.status.success());
+    let status: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(status["state"], "ready");
+    assert!(status.get("connections").is_none());
+    let country = database("IT", 1704067200);
+    let mut wrong_type = country.clone();
+    let start = wrong_type.windows(7).position(|b| b == b"Country").unwrap();
+    wrong_type[start..start + 7].copy_from_slice(b"NotGeo!");
+    fs::write(&path, wrong_type).unwrap();
+    assert!(!run().status.success());
+    fs::write(&path, b"corrupt").unwrap();
+    assert!(!run().status.success());
+}

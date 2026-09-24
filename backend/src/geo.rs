@@ -93,6 +93,17 @@ impl Geo {
         }
         geo
     }
+    // Installer validation uses the same bounded reader, without sampling sockets.
+    pub fn is_country_database(&self) -> bool {
+        self.reader.as_ref().is_some_and(|reader| {
+            reader
+                .metadata()
+                .database_type
+                .to_ascii_lowercase()
+                .contains("country")
+                && reader.metadata().ip_version == 6
+        })
+    }
     pub fn lookup(&mut self, address: IpAddr) -> Option<String> {
         let address = scope::normalized(address);
         if scope::classify(address) != Scope::Public {

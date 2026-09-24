@@ -10,6 +10,12 @@ synthetic local test data. Source build instructions are now available in
 [development.md](development.md); release installation and data distribution
 remain planned.
 
+GeoIP implementation update: an explicit UI/CLI installer now downloads the
+provider's country MMDB over HTTPS, validates it with the Rust reader and
+atomically activates a versioned local directory with provenance and notices.
+No provider data is committed to Git. This does not implement prebuilt binary
+release installation. See [GeoIP setup](geoip.md).
+
 ## Geographic data
 
 Choose **DB-IP IP to Country Lite, MMDB** for v1. The provider offers monthly

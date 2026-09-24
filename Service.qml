@@ -40,6 +40,10 @@ Item {
     function removeView(token) { views = views.filter(function(v) { return v.token !== token; }); }
     readonly property var collector: transport.item
     function retry() { if (collector) collector.retry(); }
+    readonly property bool geoInstalling: collector ? collector.geoInstalling : false
+    readonly property string geoInstallError: collector ? collector.geoInstallError : ""
+    readonly property bool needsGeoIp: !demoMode && (!snapshot || snapshot.database.state !== "ready")
+    function installGeoIp() { if (collector) collector.installGeoIp(); }
     function configure(backend, database, latitude, longitude, interval) {
         var lat = latitude.trim(), lon = longitude.trim(), seconds = Number(interval);
         if ((backend && backend[0] !== "/") || (database && database[0] !== "/") || backend.length > 4096 || database.length > 4096 || /[\x00-\x1f]/.test(backend + database)) return "Use absolute file paths.";
