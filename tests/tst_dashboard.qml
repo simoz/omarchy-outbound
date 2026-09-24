@@ -70,6 +70,28 @@ Item {
             compare(dashboard.globe.layers[2].length, 0);
             service.liveRows = [];
         }
+        function test_connection_pulse_respects_motion_visibility_and_pause() {
+            dashboard.globe.rotating = false;
+            service.paused = false;
+            var pulse = findChild(dashboard, "connectionPulse");
+            verify(!dashboard.globe.linksAnimating);
+            service.reducedMotion = false;
+            verify(dashboard.globe.linksAnimating);
+            wait(100);
+            var opacity = pulse.opacity;
+            var paints = dashboard.globe.paintCount;
+            tryVerify(function() { return Math.abs(pulse.opacity - opacity) > 0.1; });
+            compare(dashboard.globe.paintCount, paints);
+            service.paused = true;
+            verify(!dashboard.globe.linksAnimating);
+            service.paused = false;
+            dashboard.active = false;
+            verify(!dashboard.globe.linksAnimating);
+            dashboard.active = true;
+            service.reducedMotion = true;
+            verify(!dashboard.globe.linksAnimating);
+            verify(dashboard.globe.layers[2].length > 0);
+        }
         function test_globe_keyboard_country_and_motion() {
             dashboard.globe.forceActiveFocus();
             keyClick(Qt.Key_Right);

@@ -72,7 +72,11 @@ are omitted; controls retain accessible names.
 Tab/Shift+Tab move through controls, Enter/Space activate buttons, and Escape
 closes the view. The focused globe accepts arrow keys and Home; search fields
 retain those keys for editing. Drag rotates the globe; choose a country in the
-list or on the globe to filter. Reduced motion is on initially. Scenarios and
+list or on the globe to filter. Connection arcs pulse by default; Reduced motion keeps them static. The pulse
+animates a cached vector overlay without repainting the globe Canvas, and stops
+when the view is hidden or collection is paused. Live arcs require a manual
+origin; use **Set origin to connect destinations** on the globe to open settings.
+No directional packet flow is inferred. Scenarios and
 display toggles are session-only prototype state, available from the header
 settings button. Selecting a country updates the application breakdown; selecting
 an application row filters the connections. The default preview is 1440×940.

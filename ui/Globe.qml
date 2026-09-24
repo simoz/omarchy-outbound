@@ -14,6 +14,8 @@ FocusScope {
     property real latitude: 18
     property string renderer: "canvas"
     property bool rotating: false
+    signal originRequested()
+    readonly property bool linksAnimating: active && visible && originPoint !== null && layers[2].length > 0 && !service.reducedMotion && !service.paused
     readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48)
     readonly property var originPoint: service.globeOrigin
     readonly property var grid: Projection.graticule()
@@ -28,6 +30,9 @@ FocusScope {
         Projection.paths(originPoint ? destinations.map(function(c) { return Projection.arc([originPoint.lon, originPoint.lat], [c.lon, c.lat]); }) : [],
                          longitude, latitude, radius, width/2, height/2)
     ] : [[], [], []]
+    readonly property var pulsePaths: !service.country ? layers[2] : Projection.paths(
+        active && originPoint ? destinations.filter(function(c) { return c.code === root.service.country; }).map(function(c) { return Projection.arc([root.originPoint.lon, root.originPoint.lat], [c.lon, c.lat]); }) : [],
+        longitude, latitude, radius, width/2, height/2)
     property int paintCount: 0
     Theme { id: theme }
     clip: true
@@ -166,6 +171,32 @@ FocusScope {
             }
         }
     }
+    // Animate only a cached vector overlay: geography stays event-driven.
+    // A simultaneous pulse expresses activity without claiming packet direction.
+    Shape {
+        id: linkPulse
+        objectName: "connectionPulse"
+        anchors.fill: parent
+        visible: root.linksAnimating
+        ShapePath {
+            fillColor: "transparent"
+            strokeColor: theme.fade(theme.accent, root.service.glow ? 0.22 : 0)
+            strokeWidth: 6
+            PathSvg { path: Projection.svg(root.pulsePaths) }
+        }
+        ShapePath {
+            fillColor: "transparent"
+            strokeColor: theme.text
+            strokeWidth: 1.8
+            PathSvg { path: Projection.svg(root.pulsePaths) }
+        }
+        SequentialAnimation on opacity {
+            running: root.linksAnimating
+            loops: Animation.Infinite
+            NumberAnimation { from: 0.05; to: 0.9; duration: 950; easing.type: Easing.InOutSine }
+            NumberAnimation { from: 0.9; to: 0.05; duration: 950; easing.type: Easing.InOutSine }
+        }
+    }
     MouseArea {
         anchors.fill: parent
         property real lastX: 0
@@ -248,6 +279,14 @@ FocusScope {
         horizontalAlignment: Text.AlignRight
         font.pixelSize: theme.size * 0.65
         color: theme.subdued
+    }
+    ActionButton {
+        objectName: "setGlobeOriginButton"
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 44 }
+        width: Math.min(330, parent.width - 24)
+        visible: !root.service.demoMode && !root.originPoint && !root.service.needsGeoIp
+        text: "Set origin to connect destinations"
+        onClicked: root.originRequested()
     }
     Column {
         anchors.centerIn: parent

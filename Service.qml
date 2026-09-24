@@ -67,7 +67,7 @@ Item {
     property string country: ""
     property string family: ""
     property string selection: ""
-    property bool reducedMotion: true
+    property bool reducedMotion: false
     property bool scanlines: false
     property bool glow: true
     readonly property var countries: demoMode ? Demo.countries : Geography.markers

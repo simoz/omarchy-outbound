@@ -127,6 +127,7 @@ FocusScope {
                         ActionButton { text: "↺"; implicitWidth: 30; hint: "Clear filters"; onClicked: root.service.clearFilters() }
                     }
                     Globe {
+                        onOriginRequested: settings.open()
                         id: globe
                         anchors { top: filters.bottom; bottom: parent.bottom; left: parent.left; right: parent.right; topMargin: 3; bottomMargin: 6 }
                         service: root.service
