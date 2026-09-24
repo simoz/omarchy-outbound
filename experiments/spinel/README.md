@@ -103,3 +103,39 @@ performance improvement, or full gem compatibility is demonstrated.
 A next step would port one real snapshot to the existing JSON protocol and
 compare it against the Rust collector on controlled connections before any
 decision to replace the backend.
+
+## Production protocol port — first increment
+
+`protocol.rb` ports the production command envelope to Ruby: bounded framing,
+field/type validation, duplicate keys (including escaped keys), request IDs,
+UTF-8 validation, nesting limits and fatal error codes. `protocol_probe.rb` is a
+test driver with the production shutdown acknowledgement. Accepted snapshot
+commands return an explicitly experimental acknowledgement, **not a snapshot**;
+do not configure the UI to use this executable.
+
+`run.sh` now also compiles that driver and runs `check_protocol.py`. With the
+pinned Spinel compiler already built, the protocol checks can run independently
+of the native adapters, Docker and libmaxminddb:
+
+```sh
+protocol_work=$(mktemp -d /tmp/outbound-protocol.XXXXXX)
+cp experiments/spinel/protocol.rb experiments/spinel/protocol_probe.rb \
+  experiments/spinel/check_protocol.py "$protocol_work/"
+spinel "$protocol_work/protocol_probe.rb" -o "$protocol_work/protocol-probe"
+(cd "$protocol_work" && python3 -B check_protocol.py)
+```
+
+Optionally set `OUTBOUND_RUST_BACKEND` to an absolute path to the built Rust
+collector. The harness then compares fatal responses against Rust for the same
+inputs, without requesting real socket snapshots or printing connection data.
+
+Validation on 2026-09-24: compiled with the pinned Spinel revision directly on
+Linux ARM64; all 11 protocol tests passed, including the optional Rust error
+comparison. Shell syntax and `git diff --check` passed. Ruby, Spinel and its
+build dependencies were not installed system-wide. The new protocol code has
+not yet been rerun on x86_64, in Docker, or through Quickshell. The earlier 8/8
+native-adapter results above refer to the previous experiment.
+
+The next increment remains a real snapshot in the production schema, with
+controlled-socket comparison against Rust. Ownership, scope, identity, GeoIP,
+aggregation and output bounds still need production ports before replacement.

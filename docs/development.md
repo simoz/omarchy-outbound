@@ -280,7 +280,9 @@ The other project's backend test and runtime-preparation commands do not apply.
 
 An isolated [Ruby/Spinel feasibility probe](../experiments/spinel/README.md)
 checks Linux ARM64 and x86_64 backend building blocks without replacing the Rust
-collector or changing the plugin runtime.
+collector or changing the plugin runtime. Its first production-protocol increment
+ports command validation and shutdown to Ruby; the linked guide includes an
+independent protocol test and optional comparison with the Rust collector.
 
 - Phase 1: manifest validation with `omarchy plugin validate .`; QML lint using
   `/usr/lib/qt6/bin/qmllint -I /usr/share/omarchy/shell` on the actual QML files;
