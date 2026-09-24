@@ -11,7 +11,8 @@ Run `./run-ui.sh` to build the collector and open an isolated live preview.
 No plugin installation or automatic database download is performed. If GeoIP
 is missing, click **Install GeoIP** on the globe. The local DB-IP Lite database
 is downloaded only on request, validated and reloaded automatically. Settings
-also accepts a custom MMDB and an optional manual origin for globe arcs.
+also accepts a custom MMDB and an origin chosen by city search or coordinates
+for globe arcs.
 Without an origin, the globe shows destination countries only.
 
 Outbound source code is MIT. DB-IP Lite data is separately licensed under

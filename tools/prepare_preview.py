@@ -15,7 +15,8 @@ for pattern in ("*.qml", "*.js"):
 for folder in ("ui", "assets", "fixtures"):
     shutil.copytree(repository / folder, plugin / folder)
 (plugin / "tools").mkdir()
-shutil.copy2(repository / "tools/update_geoip.py", plugin / "tools/update_geoip.py")
+for helper in ("update_geoip.py", "search_city.py"):
+    shutil.copy2(repository / "tools" / helper, plugin / "tools" / helper)
 for folder in ("Commons", "Ui"):
     shutil.copytree(Path("/usr/share/omarchy/shell") / folder, target / folder)
 preview = (repository / "tools" / "preview.qml").read_text()

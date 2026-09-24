@@ -1,6 +1,6 @@
 # Development
 
-The QML service runs the Rust collector through Quickshell. Python is also used by the explicit GeoIP installer; neither Python nor Node
+The QML service runs the Rust collector through Quickshell. Python is also used by the explicit GeoIP installer and city search; neither Python nor Node
 is a runtime collection dependency.
 
 ## Run the live interface
@@ -28,6 +28,27 @@ For an installed plugin, place the built binary at
 `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/bin/outbound-engine`, or set its
 absolute path in settings. Copy the runtime files as described below.
 
+
+## Choose the globe origin
+
+Open settings with the gear, or click **Set origin to connect destinations** on
+the globe. Under **Origin**, type a city (for example `Genoa, Italy`), press
+**Search** or Enter, choose a result, then **Apply collection settings**.
+Coordinates stay editable; clearing both removes the origin. The selected label
+and coordinates are retained with collection settings (session-only in preview).
+
+Like Vessel, search uses [Photon/OpenStreetMap](https://github.com/komoot/photon).
+Only explicit searches contact the provider; typing does not send requests.
+The query text is sent, never observed IPs or application names. Results are
+limited to six, cached for the session (20 queries), and requests are separated
+by at least 1.1 seconds. Closing settings, changing the query or closing the last
+view cancels the search and ignores late replies. Saved origins need no lookup.
+Python 3 is required for this optional helper. A failed search leaves manual
+coordinate entry available. Public service availability is not guaranteed.
+
+Tests: `python3 -B -m unittest discover -s tests -p 'test_search_city.py'` and
+`python3 -B tests/check_origin_search.py` (real Quickshell, local fixture helper).
+QtTest also covers choosing a city, saving coordinates and focus in the editor.
 
 ## Generate real test connections
 
@@ -126,7 +147,7 @@ ln -s /usr/share/omarchy/shell "$outbound_imports/qs"
 ```
 
 For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
-`ui/`, `assets/`, `fixtures/`, `tools/update_geoip.py`) into an unused
+`ui/`, `assets/`, `fixtures/`, `tools/update_geoip.py`, `tools/search_city.py`) into an unused
 `~/.config/omarchy/plugins/io.github.simoz.outbound/`, rescan with
 `omarchy-shell shell rescanPlugins`, and enable with
 `omarchy plugin enable io.github.simoz.outbound`. This changes the bar and must

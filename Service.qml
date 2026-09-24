@@ -33,6 +33,18 @@ Item {
         source: "Collector.qml"
         onLoaded: item.service = root
     }
+    Loader {
+        id: originSearch
+        active: root.shell !== null || root.standalone
+        source: "OriginSearch.qml"
+        onLoaded: item.service = root
+    }
+    readonly property var citySearch: originSearch.item
+    readonly property bool searchingCity: citySearch ? citySearch.busy : false
+    readonly property var cityResults: citySearch ? citySearch.results : []
+    readonly property string cityError: citySearch ? citySearch.error : ""
+    function searchCity(query) { if (citySearch) citySearch.search(query); }
+    function clearCitySearch() { if (citySearch) citySearch.clear(); }
     function setView(token, open) {
         var next = views.filter(function(v) { return v.token !== token; });
         next.push({token:token, open:open}); views = next;
@@ -44,12 +56,13 @@ Item {
     readonly property string geoInstallError: collector ? collector.geoInstallError : ""
     readonly property bool needsGeoIp: !demoMode && (!snapshot || snapshot.database.state !== "ready")
     function installGeoIp() { if (collector) collector.installGeoIp(); }
-    function configure(backend, database, latitude, longitude, interval) {
+    function configure(backend, database, latitude, longitude, interval, originName) {
         var lat = latitude.trim(), lon = longitude.trim(), seconds = Number(interval);
         if ((backend && backend[0] !== "/") || (database && database[0] !== "/") || backend.length > 4096 || database.length > 4096 || /[\x00-\x1f]/.test(backend + database)) return "Use absolute file paths.";
         if ((lat === "") !== (lon === "") || (lat !== "" && (!isFinite(Number(lat)) || !isFinite(Number(lon)) || Math.abs(Number(lat)) > 90 || Math.abs(Number(lon)) > 180))) return "Enter both coordinates: latitude −90…90, longitude −180…180.";
         if (!Number.isInteger(seconds) || seconds < 1 || seconds > 60) return "Refresh interval must be 1–60 seconds.";
-        var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon)}, intervalSeconds:seconds});
+        var name = typeof originName === "string" ? originName.slice(0,240) : origin && origin.lat === Number(lat) && origin.lon === Number(lon) ? origin.name || "" : "";
+        var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds});
         if (shell && !shell.updateEntryInline("io.github.simoz.outbound", config)) return "Unable to save settings.";
         loadConfiguration(config); return "";
     }

@@ -9,6 +9,14 @@ C.Popup {
     objectName: "outboundSettings"
     required property var service
     property string validationError: ""
+    property string originName: ""
+    function openOrigin() { open(); Qt.callLater(function() { city.forceActiveFocus(); }); }
+    function chooseOrigin(place) {
+        originName=place.label; city.text=place.label;
+        latitude.text=String(place.lat); longitude.text=String(place.lon);
+        service.clearCitySearch();
+    }
+    onClosed: service.clearCitySearch()
     width: Math.min(480,parent.width-24)
     height: Math.min(parent.height-24,body.implicitHeight+32)
     x: Math.max(12,parent.width-width-12)
@@ -18,6 +26,8 @@ C.Popup {
     closePolicy: C.Popup.CloseOnEscape | C.Popup.CloseOnPressOutside
     Theme { id: theme }
     onAboutToShow: {
+        originName = service.origin ? service.origin.name || "" : "";
+        city.text = originName; service.clearCitySearch();
         backend.text = service.backendPath; database.text = service.databasePath;
         latitude.text = service.origin ? String(service.origin.lat) : "";
         longitude.text = service.origin ? String(service.origin.lon) : "";
@@ -70,18 +80,41 @@ C.Popup {
             Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
             ActionButton { Layout.fillWidth:true; visible:!root.service.demoMode; enabled:!root.service.geoInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
             Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.geoInstallError !== ""; text:root.service.geoInstallError }
-            Label { text:"Manual origin · leave both blank for markers only"; Layout.fillWidth:true; wrapMode:Text.Wrap }
+            Label { text:"Origin · search a city or enter coordinates"; Layout.fillWidth:true; wrapMode:Text.Wrap }
             RowLayout {
                 Layout.fillWidth:true
-                SearchField { id:latitude; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Latitude"; Accessible.name:"Origin latitude" }
-                SearchField { id:longitude; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Longitude"; Accessible.name:"Origin longitude" }
+                SearchField {
+                    id:city; objectName:"originCityField"; Layout.fillWidth:true
+                    placeholderText:"City, e.g. Genoa, Italy"; maximumLength:120
+                    Accessible.name:"Search origin city"
+                    onTextEdited:root.service.clearCitySearch()
+                    onAccepted:root.service.searchCity(text)
+                }
+                ActionButton { text:root.service.searchingCity ? "Searching…" : "Search"; enabled:!root.service.searchingCity && city.text.trim().length >= 2; onClicked:root.service.searchCity(city.text) }
+            }
+            Repeater {
+                model:root.service.cityResults
+                ActionButton {
+                    required property var modelData
+                    Layout.fillWidth:true
+                    text:modelData.label
+                    onClicked:root.chooseOrigin(modelData)
+                }
+            }
+            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.originName !== ""; text:"Selected: " + root.originName }
+            Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.cityError !== ""; text:root.service.cityError }
+            ActionButton { Layout.fillWidth:true; text:"City search: Photon / © OpenStreetMap contributors"; onClicked:Qt.openUrlExternally("https://photon.komoot.io/") }
+            RowLayout {
+                Layout.fillWidth:true
+                SearchField { id:latitude; objectName:"originLatitude"; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Latitude"; Accessible.name:"Origin latitude"; onTextEdited:root.originName="" }
+                SearchField { id:longitude; objectName:"originLongitude"; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Longitude"; Accessible.name:"Origin longitude"; onTextEdited:root.originName="" }
             }
             Label { text:"Refresh interval · seconds (1–60)" }
             SearchField { id:interval; Layout.fillWidth:true; Accessible.name:"Refresh interval in seconds" }
             Label { visible:root.validationError !== ""; Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.validationError }
             ActionButton {
-                Layout.fillWidth:true; text:"Apply collection settings"
-                onClicked:root.validationError=root.service.configure(backend.text.trim(),database.text.trim(),latitude.text,longitude.text,interval.text)
+                objectName:"applyCollectionSettings"; Layout.fillWidth:true; text:"Apply collection settings"
+                onClicked:root.validationError=root.service.configure(backend.text.trim(),database.text.trim(),latitude.text,longitude.text,interval.text,root.originName)
             }
             ActionButton { Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
             ActionButton { Layout.fillWidth:true; text:"Glow: " + (root.service.glow ? "on" : "off"); selected:root.service.glow; onClicked:root.service.glow=!root.service.glow }

@@ -70,6 +70,20 @@ Item {
             compare(dashboard.globe.layers[2].length, 0);
             service.liveRows = [];
         }
+        function test_city_choice_populates_and_saves_origin() {
+            var settings = findChild(dashboard, "outboundSettings");
+            settings.openOrigin();
+            tryCompare(settings, "opened", true);
+            tryVerify(function() { return findChild(settings, "originCityField").activeFocus; });
+            settings.chooseOrigin({label:"Test city, Italy", lat:44.4, lon:8.9});
+            compare(findChild(settings, "originLatitude").text, "44.4");
+            compare(findChild(settings, "originLongitude").text, "8.9");
+            findChild(settings, "applyCollectionSettings").clicked();
+            compare(service.origin.name, "Test city, Italy");
+            compare(service.origin.lat, 44.4);
+            settings.close();
+            service.configure("", "", "", "", "2");
+        }
         function test_connection_pulse_respects_motion_visibility_and_pause() {
             dashboard.globe.rotating = false;
             service.paused = false;
