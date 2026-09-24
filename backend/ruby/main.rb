@@ -1,5 +1,6 @@
 require "json"
 require_relative "protocol"
+require_relative "input"
 require_relative "engine"
 
 STDOUT.sync = true
@@ -30,7 +31,8 @@ begin
     exit 0
   end
   engine = Engine.new(geo)
-  while request = OutboundProtocol.read(STDIN)
+  while line = Input.read
+    request = OutboundProtocol.parse(line)
     if request["error"]
       puts JSON.generate({"version" => 1, "kind" => "error", "requestId" => nil,
                           "code" => request["error"], "fatal" => true})

@@ -1,10 +1,12 @@
 require "json"
 require_relative "../protocol"
+require_relative "../input"
 
 # Test driver only: accepted snapshots acknowledge parsing without collecting
 # or fabricating socket data. It is not an outbound-engine executable.
 STDOUT.sync = true
-while request = OutboundProtocol.read(STDIN)
+while line = Input.read
+  request = OutboundProtocol.parse(line)
   if request["error"]
     puts JSON.generate({"version" => 1, "kind" => "error", "requestId" => nil,
                         "code" => request["error"], "fatal" => true})

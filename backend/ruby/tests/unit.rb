@@ -48,6 +48,14 @@ engine.snapshot("truncated", [row], {}, truncated)
 e = engine.snapshot("e", [row], {}, coverage)
 check(d["connections"][0]["id"] != e["connections"][0]["id"], "truncation retires fallback")
 
+# Both wire paths must preserve quotes, backslashes, BMP and astral names.
+["Browser", "café 船🦀 \"quoted\" \\ path"].each do |name|
+  sample = engine.snapshot("encoding", [row], {7 => [{"pid" => 1, "startTimeTicks" => "8", "name" => name}]}, coverage)
+  wire = engine.encode(sample)
+  check(wire.ascii_only?, "ASCII wire for every process name")
+  check(JSON.parse(wire) == sample, "exact wire roundtrip")
+end
+
 many = []
 16.times { |i| many << {"pid" => i + 1, "startTimeTicks" => "8", "name" => "船🦀" * 64} }
 large = engine.snapshot("large", [row] * 4096, {7 => many}, coverage)

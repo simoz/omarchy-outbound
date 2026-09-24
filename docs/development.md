@@ -167,7 +167,7 @@ backend required to run the simulated UI.
 
 The default backend lives in `backend/ruby/`. Ruby handles protocol, ownership,
 address scope, identity, GeoIP cache, aggregation and output bounds. Small C
-adapters handle the Linux netlink ABI and libmaxminddb. The executable needs
+adapters handle the Linux netlink ABI, blocking bounded stdin reads and libmaxminddb. The executable needs
 neither a Ruby interpreter nor Rust. This is a development port, not a release
 or a claim of performance parity on every architecture.
 
@@ -221,6 +221,28 @@ system glibc, libm and libcrypt. Redistribution must include libmaxminddb's
 Apache-2.0 license/NOTICE and Spinel/runtime notices as applicable; no release
 bundle or universal glibc baseline is established here. See
 [Ruby validation](ruby-validation.md) for the tested environment and limits.
+
+## Compare backend resource use on ARM64
+
+Build both collectors first, then run the local benchmark:
+
+```bash
+python3 -B tools/benchmark_backends.py > /tmp/outbound-benchmark.json
+python3 -B tools/benchmark_backends.py --pairs 256 --samples 500 --idle-seconds 10 \
+  > /tmp/outbound-soak.json
+```
+
+The harness holds controlled IPv4/IPv6 loopback sockets, checks attribution and
+validates the UI protocol. It reports only timings, CPU ticks, memory, descriptor
+counts and aggregate counts; it does not save IPs, names or raw snapshots.
+It needs ordinary netlink/loopback access and Node for protocol validation.
+There are no external requests, GeoIP downloads, or desktop changes.
+
+`--ruby` and `--rust` select existing binaries; `--reference-ruby` optionally adds
+a previous Ruby binary to the same-load comparison. Samples are requested back
+to back rather than at the UI's normal cadence. The tool runs without a GeoIP
+database and does not measure QML rendering. See [recorded measurements and
+limitations](performance.md) before interpreting latency or memory differences.
 
 ## Build and try the Rust reference collector
 

@@ -93,15 +93,20 @@ class Engine
     loop do
       # The Qt reader decodes chunks independently; ASCII preserves all names.
       json = JSON.generate(snapshot)
-      wire = +""
-      json.codepoints.each do |code|
-        if code < 128
-          wire << code.chr
-        elsif code <= 65535
-          wire << ("\\u%04x" % code)
-        else
-          value = code - 65536
-          wire << ("\\u%04x\\u%04x" % [55296 + (value >> 10), 56320 + (value & 1023)])
+      # Most snapshots are already ASCII; keep their buffer instead of allocating
+      # a codepoint array and one temporary string for every wire character.
+      wire = json
+      unless json.ascii_only?
+        wire = +""
+        json.codepoints.each do |code|
+          if code < 128
+            wire << code.chr
+          elsif code <= 65535
+            wire << ("\\u%04x" % code)
+          else
+            value = code - 65536
+            wire << ("\\u%04x\\u%04x" % [55296 + (value >> 10), 56320 + (value & 1023)])
+          end
         end
       end
       return wire + "\n" if wire.bytesize < 2 * 1024 * 1024

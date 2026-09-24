@@ -30,6 +30,7 @@ fi
 cd "$build_dir"
 cc -std=c11 -D_GNU_SOURCE -O2 -Wall -Wextra -Werror -c "$source_dir/native/netlink.c" -o netlink.o
 cc -std=c11 -D_GNU_SOURCE -O2 -Wall -Wextra -Werror -I "$include_dir" -c "$source_dir/native/geo.c" -o geo.o
+cc -std=c11 -O2 -Wall -Wextra -Werror -c "$source_dir/native/input.c" -o input.o
 cp "$library_dir/libmaxminddb.a" maxmind.o
 "$compiler" "$source_dir/main.rb" -o "$binary.new" >&2
 mv "$binary.new" "$binary"

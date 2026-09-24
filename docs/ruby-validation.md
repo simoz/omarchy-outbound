@@ -16,7 +16,7 @@ back to Rust when Ruby compilation fails.
 
 Ruby handles bounded commands, process attribution, scope policy, session and
 socket identity, GeoIP caching, aggregates and ASCII output. C adapters handle
-netlink framing/syscalls and libmaxminddb. Netlink errors discard a whole family;
+netlink framing/syscalls, blocking bounded command input and libmaxminddb. Netlink errors discard a whole family;
 missing ownership and truncated scans remain visible. Process directory reads
 are streamed and identities checked before/after matching fds. Database files
 are copied into a sealed anonymous file before mapping, with size, tree, record
@@ -34,8 +34,9 @@ process. Wire JSON cannot contain raw NUL and uses explicit Unicode escaping.
   listeners, omission counts and bounded arbitrary input.
 - The 11 protocol tests run against a driver importing the production Ruby
   parser. Fatal responses can also be compared with the existing Rust binary.
-- Five backend test groups cover controlled IPv4/IPv6 sockets and comparison
-  with Rust, standalone database validation, EOF/shutdown/fatal errors, closed stdout, and the
+- Eight backend test groups cover controlled IPv4/IPv6 sockets and comparison
+  with Rust, standalone database validation, EOF/shutdown/fatal errors, closed stdout, fragmented/binary input, termination
+  while waiting for input, and the
   compiled Ruby unit/fixture suite. Ruby units cover scope boundaries, stable
   and retired fallback IDs, shared-owner aggregation, the 2 MiB ASCII wire
   bound, owner limits, PID reuse, Unicode, corrupt/immutable MMDBs, public-only
@@ -55,11 +56,19 @@ Loopback/netlink tests require execution outside the restricted command sandbox:
 inside it, socket creation is denied. This denial was not treated as successful
 collection. The remaining checks use local data and do not need external APIs.
 
+The command reader uses a fixed native buffer and a blocking `read`, avoiding
+1 ms readiness polling in the pinned Spinel cooperative runtime. The adapter
+returns at most 4,097 bytes through a hexadecimal FFI string so embedded NUL
+cannot truncate malformed input. Ruby retains command/schema validation. EOF,
+oversized input without EOF, split writes and termination during a partial
+command are checked explicitly.
+
 ## Limits
 
 These results do not validate the full port on x86_64, physical multiple
-monitors, an installed plugin, a distribution glibc baseline, or comparative
-resource usage on a busy machine. The earlier Spinel x86_64 feasibility probe
+monitors, an installed plugin, or a distribution glibc baseline. Controlled
+ARM64 resource measurements are recorded in [performance.md](performance.md);
+they do not establish busy-machine or GeoIP-loaded performance. The earlier Spinel x86_64 feasibility probe
 covered only isolated building blocks. The Ruby port has not inherited the
 Rust collector's earlier real-host certification.
 

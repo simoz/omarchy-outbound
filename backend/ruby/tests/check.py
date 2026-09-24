@@ -107,9 +107,41 @@ class BackendTest(unittest.TestCase):
         def stop():
             if process.poll() is None:
                 process.kill()
-            process.communicate(timeout=5)
+            if process.stdin and not process.stdin.closed:
+                process.stdin.close()
+            process.wait(timeout=5)
+            process.stdout.close()
+            process.stderr.close()
         self.addCleanup(stop)
         return process
+
+    def test_fragmented_input(self):
+        process = self.start(ENGINE)
+        process.stdin.write(b'{"version":1,"requestId":')
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            self.assertFalse(selector.select(.1), "partial input produced a response")
+        out, err = process.communicate(b'"stop","command":"shutdown"}\n', timeout=5)
+        self.assertEqual(process.returncode, 0)
+        self.assertEqual(err, b"")
+        self.assertEqual(json.loads(out)["kind"], "stopped")
+
+    def test_binary_frame_is_not_truncated_at_ffi_boundary(self):
+        for data in (b'{"version":1,"requestId":"a\x00b","command":"shutdown"}\n',
+                     b'{"version":1,"requestId":"stop","command":"shutdown"}\x00\n',
+                     b'{"version":1,"requestId":"\xff","command":"shutdown"}\n'):
+            result = self.run_engine(data=data)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(json.loads(result.stdout)["code"], "invalidCommand")
+
+    def test_termination_while_waiting_for_partial_input(self):
+        process = self.start(ENGINE)
+        process.stdin.write(b'{"version":')
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            self.assertFalse(selector.select(.1))
+        process.terminate()
+        self.assertEqual(process.wait(timeout=5), -15)
 
     def snapshot(self, process, request_id):
         process.stdin.write((json.dumps({"version": 1, "requestId": request_id, "command": "snapshot"}) + "\n").encode())
