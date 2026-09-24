@@ -8,6 +8,7 @@ Item {
     property var shell: null
     property var manifest: null
     property bool standalone: false
+    property var saveConfiguration: null
     property bool demoMode: false
     property bool paused: false
     property var views: []
@@ -64,6 +65,7 @@ Item {
         var name = typeof originName === "string" ? originName.slice(0,240) : origin && origin.lat === Number(lat) && origin.lon === Number(lon) ? origin.name || "" : "";
         var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds});
         if (shell && !shell.updateEntryInline("io.github.simoz.outbound", config)) return "Unable to save settings.";
+        if (!shell && saveConfiguration && !saveConfiguration(config)) return "Unable to save settings.";
         loadConfiguration(config); return "";
     }
     function loadConfiguration(config) {

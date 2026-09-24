@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import QtCore as Core
 import Quickshell
 import qs.Commons
 import ".." as Plugin
@@ -10,12 +11,32 @@ ShellRoot {
     id: root
     property var sampleIntervals: []
     property double previousTick: 0
+    Core.Settings {
+        id: preferences
+        location: "file://" + (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/outbound/preview.ini"
+    }
     Plugin.Service {
         id: service
         standalone: true
         demoMode: Quickshell.env("OUTBOUND_LIVE") !== "1"
         backendPath: Quickshell.env("OUTBOUND_BACKEND") || "__OUTBOUND_BACKEND__"
         databasePath: Quickshell.env("OUTBOUND_DATABASE") || ""
+        saveConfiguration: function(config) {
+            preferences.setValue("collection", JSON.stringify(config));
+            preferences.sync();
+            return true;
+        }
+        Component.onCompleted: {
+            var saved = preferences.value("collection", "");
+            var config = {backendPath:backendPath,databasePath:databasePath};
+            if (saved) {
+                try { config = Object.assign(config, JSON.parse(saved)); }
+                catch (e) { console.warn("Unable to read saved Outbound preview settings"); }
+            }
+            if (Quickshell.env("OUTBOUND_BACKEND")) config.backendPath = Quickshell.env("OUTBOUND_BACKEND");
+            if (Quickshell.env("OUTBOUND_DATABASE")) config.databasePath = Quickshell.env("OUTBOUND_DATABASE");
+            loadConfiguration(config);
+        }
     }
     Window {
         id: window

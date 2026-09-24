@@ -76,6 +76,8 @@ Item {
             tryCompare(settings, "opened", true);
             tryVerify(function() { return findChild(settings, "originCityField").activeFocus; });
             settings.chooseOrigin({label:"Test city, Italy", lat:44.4, lon:8.9});
+            compare(service.origin.name, "Test city, Italy");
+            compare(service.origin.lat, 44.4);
             compare(findChild(settings, "originLatitude").text, "44.4");
             compare(findChild(settings, "originLongitude").text, "8.9");
             findChild(settings, "applyCollectionSettings").clicked();

@@ -15,6 +15,9 @@ C.Popup {
         originName=place.label; city.text=place.label;
         latitude.text=String(place.lat); longitude.text=String(place.lon);
         service.clearCitySearch();
+        // Choosing a result commits only the origin; other editor drafts stay intact.
+        validationError = service.configure(service.backendPath, service.databasePath,
+            latitude.text, longitude.text, String(service.intervalSeconds), originName);
     }
     onClosed: service.clearCitySearch()
     width: Math.min(480,parent.width-24)

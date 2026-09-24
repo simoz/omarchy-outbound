@@ -33,9 +33,11 @@ absolute path in settings. Copy the runtime files as described below.
 
 Open settings with the gear, or click **Set origin to connect destinations** on
 the globe. Under **Origin**, type a city (for example `Genoa, Italy`), press
-**Search** or Enter, choose a result, then **Apply collection settings**.
-Coordinates stay editable; clearing both removes the origin. The selected label
-and coordinates are retained with collection settings (session-only in preview).
+**Search** or Enter, then choose a result to save the origin immediately.
+Coordinates stay editable; use **Apply collection settings** to save manual
+edits, or clear both coordinates and apply to remove the origin. The preview
+retains collection settings in `${XDG_CONFIG_HOME:-$HOME/.config}/outbound/preview.ini`
+across launches. `OUTBOUND_BACKEND` and `OUTBOUND_DATABASE` override saved paths.
 
 Like Vessel, search uses [Photon/OpenStreetMap](https://github.com/komoot/photon).
 Only explicit searches contact the provider; typing does not send requests.
@@ -49,6 +51,8 @@ coordinate entry available. Public service availability is not guaranteed.
 Tests: `python3 -B -m unittest discover -s tests -p 'test_search_city.py'` and
 `python3 -B tests/check_origin_search.py` (real Quickshell, local fixture helper).
 QtTest also covers choosing a city, saving coordinates and focus in the editor.
+Run `python3 -B tests/check_preview_settings.py` to verify persistence across
+fresh previews with an isolated configuration directory.
 
 ## Generate real test connections
 
