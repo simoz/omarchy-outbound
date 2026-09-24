@@ -115,14 +115,6 @@ Item {
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 12 }
         height: Math.max(32, theme.size * 2.6)
         Rectangle { y: -5; width: parent.width; height: 1; color: theme.border }
-        Label {
-            anchors { left: parent.left; right: copy.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
-            text: root.service.selected
-                ? root.service.selected.app + " · PID " + (root.service.selected.pid || "unavailable") + " · " + root.service.selected.ip
-                : "Select a socket for details · Direction unknown"
-            font.pixelSize: theme.size * 0.85
-            color: theme.subdued
-        }
         ActionButton {
             id: copy
             objectName: "copyIpButton"
