@@ -58,6 +58,18 @@ Item {
             keyClick(Qt.Key_Escape);
             compare(closeSpy.count, 1);
         }
+        function test_live_globe_requires_manual_origin_for_arcs() {
+            service.liveRows = [{id:"live-1", app:"Test", country:"IT", family:"IPv4", ip:"1.1.1.1"}];
+            service.origin = null;
+            service.demoMode = false;
+            compare(dashboard.globe.destinations.length, 1);
+            compare(dashboard.globe.layers[2].length, 0);
+            service.origin = {lon:0, lat:45};
+            verify(dashboard.globe.layers[2].length > 0);
+            service.origin = null;
+            compare(dashboard.globe.layers[2].length, 0);
+            service.liveRows = [];
+        }
         function test_globe_keyboard_country_and_motion() {
             dashboard.globe.forceActiveFocus();
             keyClick(Qt.Key_Right);

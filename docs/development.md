@@ -1,8 +1,29 @@
 # Development
 
-The repository contains a QML prototype with simulated data, Phase 0
-documentation, a standalone Rust collector and a Linux socket feasibility probe.
-The UI still uses simulated data; backend integration is Phase 3.
+The QML service runs the Rust collector through Quickshell. Python and Node are
+development tools, not runtime collection dependencies.
+
+## Run the live interface
+
+```bash
+./run-ui.sh
+# Optional existing country database:
+OUTBOUND_DATABASE=/absolute/path/to/country.mmdb ./run-ui.sh
+```
+
+The launcher builds the release collector and opens a fresh isolated preview.
+Open settings to change the backend/database paths, sample interval (1–60 s),
+manual origin or data source; pause/resume and retry are also available there.
+Preview settings last for that session. Installed collection settings are saved
+through the host's inline plugin configuration; display toggles are session-only.
+The bar alone samples every 10 s; an open panel/window uses the configured interval.
+Pausing, switching to simulated data or removing every view stops the process.
+No database or origin is fetched automatically.
+
+For an installed plugin, place the built binary at
+`${XDG_DATA_HOME:-$HOME/.local/share}/outbound/bin/outbound-engine`, or set its
+absolute path in settings. Copy the runtime files as described below.
+
 
 ## Preview the prototype
 
@@ -34,10 +55,10 @@ Optional environment controls: `OUTBOUND_WIDTH`, `OUTBOUND_HEIGHT`,
 geometry for 120 ticks, logs timing and an idle repaint count, then exits.
 Measurements from offscreen rendering are not GPU frame-rate guarantees.
 
-The prototype always displays a simulated-data banner. The fixture uses
+The default preview displays a simulated-data banner. The fixture uses
 documentation IP ranges with explicitly fictional country assignments; these
-must not become GeoIP expectations for the production collector. No download,
-socket collection, DNS lookup or external process is initiated by the plugin.
+must not become GeoIP expectations for the production collector. In simulated mode, the plugin starts no collector, download or DNS lookup.
+Set `OUTBOUND_LIVE=1` to use live data; `OUTBOUND_BACKEND` can override the binary.
 The surrounding Omarchy theme components retain their usual host behavior.
 
 Open the keyboard guide with F1 or the header’s ? button. Escape closes the
@@ -75,7 +96,7 @@ directory; `-I /usr/share/omarchy/shell` alone does not resolve that prefix:
 outbound_imports=$(mktemp -d /tmp/outbound-imports.XXXXXX)
 ln -s /usr/share/omarchy/shell "$outbound_imports/qs"
 /usr/lib/qt6/bin/qmllint -I "$outbound_imports" \
-  BarWidget.qml Panel.qml Service.qml ui/*.qml
+  BarWidget.qml Panel.qml Service.qml Collector.qml ui/*.qml
 ```
 
 For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
@@ -138,6 +159,19 @@ or an unavailable family is not a successful empty result. Assertions report
 only controlled test outcomes, not unrelated socket details. These native
 checks have been run on ARM64; x86_64 and the release glibc baseline remain
 unverified. See [backend-validation.md](backend-validation.md).
+
+## Verify live transport and lifecycle
+
+```bash
+python3 -B tests/check_transport.py
+```
+
+Build the release binary first. The test uses real Quickshell processes with
+local fixture helpers, then the real collector. It checks pause/resume, view
+registration, late responses, bounded retries, missing executables, malformed,
+incompatible and oversized output, and shell-crash cleanup. It does not install
+a plugin or print observed connection details. See
+[integration-validation.md](integration-validation.md) for real-host results.
 
 ## Reproduce the socket experiment
 

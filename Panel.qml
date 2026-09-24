@@ -46,7 +46,7 @@ UI.Panel {
     }
     Window {
         id: expandedWindow
-        title: "Outbound — simulated data"
+        title: root.service && root.service.demoMode ? "Outbound — simulated data" : "Outbound"
         width: 1160
         height: 920
         minimumWidth: 380
@@ -69,7 +69,7 @@ UI.Panel {
             onExpandRequested: root.changeSurface()
             onCopyRequested: function(text) {
                 Quickshell.clipboardText = text;
-                feedback = "Copied simulated IP: " + text;
+                feedback = "Copied IP";
             }
         }
     }

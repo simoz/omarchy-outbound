@@ -61,12 +61,13 @@ FocusScope {
                 id: header
                 Layout.fillWidth: true
                 Layout.minimumHeight: 36
-                spacing: 12
-                Label { text: "OUTBOUND"; color: theme.accent; font.pixelSize: theme.size * 1.75; font.letterSpacing: 3 }
+                spacing: root.wide ? 12 : 4
+                Label { text: "OUTBOUND"; color: theme.accent; font.pixelSize: theme.size * (root.wide ? 1.75 : 1.2); font.letterSpacing: root.wide ? 3 : 1 }
                 Label { visible: root.width > 920; text: "NETWORK OBSERVATORY"; color: theme.subdued; font.pixelSize: theme.size * 0.75; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
-                Label { text: "● DEMO"; color: theme.accent; font.pixelSize: theme.size * 0.8 }
+                Label { text: "● " + root.service.status; color: theme.accent; font.pixelSize: theme.size * 0.8 }
                 ActionButton {
+                    visible: root.wide
                     text: globe.rotating ? "Ⅱ" : "▷"
                     implicitWidth: 30
                     hint: root.service.reducedMotion ? "Rotation disabled by reduced motion" : globe.rotating ? "Pause rotation" : "Rotate globe"
@@ -74,7 +75,7 @@ FocusScope {
                     onClicked: globe.rotating = !globe.rotating
                 }
                 ActionButton { objectName: "keyboardHelpButton"; text: "?"; implicitWidth: 30; hint: "Keyboard guide (F1)"; onClicked: keyboardHelp.open() }
-                ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Display and simulated data settings"; onClicked: settings.open() }
+                ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
                 ActionButton { visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
                 ActionButton { text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
             }
@@ -149,9 +150,10 @@ FocusScope {
                         objectName: "outboundApplications"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        denominator: root.service.applicationFacetRows.length
                         groups: root.service.countryApplications
                         title: root.service.country ? root.service.countryName(root.service.country).toUpperCase() : "APPLICATIONS"
-                        subtitle: (root.service.country ? "APPLICATIONS IN SELECTED COUNTRY" : "ALL DESTINATIONS") + "  /  " + total + " SOCKETS"
+                        subtitle: (root.service.country ? "APPLICATIONS IN SELECTED COUNTRY" : "ALL DESTINATIONS") + "  /  " + denominator + " SOCKETS"
                         selectedValue: root.service.application
                         accent: root.service.country ? theme.text : theme.accent
                         labelFor: function(name) { return name; }
@@ -172,67 +174,17 @@ FocusScope {
                 columns: root.wide ? 2 : 1
                 Label {
                     Layout.fillWidth: true
-                    text: root.feedback || "LOCAL GEOMETRY / NATURAL EARTH · DIRECTION UNKNOWN"
+                    text: root.feedback || (root.service.demoMode ? "LOCAL GEOMETRY / NATURAL EARTH · DIRECTION UNKNOWN" : (root.service.error || root.service.geoStatus) + (root.service.snapshot ? " · " + new Date(root.service.snapshot.observedAtMs).toLocaleTimeString() : ""))
                     color: theme.subdued
                     font.pixelSize: theme.size * 0.7
                 }
                 Label {
-                    text: "SIMULATED DATA / " + root.service.rows.length + " SOCKETS / " + root.service.countryCount + " COUNTRIES"
+                    text: (root.service.demoMode ? "SIMULATED DATA / " : "OBSERVED / ") + root.service.rows.length + " SOCKETS / " + root.service.countryCount + " COUNTRIES"
                     color: theme.accent
                     font.pixelSize: theme.size * 0.7
                 }
             }
         }
     }
-    C.Popup {
-        id: settings
-        objectName: "outboundSettings"
-        x: Math.max(12, root.width - width - 12)
-        y: 58
-        width: Math.min(410, root.width - 24)
-        padding: 16
-        focus: true
-        closePolicy: C.Popup.CloseOnEscape | C.Popup.CloseOnPressOutside
-        background: Rectangle {
-            color: theme.background
-            Frame { anchors.fill: parent; emphasized: true }
-        }
-        contentItem: ColumnLayout {
-            spacing: 12
-            Label { text: "DISPLAY / PROTOTYPE"; color: theme.accent; font.letterSpacing: 1 }
-            Label {
-                Layout.fillWidth: true
-                wrapMode: Text.Wrap
-                text: "All IPs, applications and country assignments are simulated. No live traffic or GeoIP lookup."
-                font.pixelSize: theme.size * 0.9
-            }
-            Choice {
-                objectName: "scenarioChoice"
-                Layout.fillWidth: true
-                description: "Simulated data scenario"
-                model: ["Sample", "Empty", "Error", "Busy / long names"]
-                currentIndex: ["sample", "empty", "error", "busy"].indexOf(root.service.scenario)
-                onActivated: root.service.setScenario(["sample", "empty", "error", "busy"][currentIndex])
-            }
-            ActionButton {
-                Layout.fillWidth: true
-                text: "Reduced motion: " + (root.service.reducedMotion ? "on" : "off")
-                selected: root.service.reducedMotion
-                onClicked: root.service.reducedMotion = !root.service.reducedMotion
-            }
-            ActionButton {
-                Layout.fillWidth: true
-                text: "Glow: " + (root.service.glow ? "on" : "off")
-                selected: root.service.glow
-                onClicked: root.service.glow = !root.service.glow
-            }
-            ActionButton {
-                Layout.fillWidth: true
-                text: "Scanlines: " + (root.service.scanlines ? "on" : "off")
-                selected: root.service.scanlines
-                onClicked: root.service.scanlines = !root.service.scanlines
-            }
-            ActionButton { Layout.fillWidth: true; text: "Done"; onClicked: settings.close() }
-        }
-    }
+    Settings { id: settings; service: root.service }
 }

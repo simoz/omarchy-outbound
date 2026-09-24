@@ -233,7 +233,20 @@ impl Engine {
 impl Snapshot {
     pub fn encode_bounded(&mut self) -> serde_json::Result<Vec<u8>> {
         loop {
-            let mut bytes = serde_json::to_vec(self)?;
+            let json = serde_json::to_string(self)?;
+            // Quickshell's raw chunks are decoded independently. ASCII JSON keeps
+            // Unicode process names intact across arbitrary pipe boundaries.
+            let mut bytes = Vec::with_capacity(json.len());
+            for ch in json.chars() {
+                if ch.is_ascii() {
+                    bytes.push(ch as u8);
+                } else {
+                    let mut units = [0u16; 2];
+                    for unit in ch.encode_utf16(&mut units) {
+                        bytes.extend_from_slice(format!("\\u{unit:04x}").as_bytes());
+                    }
+                }
+            }
             if bytes.len() < MAX_LINE {
                 bytes.push(b'\n');
                 return Ok(bytes);
@@ -321,6 +334,12 @@ mod tests {
             engine.snapshot("a".into(), vec![socket(); MAX_SOCKETS], owners, coverage());
         let bytes = snapshot.encode_bounded().unwrap();
         assert!(bytes.len() <= MAX_LINE);
+        assert!(bytes.is_ascii());
+        let decoded: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            decoded["connections"][0]["owners"][0]["name"],
+            "🦀".repeat(128)
+        );
         assert!(snapshot.coverage.truncated);
         assert_eq!(
             snapshot.connections.len() + snapshot.coverage.omitted_rows,

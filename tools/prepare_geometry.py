@@ -54,6 +54,18 @@ for band in range(-59, 60):
         ):
             dots.append([round(lon, 3), round(lat, 3)])
 
+markers = []
+for feature in json.loads(source)["features"]:
+    properties = feature["properties"]
+    code = properties["ISO_A2_EH"]
+    # Natural Earth provides ISO exceptions for France/Norway and XK for Kosovo.
+    # Features without a two-letter code have no invented country mapping.
+    if len(code) == 2:
+        markers.append({"code": code, "name": properties["NAME_EN"],
+                        "lon": round(properties["LABEL_X"], 3),
+                        "lat": round(properties["LABEL_Y"], 3)})
+markers.sort(key=lambda item: item["code"])
+
 target = Path(__file__).resolve().parents[1] / "assets" / "Countries.js"
 target.parent.mkdir(exist_ok=True)
 target.write_text(
@@ -61,6 +73,7 @@ target.write_text(
     "// See assets/NOTICE.md for source and checksum.\nvar outlines = "
     + json.dumps(rings, separators=(",", ":"))
     + ";\n"
+    + "var markers = " + json.dumps(markers, separators=(",", ":")) + ";\n"
     + "var landDots = " + json.dumps(dots, separators=(",", ":")) + ";\n"
 )
 print(f"Wrote {len(rings)} outlines, {sum(map(len, rings))} points, {len(dots)} land dots")

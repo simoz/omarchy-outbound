@@ -15,6 +15,7 @@ FocusScope {
     property string renderer: "canvas"
     property bool rotating: false
     readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48)
+    readonly property var originPoint: service.globeOrigin
     readonly property var grid: Projection.graticule()
     // Keep other destinations visible when a country is selected; its arc and
     // marker carry the emphasis while the table shows the filtered sockets.
@@ -24,7 +25,7 @@ FocusScope {
     readonly property var layers: active ? [
         Projection.paths(grid, longitude, latitude, radius, width/2, height/2),
         Projection.paths(Geography.outlines, longitude, latitude, radius, width/2, height/2),
-        Projection.paths(destinations.map(function(c) { return Projection.arc([12.5, 41.9], [c.lon, c.lat]); }),
+        Projection.paths(originPoint ? destinations.map(function(c) { return Projection.arc([originPoint.lon, originPoint.lat], [c.lon, c.lat]); }) : [],
                          longitude, latitude, radius, width/2, height/2)
     ] : [[], [], []]
     property int paintCount: 0
@@ -107,9 +108,9 @@ FocusScope {
             if (root.renderer === "canvas") {
                 stroke(root.layers[0], theme.fade(theme.accent, 0.16), 0.6);
                 stroke(root.layers[1], theme.fade(theme.accent, 0.5), 0.7);
-                root.destinations.forEach(function(c) {
+                (root.originPoint ? root.destinations : []).forEach(function(c) {
                     var selected = !root.service.country || root.service.country === c.code;
-                    var arc = Projection.path(Projection.arc([12.5, 41.9], [c.lon, c.lat]), root.longitude, root.latitude, r, cx, cy);
+                    var arc = Projection.path(Projection.arc([root.originPoint.lon, root.originPoint.lat], [c.lon, c.lat]), root.longitude, root.latitude, r, cx, cy);
                     if (root.service.glow && selected) {
                         stroke(arc, theme.fade(theme.accent, 0.05), 9);
                         stroke(arc, theme.fade(theme.accent, 0.13), 4);
@@ -117,8 +118,8 @@ FocusScope {
                     stroke(arc, theme.fade(theme.accent, selected ? 0.95 : 0.2), selected ? 1.4 : 0.8);
                 });
             }
-            var origin = Projection.project(12.5, 41.9, root.longitude, root.latitude);
-            if (origin.z > 0) {
+            var origin = root.originPoint ? Projection.project(root.originPoint.lon, root.originPoint.lat, root.longitude, root.latitude) : null;
+            if (origin && origin.z > 0) {
                 var ox = cx + origin.x*r, oy = cy - origin.y*r;
                 if (root.service.glow) {
                     var glow = ctx.createRadialGradient(ox, oy, 0, ox, oy, 19);
@@ -243,7 +244,7 @@ FocusScope {
     }
     Label {
         anchors { right: parent.right; bottom: parent.bottom; margins: 12 }
-        text: "ILLUSTRATIVE ORIGIN / ROME\nENDPOINT ARCS · NOT ROUTES"
+        text: root.service.demoMode ? "ILLUSTRATIVE ORIGIN / ROME\nENDPOINT ARCS · NOT ROUTES" : root.originPoint ? "MANUAL ORIGIN / APPROXIMATE COUNTRIES\nENDPOINT ARCS · NOT ROUTES" : "ORIGIN NOT SET / DESTINATIONS ONLY"
         horizontalAlignment: Text.AlignRight
         font.pixelSize: theme.size * 0.65
         color: theme.subdued

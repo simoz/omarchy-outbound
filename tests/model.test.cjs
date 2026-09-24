@@ -60,3 +60,15 @@ test('demo arcs and geography produce finite paths in rotated views', () => {
         assert.ok(Math.abs(arc.at(-1)[0] - country.lon) < 1e-8);
     }
 });
+
+
+test('shared process names stay separate facets and prototype names are plain data', () => {
+    const rows = [
+        {id:'a', app:'Editor, __proto__', apps:['Editor', '__proto__'], country:'IT'},
+        {id:'b', app:'Editor', apps:['Editor'], country:'IT'}
+    ];
+    const groups = model.groups(rows, 'app');
+    assert.equal(groups.find(g => g.value === 'Editor').count, 2);
+    assert.equal(groups.find(g => g.value === '__proto__').count, 1);
+    assert.equal(model.filter(rows, '', '__proto__', '', '').length, 1);
+});

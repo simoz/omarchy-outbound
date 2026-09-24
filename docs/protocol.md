@@ -1,7 +1,7 @@
 # Collector protocol v1
 
-Implemented by `backend/`, Linux only. The QML service still uses simulated
-fixtures; wiring this protocol to the UI is Phase 3.
+Implemented by `backend/`, Linux only, and consumed by `Collector.qml` through
+`Protocol.js`.
 
 ## Invocation and framing
 
@@ -10,13 +10,15 @@ user. It performs no downloads, DNS queries, HTTP requests, packet capture,
 shell commands or privilege changes. Collection uses a kernel netlink socket;
 there is no network listener. Only the development test invokes `ss`.
 
-Stdin/stdout carry UTF-8 JSON objects, one per newline. Stdout has no banners or
+Stdin/stdout carry UTF-8 JSON objects, one per newline. Snapshot output escapes
+non-ASCII characters as JSON Unicode escapes (including surrogate pairs), so
+Qt string chunk boundaries cannot corrupt process names. Stdout has no banners or
 logs. Stderr errors contain neither process names nor IPs nor input contents.
 There is no autonomous sampling: the caller requests a snapshot at its chosen
 cadence and must keep draining stdout. EOF exits after any current bounded
 sample/write; `shutdown` exits after acknowledging. A closed output pipe exits
-cleanly. There is no worker process or detached thread. Host termination and
-backpressure/lifecycle handling will be tested during Phase 3 integration.
+cleanly. There is no worker process or detached thread. Host termination and lifecycle checks are recorded in
+[integration-validation.md](integration-validation.md).
 
 Commands have exactly these fields:
 
@@ -107,9 +109,17 @@ processes completely without returning a permission error. `namespace` is
 `truncated` marks that condition. Failed families may have additional unknown
 rows, so this is not a machine-wide missing-socket count. Output including
 newline is at most 2 MiB. If names/shared owners exceed that budget, the emitted
-row set is reduced and aggregates recomputed. Producer limits do not resolve
-the QML SplitParser unterminated-input limitation: consumer framing remains a
-Phase 3/4 release gate.
+row set is reduced and aggregates recomputed. The consumer uses `SplitParser` with an empty marker to receive raw chunks,
+then bounds its own accumulator before JSON parsing. It rejects non-ASCII wire
+output, excessive depth, invalid schemas/aggregates and stale request/session/
+sequence values. Only one request is outstanding, with a five-second watchdog.
+The application accumulator is bounded; Qt allocates each incoming chunk before
+JavaScript sees it. This is not a sandbox for arbitrary hostile executables.
+
+Transient exits retry after 1, 2, 4, 8 and 16 seconds. Invalid output or failure to
+start requires explicit retry or a path change. Cancellation closes stdin,
+ignores late output, and escalates to TERM/KILL after bounded grace periods.
+Replacement waits for the previous process to exit.
 
 ## GeoIP and address scope
 

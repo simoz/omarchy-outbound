@@ -9,6 +9,34 @@ Item {
         function init() {
             service.setScenario("sample");
         }
+        function test_view_demand_counts_all_monitors_and_preserves_pause() {
+            service.demoMode = false;
+            service.setView("monitor-a",false);
+            service.setView("monitor-b",true);
+            verify(service.demanded);
+            compare(service.openViews,1);
+            compare(service.pollInterval,2000);
+            service.removeView("monitor-b");
+            verify(service.demanded);
+            compare(service.pollInterval,10000);
+            service.paused = true;
+            verify(!service.demanded);
+            service.setView("monitor-a",true);
+            verify(!service.demanded);
+            service.removeView("monitor-a");
+            service.paused = false;
+            verify(!service.demanded);
+        }
+        function test_configuration_validates_origin_without_inventing_one() {
+            compare(service.configure("relative","","","","2"),"Use absolute file paths.");
+            verify(service.configure("/tmp/engine","","91","0","2") !== "");
+            verify(service.configure("/tmp/engine","","","0","2") !== "");
+            compare(service.configure("/tmp/engine","","41.9","12.5","3"),"");
+            compare(service.origin.lat,41.9);
+            compare(service.intervalSeconds,3);
+            compare(service.configure("","","","","2"),"");
+            compare(service.origin,null);
+        }
         function test_selection_tracks_combined_filters() {
             compare(service.rows.length, 24);
             compare(service.countryCount, 8);

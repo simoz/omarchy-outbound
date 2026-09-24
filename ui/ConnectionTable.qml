@@ -104,7 +104,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
-            text: root.service.scenario === "error" ? "Simulated collector error. Open settings and choose Sample to recover."
+            text: !root.service.demoMode ? (root.service.error || (root.service.snapshot ? "No matching observed connections." : "Waiting for a socket snapshot…")) : root.service.scenario === "error" ? "Simulated collector error. Open settings and choose Sample to recover."
                 : root.service.scenario === "empty" ? "No connections in this simulated snapshot."
                 : "No matches. Clear filters to see all simulated connections."
             color: theme.subdued

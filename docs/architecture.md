@@ -174,3 +174,18 @@ inventory is in `backend/DEPENDENCIES.md`.
 The reviewed `maxminddb` 0.32.0 declares ISC and offers a read-file mode without
 the optional mmap/unsafe decoding features; keep those features disabled.
 See its [manifest](https://github.com/oschwald/maxminddb-rust/blob/main/Cargo.toml).
+
+
+## Phase 3 implementation update
+
+The live service now owns one `Collector.qml` transport. Bar instances register
+view tokens; open panel/window views select the foreground interval, bar-only
+views use 10 seconds, and no registered views stops collection. Pause survives
+view transitions. The panel continues to reparent its existing scene.
+
+The framing gate above is addressed with the installed `SplitParser`'s empty
+marker mode, verified with real Quickshell chunk, oversized and unterminated
+output tests. `Protocol.js` bounds accumulated ASCII-escaped JSON before parsing
+and validates snapshot contents. Qt's initial chunk allocation is outside that
+JavaScript bound; no hostile-helper sandbox is claimed. See the implemented
+[protocol](protocol.md) and [integration checks](integration-validation.md).

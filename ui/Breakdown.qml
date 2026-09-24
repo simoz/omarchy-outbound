@@ -11,6 +11,7 @@ Item {
     property var labelFor: function(value) { return value; }
     property var badgeFor: function(value) { return value.slice(0, 2).toUpperCase(); }
     property bool flags: false
+    property int denominator: total
     property color accent: theme.accent
     readonly property int total: groups.reduce(function(n, group) { return n + group.count; }, 0)
     readonly property real rowHeight: Math.max(39, theme.size * 3)
@@ -48,7 +49,7 @@ Item {
             required property var modelData
             required property int index
             readonly property bool selected: root.selectedValue === modelData.value
-            readonly property int percentage: Math.round(100 * modelData.count / root.total)
+            readonly property int percentage: Math.round(100 * modelData.count / root.denominator)
             width: list.width - 8
             height: root.rowHeight
             focusPolicy: Qt.StrongFocus
@@ -99,7 +100,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         color: theme.fade(root.accent, 0.13)
                         Rectangle {
-                            width: parent.width * row.modelData.count / root.total
+                            width: parent.width * row.modelData.count / root.denominator
                             height: parent.height
                             color: root.accent
                         }

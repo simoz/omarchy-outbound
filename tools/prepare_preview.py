@@ -1,6 +1,7 @@
 """Assemble an isolated Quickshell config with the installed host UI modules."""
 
 from pathlib import Path
+import json
 import shutil
 import tempfile
 
@@ -18,5 +19,6 @@ for folder in ("Commons", "Ui"):
 preview = (repository / "tools" / "preview.qml").read_text()
 preview = preview.replace('import ".." as Plugin', 'import "plugin" as Plugin')
 preview = preview.replace('import "../ui" as Outbound', 'import "plugin/ui" as Outbound')
+preview = preview.replace('"__OUTBOUND_BACKEND__"', json.dumps(str(repository / "backend/target/release/outbound-engine")))
 (target / "shell.qml").write_text(preview)
 print(target)

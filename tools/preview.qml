@@ -10,13 +10,23 @@ ShellRoot {
     id: root
     property var sampleIntervals: []
     property double previousTick: 0
-    Plugin.Service { id: service }
+    Plugin.Service {
+        id: service
+        standalone: true
+        demoMode: Quickshell.env("OUTBOUND_LIVE") !== "1"
+        backendPath: Quickshell.env("OUTBOUND_BACKEND") || "__OUTBOUND_BACKEND__"
+        databasePath: Quickshell.env("OUTBOUND_DATABASE") || ""
+    }
     Window {
         id: window
         visible: true
+        onVisibleChanged: {
+            if (visible) service.setView(window,true); else service.removeView(window);
+        }
+        Component.onCompleted: service.setView(window,true)
         width: Number(Quickshell.env("OUTBOUND_WIDTH")) || 1440
         height: Number(Quickshell.env("OUTBOUND_HEIGHT")) || 940
-        title: "Outbound — isolated prototype preview"
+        title: service.demoMode ? "Outbound — simulated preview" : "Outbound — live preview"
         Outbound.Dashboard {
             id: dashboard
             anchors.fill: parent
@@ -40,7 +50,7 @@ ShellRoot {
                 Color.foreground = light ? "#202a30" : "#c8e5eb";
                 Color.accent = light ? "#23595b" : "#53d6e8";
             }
-            service.setScenario(Quickshell.env("OUTBOUND_SCENARIO") || "sample");
+            if (service.demoMode) service.setScenario(Quickshell.env("OUTBOUND_SCENARIO") || "sample");
             dashboard.globe.renderer = Quickshell.env("OUTBOUND_RENDERER") || "canvas";
             if (Quickshell.env("OUTBOUND_BENCHMARK")) {
                 previousTick = Date.now();

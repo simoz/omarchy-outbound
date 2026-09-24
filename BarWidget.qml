@@ -10,6 +10,17 @@ UI.BarWidget {
     readonly property bool popoutSwitchClosing: panel.popoutSwitchClosing
     implicitWidth: button.implicitWidth
     implicitHeight: button.implicitHeight
+    property var registeredService: null
+    function syncView() {
+        if (registeredService && registeredService !== service) registeredService.removeView(root);
+        registeredService = service;
+        if (service) { service.loadConfiguration(settings); service.setView(root,panel.opened); }
+    }
+    onServiceChanged: syncView()
+    onOpenedChanged: syncView()
+    onSettingsChanged: if (service) service.loadConfiguration(settings)
+    Component.onCompleted: syncView()
+    Component.onDestruction: if (registeredService) registeredService.removeView(root)
     function open() { panel.open(); }
     function close() { panel.close(); }
     function toggle() { panel.toggle(); }
@@ -20,12 +31,12 @@ UI.BarWidget {
         objectName: "outboundBarButton"
         anchors.fill: parent
         bar: root.bar
-        text: root.vertical ? "OB\n" + (root.service ? root.service.rows.length + "/" + root.service.countryCount : "—") + "\nDEMO"
-            : "◎ " + (root.service ? root.service.rows.length + " / " + root.service.countryCount : "—") + "  DEMO"
-        tooltipText: "Outbound — simulated sockets / countries. Open network globe."
+        text: root.vertical ? "OB\n" + (root.service ? root.service.rows.length + "/" + root.service.countryCount : "—") + "\n" + (root.service ? root.service.status : "IDLE")
+            : "◎ " + (root.service ? root.service.rows.length + " / " + root.service.countryCount : "—") + "  " + (root.service ? root.service.status : "IDLE")
+        tooltipText: ""
         activeFocusOnTab: true
         Accessible.role: Accessible.Button
-        Accessible.name: tooltipText
+        Accessible.name: "Outbound sockets and countries. Open network globe."
         Accessible.onPressAction: root.toggle()
         Keys.onSpacePressed: root.toggle()
         Keys.onReturnPressed: root.toggle()
