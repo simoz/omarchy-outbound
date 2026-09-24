@@ -29,6 +29,24 @@ For an installed plugin, place the built binary at
 absolute path in settings. Copy the runtime files as described below.
 
 
+## Generate real test connections
+
+With the live UI open, run this in another terminal:
+
+```bash
+./test-connections.sh
+# Shorter run or explicit targets:
+./test-connections.sh --duration 60 --host www.python.org --host www.kernel.org
+```
+
+The script opens up to five default HTTPS targets in parallel for two minutes.
+It sends HEAD requests, holds connections for up to 20 seconds, and reconnects
+at most once every five seconds after a connection ends. Ctrl+C closes test
+sockets. Filter the UI by `python3`; every connection belongs to this real test
+process. DNS/CDNs determine actual destination IPs and countries, so geographic
+spread is not guaranteed. GeoIP and a configured origin are needed for globe
+arcs. No fixture IPs or invented countries are injected into the UI.
+
 ## Preview the prototype
 
 On the supported Omarchy installation, assemble an isolated Quickshell config:
