@@ -165,11 +165,12 @@ cost of frequent large [Canvas](https://doc.qt.io/qt-6/qml-qtquick-canvas.html)
 updates. No continuous full-canvas animation or Qt Quick 3D dependency is
 approved by this feasibility result.
 
-Expected direct Rust dependencies: `libc` for Linux interfaces, `serde` and
-`serde_json` for the protocol, and `maxminddb` for the local MMDB reader. Prefer
+Phase 2 implements these direct Rust dependencies: `libc` for Linux interfaces,
+`serde` and `serde_json` for the protocol, and `maxminddb` for the local MMDB reader. Prefer
 the standard library for scheduling, threads, and file access; no HTTP client,
 async framework, packet capture, or Python runtime dependency is required.
-Pin exact versions and record transitive licenses in Cargo.lock in Phase 2.
+Exact versions are pinned in `backend/Cargo.lock`; the declared license
+inventory is in `backend/DEPENDENCIES.md`.
 The reviewed `maxminddb` 0.32.0 declares ISC and offers a read-file mode without
 the optional mmap/unsafe decoding features; keep those features disabled.
 See its [manifest](https://github.com/oschwald/maxminddb-rust/blob/main/Cargo.toml).

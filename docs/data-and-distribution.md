@@ -5,7 +5,10 @@ installer, or release artifact has been bundled or published yet.
 
 Phase 1 update: local Natural Earth outlines are now bundled for the prototype;
 see [asset provenance](../assets/NOTICE.md). No GeoIP database or Rust binary is
-included. The distribution workflow below remains a plan for the live backend.
+included. Phase 2 adds a standalone Rust collector and MMDB reader with
+synthetic local test data. Source build instructions are now available in
+[development.md](development.md); release installation and data distribution
+remain planned.
 
 ## Geographic data
 
@@ -83,8 +86,8 @@ The intended explicit install step places a verified executable at
 database at the corresponding `outbound/data/` directory. The QML service
 resolves that absolute path. Source installation will use
 `cargo build --release --locked` from `backend/` and copy the resulting binary
-to the same location. These are future paths/workflows, not runnable installation
-instructions for the current repository.
+to the same location. The source build now works; the install locations and
+verified release workflow remain planned and no installer is shipped.
 
 The installer must detect architecture, reject unsupported systems, verify
 artifacts before extraction and replace atomically. A checksum downloaded from

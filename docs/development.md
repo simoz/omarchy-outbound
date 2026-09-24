@@ -1,7 +1,8 @@
 # Development
 
 The repository contains a QML prototype with simulated data, Phase 0
-documentation, and a Linux socket feasibility probe. There is no Rust backend.
+documentation, a standalone Rust collector and a Linux socket feasibility probe.
+The UI still uses simulated data; backend integration is Phase 3.
 
 ## Preview the prototype
 
@@ -84,7 +85,45 @@ For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
 `omarchy plugin enable io.github.simoz.outbound`. This changes the bar and must
 be intentional. Do not overwrite an existing plugin. Summon/hide through the
 normal shell IPC, and disable the temporary plugin after testing. There is no
-backend to build for this phase.
+backend required to run the simulated UI.
+
+## Build and try the Rust collector
+
+From the repository root, on Linux with Rust/Cargo installed:
+
+```bash
+cargo build --manifest-path backend/Cargo.toml --release --locked
+printf '%s\n' '{"version":1,"requestId":"sample-1","command":"snapshot"}' | \
+  backend/target/release/outbound-engine
+```
+
+This prints one real socket snapshot as JSON, then exits on stdin EOF. It does
+not install anything or change the QML preview. Ownership is best-effort and
+may be partial; direction stays unknown. No country database is downloaded.
+To use an existing local country MMDB, append `--database /path/to/country.mmdb`.
+Missing GeoIP still yields connection rows. See [protocol.md](protocol.md).
+
+Run tests as a normal user, without extra capabilities:
+
+```bash
+cargo test --manifest-path backend/Cargo.toml --locked
+cargo clippy --manifest-path backend/Cargo.toml --all-targets --locked -- -D warnings
+cargo fmt --manifest-path backend/Cargo.toml --check
+```
+
+The ordinary suite uses local proc/MMDB fixtures and child-process protocol
+checks. The explicit Linux integration test opens controlled loopback sockets
+with IPv4 and IPv6, queries kernel netlink and compares them with `ss`:
+
+```bash
+cargo test --manifest-path backend/Cargo.toml --locked --test linux -- --ignored
+```
+
+It requires `ss`, permitted netlink access and both loopback families; failure
+or an unavailable family is not a successful empty result. Assertions report
+only controlled test outcomes, not unrelated socket details. These native
+checks have been run on ARM64; x86_64 and the release glibc baseline remain
+unverified. See [backend-validation.md](backend-validation.md).
 
 ## Reproduce the socket experiment
 

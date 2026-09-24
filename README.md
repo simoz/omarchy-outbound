@@ -2,14 +2,13 @@
 
 See where your apps connect.
 
-**In development — simulated data only.** Outbound is an Omarchy QML / Quickshell
+**In development — UI uses simulated data.** Outbound is an Omarchy QML / Quickshell
 prototype for exploring connections by application, remote IP, and country on
-an interactive globe. The Rust collector and local GeoIP integration are not
-implemented yet. Nothing in the prototype represents your actual traffic.
+an interactive globe. A standalone Rust collector and local MMDB reader are
+implemented, but are not yet connected to the UI. Nothing in the UI represents your actual traffic.
 
 The prototype provides a compact bar counter, a panel and an expanded window,
-coordinated country/application/IP-family filters, search, connection details
-and copy IP. It follows the Omarchy theme, supports keyboard navigation and
+coordinated country/application/IP-family filters, search and copy IP. It follows the Omarchy theme, supports keyboard navigation and
 reduced motion, and includes sample, empty, error and large-dataset scenarios.
 The same scene survives panel/window transitions.
 
@@ -23,6 +22,8 @@ integration are not yet verified.
 - [Data licensing and distribution plan](docs/data-and-distribution.md)
 - [Development and reproducible checks](docs/development.md)
 - [Prototype validation and renderer comparison](docs/prototype-validation.md)
+- [Collector protocol and bounds](docs/protocol.md)
+- [Backend validation](docs/backend-validation.md)
 - [Map attribution](assets/NOTICE.md)
 
 Connections are sampled, so short connections can be missed. Socket snapshots
@@ -35,4 +36,4 @@ For a local preview, follow the development guide. The runtime prototype needs
 Omarchy Quattro's built-in bar and Quickshell; Python and Node are development
 tools only. This working tree has not been published as an installable release.
 
-Next: review the prototype before implementing the Rust collector.
+Next: connect the standalone collector to the QML service (Phase 3).
