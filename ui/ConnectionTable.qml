@@ -81,7 +81,7 @@ Item {
             contentItem: Item {
                 id: rowCells
                 Repeater {
-                    model: [root.service.appBadge(row.modelData.app) + "  " + (row.selected ? "› " : "") + row.modelData.app,
+                    model: [root.service.appBadge(row.modelData.app) + "  " + row.modelData.app,
                             row.modelData.ip, root.service.countryName(row.modelData.country),
                             String(row.modelData.port), "● " + row.modelData.state, row.modelData.family]
                     Label {

@@ -86,7 +86,7 @@ Item {
                     x: 34
                     width: parent.width - 34 - numbers.width - 8
                     anchors.verticalCenter: parent.verticalCenter
-                    text: (row.selected ? "› " : "") + root.labelFor(row.modelData.value)
+                    text: root.labelFor(row.modelData.value)
                     font.bold: row.selected
                 }
                 Row {
