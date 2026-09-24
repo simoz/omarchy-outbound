@@ -92,6 +92,20 @@ backend required to run the simulated UI.
 From the repository root, on Linux with Rust/Cargo installed:
 
 ```bash
+./run-backend.sh
+```
+
+The launcher builds the release binary when needed, requests one snapshot and
+exits. It also works when invoked by absolute path from another directory.
+Arguments are forwarded to the collector, for example:
+
+```bash
+./run-backend.sh --database /path/to/country.mmdb
+```
+
+The equivalent manual commands are:
+
+```bash
 cargo build --manifest-path backend/Cargo.toml --release --locked
 printf '%s\n' '{"version":1,"requestId":"sample-1","command":"snapshot"}' | \
   backend/target/release/outbound-engine
