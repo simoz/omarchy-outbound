@@ -1,0 +1,41 @@
+# Dependencies and vendored packages
+/vendor/bundle/
+/node_modules/
+
+# Rails runtime and generated output
+/log/
+/tmp/
+/storage/
+/public/assets/
+/public/packs/
+/public/packs-test/
+/public/digital_objects/
+/public/sitemaps/
+/public/*.html
+/public/*.png
+/public/*.ico
+/public/robots.txt
+/public/dobs_origin/
+/public/storymap/
+/app/assets/images/
+/app/assets/fonts/storymap/
+
+
+# Local database dumps and import corpora
+/db/legacy_db/
+/db/dumps/
+/db/biblioteca/
+/db/sbn-nomi-*.tar.bz2
+
+# Historical migrations kept outside the current schema evolution path
+/db/migrate/x-old-migrate/
+
+# Local secrets and machine-specific files
+/config/database.yml
+/config/master.key
+/config/credentials.yml.enc
+.DS_Store
+.byebug_history
+
+# Agent-local instructions are useful to Codex, not to the project graph
+AGENTS.md

@@ -1,0 +1,10 @@
+.DS_Store
+.env
+*.local
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local agent instructions
+/AGENTS.md
+/PLAN.md
