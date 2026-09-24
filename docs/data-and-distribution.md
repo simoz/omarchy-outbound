@@ -3,6 +3,10 @@
 Phase 0 decisions, checked 2026-09-24. No geographic dataset, binary, dependency,
 installer, or release artifact has been bundled or published yet.
 
+Phase 1 update: local Natural Earth outlines are now bundled for the prototype;
+see [asset provenance](../assets/NOTICE.md). No GeoIP database or Rust binary is
+included. The distribution workflow below remains a plan for the live backend.
+
 ## Geographic data
 
 Choose **DB-IP IP to Country Lite, MMDB** for v1. The provider offers monthly

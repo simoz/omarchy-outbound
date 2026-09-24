@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.simoz.outbound",
+  "name": "Outbound",
+  "version": "0.1.0",
+  "author": "Simone Merli",
+  "license": "MIT",
+  "description": "A network globe prototype with clearly labelled simulated connections.",
+  "kinds": ["service", "bar-widget"],
+  "entryPoints": {"service": "Service.qml", "barWidget": "BarWidget.qml"},
+  "barWidget": {
+    "displayName": "Outbound",
+    "category": "Network",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

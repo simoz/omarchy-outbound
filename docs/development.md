@@ -1,7 +1,82 @@
 # Development
 
-The repository currently contains Phase 0 documentation and a Linux feasibility
-probe. There is no plugin manifest, QML prototype, or Rust backend yet.
+The repository contains a QML prototype with simulated data, Phase 0
+documentation, and a Linux socket feasibility probe. There is no Rust backend.
+
+## Preview the prototype
+
+On the supported Omarchy installation, assemble an isolated Quickshell config:
+
+```bash
+outbound_preview=$(python3 -B tools/prepare_preview.py)
+qs -p "$outbound_preview"
+```
+
+The helper copies the prototype and installed `Commons`/`Ui` modules to a new
+temporary directory. It does not install a plugin or change the desktop bar.
+Rebuild the preview after editing source files. This is a simulated host,
+although it uses actual Omarchy theme components.
+
+To capture only the prototype offscreen:
+
+```bash
+QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
+  OUTBOUND_THEME=light OUTBOUND_CAPTURE=/tmp/outbound-light.png \
+  qs -p "$outbound_preview"
+```
+
+Optional environment controls: `OUTBOUND_WIDTH`, `OUTBOUND_HEIGHT`,
+`OUTBOUND_SCENARIO` (`sample`, `empty`, `error`, `busy`), `OUTBOUND_RENDERER`
+(`canvas`, `shapes`), and `OUTBOUND_BENCHMARK=1`. The benchmark rotates the same
+geometry for 120 ticks, logs timing and an idle repaint count, then exits.
+Measurements from offscreen rendering are not GPU frame-rate guarantees.
+
+The prototype always displays a simulated-data banner. The fixture uses
+documentation IP ranges with explicitly fictional country assignments; these
+must not become GeoIP expectations for the production collector. No download,
+socket collection, DNS lookup or external process is initiated by the plugin.
+The surrounding Omarchy theme components retain their usual host behavior.
+
+Tab/Shift+Tab move through controls, Enter/Space activate buttons, and Escape
+closes the view. The focused globe accepts arrow keys and Home; search fields
+retain those keys for editing. Drag rotates the globe; choose a country in the
+list or on the globe to filter. Reduced motion is on initially. Scenarios and
+display toggles are session-only prototype state.
+
+## Prototype checks
+
+```bash
+node --test tests/*.test.cjs
+QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
+  /usr/lib/qt6/bin/qmltestrunner -input tests -import tests/stubs -o -,txt
+omarchy plugin validate .
+git diff --check
+```
+
+QtTest uses a minimal `qs.Commons` facade because Quickshell's modules are
+embedded in its executable and cannot be loaded by plain qmltestrunner. These
+tests cover real plugin controls and state with a simulated host. Theme
+bindings and panel/window transitions also need the real-host check described
+in [prototype-validation.md](prototype-validation.md).
+
+For lint, expose the installed shell under its `qs` import prefix in a temporary
+directory; `-I /usr/share/omarchy/shell` alone does not resolve that prefix:
+
+```bash
+outbound_imports=$(mktemp -d /tmp/outbound-imports.XXXXXX)
+ln -s /usr/share/omarchy/shell "$outbound_imports/qs"
+/usr/lib/qt6/bin/qmllint -I "$outbound_imports" \
+  BarWidget.qml Panel.qml Service.qml ui/*.qml
+```
+
+For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
+`ui/`, `assets/`, `fixtures/`) into an unused
+`~/.config/omarchy/plugins/io.github.simoz.outbound/`, rescan with
+`omarchy-shell shell rescanPlugins`, and enable with
+`omarchy plugin enable io.github.simoz.outbound`. This changes the bar and must
+be intentional. Do not overwrite an existing plugin. Summon/hide through the
+normal shell IPC, and disable the temporary plugin after testing. There is no
+backend to build for this phase.
 
 ## Reproduce the socket experiment
 
@@ -23,7 +98,7 @@ where local socket creation is forbidden and infer a kernel-wide limitation.
 The [recorded ARM64 results](feasibility.md) cover Linux collection only.
 Python is a development aid; the runtime collector will be Rust.
 
-## Checks for the current phase
+## Documentation and Python checks
 
 Review Markdown links and decisions against the cited sources, then run:
 
@@ -38,10 +113,9 @@ ruff check tools
 ruff format --check tools
 ```
 
-Do not run `omarchy plugin validate .` before real manifest entry points exist.
-There is no backend suite, prepared runtime, or renderer to invoke at this
-stage. Commands inherited from a different project's instructions are not
-applicable to this repository.
+No Python package preparation is necessary. The geometry helper accepts only
+the pinned local input documented in [the map notice](../assets/NOTICE.md).
+The other project's backend test and runtime-preparation commands do not apply.
 
 ## Later-phase validation
 
