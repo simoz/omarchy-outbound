@@ -11,6 +11,8 @@ Made with Natural Earth. The source data is in the public domain.
 `Countries.js` retains exterior polygon vertices rounded to three decimal
 places, omitting holes and properties. It is a low-resolution illustrative
 outline with de facto boundaries, not a political or navigational reference.
+It also includes 5,341 land dots sampled from those exterior rings at roughly
+1.5-degree spacing, adjusted by latitude.
 The conversion is offline and refuses an input with a different checksum.
 
 The prototype's country markers and IP-country assignments are explicitly

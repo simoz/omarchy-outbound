@@ -11,7 +11,7 @@ C.Button {
     padding: 8
     hoverEnabled: true
     focusPolicy: Qt.StrongFocus
-    Accessible.name: text
+    Accessible.name: hint
     C.ToolTip.visible: hovered && hint !== ""
     C.ToolTip.text: hint
     C.ToolTip.delay: 500

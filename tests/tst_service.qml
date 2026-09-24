@@ -10,7 +10,7 @@ Item {
             service.setScenario("sample");
         }
         function test_selection_tracks_combined_filters() {
-            compare(service.rows.length, 18);
+            compare(service.rows.length, 24);
             compare(service.countryCount, 8);
             service.selection = "demo-0";
             verify(service.selected !== null);
@@ -36,6 +36,16 @@ Item {
             compare(service.filtered.length, 0);
             service.setScenario("busy");
             compare(service.filtered.length, 240);
+        }
+        function test_country_application_drilldown_retains_facet_totals() {
+            service.chooseCountry("DE");
+            compare(service.filtered.length, 8);
+            compare(service.countryApplications.reduce(function(n, g) { return n + g.count; }, 0), 8);
+            service.chooseApplication("Browser");
+            compare(service.filtered.length, 2);
+            compare(service.countryApplications.reduce(function(n, g) { return n + g.count; }, 0), 8);
+            service.chooseApplication("Browser");
+            compare(service.filtered.length, 8);
         }
     }
 }

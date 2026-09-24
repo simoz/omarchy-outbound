@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic as C
 
@@ -20,6 +21,24 @@ C.ComboBox {
     palette.buttonText: theme.text
     palette.highlight: theme.text
     palette.highlightedText: theme.background
+    delegate: C.ItemDelegate {
+        id: option
+        required property int index
+        width: root.popup.width
+        text: root.textAt(index)
+        highlighted: root.highlightedIndex === index
+        hoverEnabled: root.hoverEnabled
+        contentItem: Label {
+            text: option.text
+            color: option.highlighted ? theme.background : theme.text
+            font.bold: root.currentIndex === option.index
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
+        background: Rectangle {
+            color: option.highlighted ? theme.text : theme.background
+        }
+    }
     indicator: Label {
         x: root.width - width - 8
         y: (root.height - height) / 2

@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -20,6 +21,39 @@ for feature in json.loads(source)["features"]:
         polygons = [polygons]
     for polygon in polygons:
         rings.append([[round(x, 3), round(y, 3)] for x, y in polygon[0]])
+
+
+def contains(lon, lat, ring):
+    inside = False
+    previous = ring[-1]
+    for current in ring:
+        x1, y1 = previous
+        x2, y2 = current
+        if (y1 > lat) != (y2 > lat) and lon < (x2 - x1) * (lat - y1) / (y2 - y1) + x1:
+            inside = not inside
+        previous = current
+    return inside
+
+
+# Precompute land stippling once, offline. Latitude-dependent longitude spacing
+# keeps dots approximately uniform on the sphere rather than crowding the poles.
+bounded = [
+    (min(x for x, _ in r), min(y for _, y in r),
+     max(x for x, _ in r), max(y for _, y in r), r)
+    for r in rings
+]
+dots = []
+for band in range(-59, 60):
+    lat = band * 1.5
+    step = 1.5 / max(0.1, math.cos(math.radians(lat)))
+    for column in range(math.ceil(360 / step)):
+        lon = -180 + column * step
+        if any(
+            x1 <= lon <= x2 and y1 <= lat <= y2 and contains(lon, lat, ring)
+            for x1, y1, x2, y2, ring in bounded
+        ):
+            dots.append([round(lon, 3), round(lat, 3)])
+
 target = Path(__file__).resolve().parents[1] / "assets" / "Countries.js"
 target.parent.mkdir(exist_ok=True)
 target.write_text(
@@ -27,5 +61,6 @@ target.write_text(
     "// See assets/NOTICE.md for source and checksum.\nvar outlines = "
     + json.dumps(rings, separators=(",", ":"))
     + ";\n"
+    + "var landDots = " + json.dumps(dots, separators=(",", ":")) + ";\n"
 )
-print(f"Wrote {len(rings)} outlines, {sum(map(len, rings))} points")
+print(f"Wrote {len(rings)} outlines, {sum(map(len, rings))} points, {len(dots)} land dots")

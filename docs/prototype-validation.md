@@ -24,10 +24,10 @@ this record does not validate a live network collector.
 | Check | Result and boundary |
 | --- | --- |
 | Node model/projection tests | Passed: combined filters, unknown/local rows, scenario totals, limb clipping and finite rotated geometry |
-| QtTest | 10 passes including setup/cleanup: service transitions, keyboard search/Escape, virtualized-list navigation, globe navigation, reduced motion/hidden state, theme reactivity and copy signal |
+| QtTest | 16 passes including setup/cleanup: service transitions, keyboard search/Escape, virtualized-list navigation, globe navigation, reduced motion/hidden state, theme reactivity, copy signal, country/application drilldown, desktop fit and dropdown contrast/keyboard selection in light and dark themes |
 | QML lint | Passed without warnings with the real shell `qs` import prefix |
 | Omarchy manifest validator | Passed |
-| Visual preview | Inspected dark and light at 1100 px, busy at 420 px; real Omarchy theme modules, simulated host |
+| Visual preview | Inspected revised dark and light layouts at 1440×940, busy at 420 px; real Omarchy theme modules, simulated host |
 | Real shell loading | Passed on the running Omarchy/Hyprland desktop with the built-in top bar |
 | Live panel → window → panel | Same scene identity retained, with query `Browser`, selected `demo-0` and longitude 33 preserved |
 | Live hide → summon | Filter and camera remained unchanged |
@@ -41,7 +41,10 @@ UI signal in QtTest, without replacing the user's clipboard.
 
 ## Renderer experiment
 
-Both paths use the same projected outline/grid/arc vertices. Natural Earth
+The following comparison records the initial outline prototype, before the
+visual revision added land stippling and glow.
+
+Both paths used the same projected outline/grid/arc vertices. Natural Earth
 contributes 288 exterior rings and 10,642 points. Measured at 1100×1100 in
 Quickshell offscreen on this ARM64 environment, requesting 120 rotation ticks
 at 16 ms intervals:
@@ -61,6 +64,12 @@ and stops when hidden or reduced motion is enabled.
 A final Canvas run (17.1 ms mean, 25 ms p95) recorded **zero** additional paints
 during a 350 ms idle window after allowing the last rotation frame to settle.
 
+The revised Canvas layout at 1440×940, including 5,341 precomputed land dots
+and glow, measured 24.3 ms mean and 35 ms p95 over 120 ticks. It also recorded
+zero additional paints during the settled 350 ms idle window. This run has
+a different layout and drawing workload from the initial comparison above.
+The revised Shapes path shares the decorative Canvas layer.
+
 ## Remaining checks and limits
 
 No x86_64, multi-monitor, alternate bar-edge, fractional display scaling or
@@ -71,5 +80,8 @@ theme and top bar. Empty/error recovery and copy dispatch were exercised in
 automated tests, not with a failing live collector.
 
 There is no persisted settings editor, GeoIP database or Rust process. The
-prototype must receive visual review before Phase 2. The earlier approved
-mockup was unavailable in the repository; styling follows the written plan.
+prototype must receive visual review before Phase 2. The revised layout follows
+the supplied graphical proposal, with a larger dotted globe, country/application
+percentage bars and compact connection columns. Colors follow the Omarchy theme.
+The real-shell transition checks above cover the initial prototype; this visual
+revision was checked with the isolated host and QtTest.

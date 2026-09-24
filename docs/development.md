@@ -41,7 +41,9 @@ Tab/Shift+Tab move through controls, Enter/Space activate buttons, and Escape
 closes the view. The focused globe accepts arrow keys and Home; search fields
 retain those keys for editing. Drag rotates the globe; choose a country in the
 list or on the globe to filter. Reduced motion is on initially. Scenarios and
-display toggles are session-only prototype state.
+display toggles are session-only prototype state, available from the header
+settings button. Selecting a country updates the application breakdown; selecting
+an application row filters the connections. The default preview is 1440×940.
 
 ## Prototype checks
 

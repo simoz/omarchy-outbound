@@ -14,14 +14,15 @@ ShellRoot {
     Window {
         id: window
         visible: true
-        width: Number(Quickshell.env("OUTBOUND_WIDTH")) || 1100
-        height: Number(Quickshell.env("OUTBOUND_HEIGHT")) || 1100
+        width: Number(Quickshell.env("OUTBOUND_WIDTH")) || 1440
+        height: Number(Quickshell.env("OUTBOUND_HEIGHT")) || 940
         title: "Outbound — isolated prototype preview"
         Outbound.Dashboard {
             id: dashboard
             anchors.fill: parent
             service: service
             expanded: true
+            surfaceSwitchAvailable: false
             onCloseRequested: Qt.quit()
             onCopyRequested: function(text) { feedback = "Preview copy request: " + text; }
         }
@@ -32,9 +33,9 @@ ShellRoot {
         onTriggered: {
             var light = Quickshell.env("OUTBOUND_THEME") === "light";
             Color.shellValues = {};
-            Color.background = light ? "#f5f2e8" : "#101519";
-            Color.foreground = light ? "#202a30" : "#d5dfdb";
-            Color.accent = light ? "#23595b" : "#83b6a6";
+            Color.background = light ? "#f5f2e8" : "#061017";
+            Color.foreground = light ? "#202a30" : "#c8e5eb";
+            Color.accent = light ? "#23595b" : "#53d6e8";
             service.setScenario(Quickshell.env("OUTBOUND_SCENARIO") || "sample");
             dashboard.globe.renderer = Quickshell.env("OUTBOUND_RENDERER") || "canvas";
             if (Quickshell.env("OUTBOUND_BENCHMARK")) {

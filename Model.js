@@ -24,3 +24,13 @@ function countryName(code, countries) {
 function selected(rows, id) {
     return rows.find(function(row) { return row.id === id; }) || null;
 }
+
+function countryBadge(code) {
+    if (code === "local") return "⌂";
+    if (code === "unknown" || !code) return "?";
+    return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1));
+}
+
+function appBadge(name) {
+    return {"Browser": "◎", "Code editor": "⌘", "Music": "♫", "Sync": "↻", "Terminal": ">_"}[name] || "◇";
+}

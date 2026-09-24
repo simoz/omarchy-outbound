@@ -15,7 +15,8 @@ function connections(scenario) {
     if (scenario === "empty" || scenario === "error") return [];
     var apps = ["Browser", "Code editor", "Music", "Sync", "Terminal"];
     var rows = [];
-    var count = scenario === "busy" ? 240 : 18;
+    var count = scenario === "busy" ? 240 : 24;
+    var sampleCountries = ["US", "DE", "GB", "JP", "BR", "ZA", "US", "DE", "AU", "IN", "US", "DE", "GB", "DE", "US", "DE", "unknown", "local", "DE", "US", "DE", "DE", "GB", "JP"];
     for (var i = 0; i < count; i++) {
         var ipv6 = i % 3 === 0;
         var country = countries[i % countries.length];
@@ -29,7 +30,7 @@ function connections(scenario) {
             ip: ipv6 ? "2001:db8::" + (i + 1).toString(16) : "203.0.113." + (i + 1),
             port: i % 5 === 0 ? 22 : 443,
             state: i % 7 === 0 ? "CLOSE_WAIT" : "ESTABLISHED",
-            country: i === 16 ? "unknown" : i === 17 ? "local" : country.code,
+            country: scenario === "busy" ? (i === 16 ? "unknown" : i === 17 ? "local" : country.code) : sampleCountries[i],
             direction: "Unknown"
         });
     }

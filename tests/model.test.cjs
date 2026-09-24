@@ -14,7 +14,7 @@ const projection = load('ui/Projection.js');
 
 test('filters combine without losing unknown and local rows', () => {
     const rows = demo.connections('sample');
-    assert.equal(rows.length, 18);
+    assert.equal(rows.length, 24);
     assert.equal(model.filter(rows, '', '', 'unknown', '').length, 1);
     assert.equal(model.filter(rows, '', '', 'local', '').length, 1);
     assert.equal(model.filter(rows, '2001:DB8', '', '', 'IPv4').length, 0);

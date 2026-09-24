@@ -1,45 +1,67 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic as C
-import QtQuick.Layouts
 
-Column {
+Item {
     id: root
     required property var service
     signal copyRequested(string text)
-    spacing: 8
-    Theme { id: theme }
-    Label {
-        width: parent.width
-        text: "03 / CONNECTIONS  ·  " + root.service.filtered.length + " SHOWN"
-        font.pixelSize: theme.size * 0.85
-        color: theme.subdued
+    readonly property bool narrow: width < 680
+    readonly property var proportions: [0.21, 0.27, 0.2, 0.07, 0.17, 0.08]
+    function columnX(index, available) {
+        var offset = 0;
+        for (var i = 0; i < index; i++) offset += proportions[i];
+        return offset * available;
     }
+    implicitHeight: narrow ? 308 : 230
+    Theme { id: theme }
+    Frame { anchors.fill: parent; emphasized: true }
     Label {
-        width: parent.width
-        text: "APPLICATION  /  REMOTE ENDPOINT  /  COUNTRY  /  TCP STATE"
-        font.pixelSize: theme.size * 0.7
-        color: theme.subdued
+        x: 14; y: 10
+        width: parent.width - 28
+        text: "CONNECTIONS  /  " + root.service.filtered.length + " SHOWN"
+        font.pixelSize: theme.size * 1.05
+        font.letterSpacing: 1.2
+        color: theme.accent
+    }
+    Item {
+        x: 14; y: 38; width: parent.width - 36; height: 23
+        visible: !root.narrow
+        Repeater {
+            model: ["APPLICATION", "REMOTE IP", "COUNTRY", "PORT", "TCP STATE", "FAMILY"]
+            Label {
+                required property string modelData
+                required property int index
+                x: root.columnX(index, parent.width)
+                width: root.proportions[index] * parent.width
+                text: modelData
+                color: theme.subdued
+                font.pixelSize: theme.size * 0.7
+            }
+        }
     }
     ListView {
         id: list
         objectName: "outboundConnections"
-        width: parent.width
-        height: root.service.filtered.length ? 215 : 72
+        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: details.top; leftMargin: 12; rightMargin: 8; topMargin: root.narrow ? 39 : 61; bottomMargin: 6 }
         model: root.service.filtered
         clip: true
-        spacing: 3
         boundsBehavior: Flickable.StopAtBounds
         C.ScrollBar.vertical: C.ScrollBar {}
         delegate: C.ItemDelegate {
             id: row
             required property var modelData
             required property int index
+            readonly property bool selected: root.service.selection === modelData.id
             objectName: "connection-" + modelData.id
-            width: list.width - 12
-            height: list.width < 640 ? 72 : 43
+            width: list.width - 8
+            height: root.narrow ? 66 : Math.max(38, theme.size * 2.9)
+            padding: 2
             focusPolicy: Qt.StrongFocus
-            Accessible.name: modelData.app + ", " + modelData.ip + ", " + root.service.countryName(modelData.country) + ", " + modelData.state
+            Accessible.name: modelData.app + ", " + modelData.ip + ", port " + modelData.port + ", " + root.service.countryName(modelData.country) + ", " + modelData.state
+            C.ToolTip.visible: hovered
+            C.ToolTip.text: Accessible.name
+            C.ToolTip.delay: 650
             onClicked: root.service.selection = modelData.id
             onActiveFocusChanged: if (activeFocus) {
                 list.currentIndex = index;
@@ -55,35 +77,27 @@ Column {
                 event.accepted = true;
             }
             background: Rectangle {
-                color: root.service.selection === row.modelData.id ? theme.fade(theme.text, 0.12) : row.hovered ? theme.wash : "transparent"
-                border.width: row.activeFocus ? 2 : 1
-                border.color: row.activeFocus || root.service.selection === row.modelData.id ? theme.text : theme.border
+                color: row.selected || row.hovered ? theme.fade(theme.accent, 0.08) : "transparent"
+                border.color: row.activeFocus || row.selected ? theme.accent : "transparent"
+                Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: theme.border }
             }
-            contentItem: GridLayout {
-                columns: list.width < 640 ? 2 : 4
-                columnSpacing: 12
-                Label {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 180
-                    text: (root.service.selection === row.modelData.id ? "● " : "") + row.modelData.app
-                    font.bold: root.service.selection === row.modelData.id
-                }
-                Label {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 240
-                    text: (row.modelData.family === "IPv6" ? "[" + row.modelData.ip + "]" : row.modelData.ip) + ":" + row.modelData.port
-                }
-                Label {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 135
-                    text: root.service.countryName(row.modelData.country)
-                    color: theme.subdued
-                }
-                Label {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 110
-                    text: row.modelData.state
-                    font.pixelSize: theme.size * 0.85
+            contentItem: Item {
+                id: rowCells
+                Repeater {
+                    model: [root.service.appBadge(row.modelData.app) + "  " + (row.selected ? "› " : "") + row.modelData.app,
+                            row.modelData.ip, root.service.countryName(row.modelData.country),
+                            String(row.modelData.port), "● " + row.modelData.state, row.modelData.family]
+                    Label {
+                        required property string modelData
+                        required property int index
+                        x: root.narrow ? (index % 2) * rowCells.width / 2 : root.columnX(index, rowCells.width)
+                        y: root.narrow ? Math.floor(index / 2) * 20 : (rowCells.height - height) / 2
+                        width: (root.narrow ? rowCells.width / 2 : root.proportions[index] * rowCells.width) - 10
+                        text: modelData
+                        font.bold: row.selected && index === 0
+                        font.pixelSize: index >= 3 ? theme.size * 0.84 : theme.size
+                        color: index === 4 ? theme.accent : theme.text
+                    }
                 }
             }
         }
@@ -93,35 +107,32 @@ Column {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
-            text: root.service.scenario === "error" ? "Simulated collector error. Choose Sample to recover."
+            text: root.service.scenario === "error" ? "Simulated collector error. Open settings and choose Sample to recover."
                 : root.service.scenario === "empty" ? "No connections in this simulated snapshot."
                 : "No matches. Clear filters to see all simulated connections."
+            color: theme.subdued
         }
     }
-    Rectangle {
-        width: parent.width
-        height: details.implicitHeight + 24
-        color: theme.wash
-        border.color: theme.border
-        Column {
-            id: details
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-            spacing: 8
-            Label {
-                width: parent.width
-                wrapMode: Text.WrapAnywhere
-                text: root.service.selected
-                    ? root.service.selected.app + " · PID " + (root.service.selected.pid || "unavailable")
-                      + "\n" + root.service.selected.ip + "  /  " + root.service.selected.family
-                      + "  /  Direction: unknown"
-                    : "Select a connection to inspect its application and copy its IP."
-            }
-            ActionButton {
-                objectName: "copyIpButton"
-                text: "Copy IP"
-                enabled: root.service.selected !== null
-                onClicked: root.copyRequested(root.service.selected.ip)
-            }
+    Item {
+        id: details
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 12 }
+        height: Math.max(32, theme.size * 2.6)
+        Rectangle { y: -5; width: parent.width; height: 1; color: theme.border }
+        Label {
+            anchors { left: parent.left; right: copy.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
+            text: root.service.selected
+                ? root.service.selected.app + " · PID " + (root.service.selected.pid || "unavailable") + " · " + root.service.selected.ip
+                : "Select a socket for details · Direction unknown"
+            font.pixelSize: theme.size * 0.85
+            color: theme.subdued
+        }
+        ActionButton {
+            id: copy
+            objectName: "copyIpButton"
+            anchors.right: parent.right
+            text: "Copy IP"
+            enabled: root.service.selected !== null
+            onClicked: root.copyRequested(root.service.selected.ip)
         }
     }
 }

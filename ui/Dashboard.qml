@@ -10,14 +10,15 @@ FocusScope {
     required property var service
     property bool active: true
     property bool expanded: false
+    property bool surfaceSwitchAvailable: true
     property alias globe: globe
     property alias searchField: search
     property string feedback: ""
+    readonly property bool wide: width >= 800
     signal expandRequested()
     signal closeRequested()
     signal copyRequested(string text)
     Theme { id: theme }
-    // Bubble only Escape; Tab and input/navigation keys retain their usual owner.
     Keys.onEscapePressed: function(event) { closeRequested(); event.accepted = true; }
     Connections {
         target: root.Window.window
@@ -30,192 +31,201 @@ FocusScope {
                 var position = item.mapToItem(scroll.contentItem, 0, 0);
                 if (position.y < scroll.contentY) scroll.contentY = Math.max(0, position.y - 12);
                 else if (position.y + item.height > scroll.contentY + scroll.height)
-                    scroll.contentY = Math.min(scroll.contentHeight - scroll.height, position.y + item.height - scroll.height + 12);
+                    scroll.contentY = Math.max(0, Math.min(scroll.contentHeight - scroll.height, position.y + item.height - scroll.height + 12));
             });
         }
     }
     Rectangle { anchors.fill: parent; color: theme.background }
+    Frame { anchors.fill: parent; anchors.margins: 1; emphasized: true }
     Flickable {
         id: scroll
+        objectName: "outboundPage"
         anchors.fill: parent
         contentWidth: width
-        contentHeight: content.implicitHeight + 32
+        contentHeight: content.implicitHeight + 24
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         C.ScrollBar.vertical: C.ScrollBar {}
         ColumnLayout {
             id: content
-            x: 16
-            y: 16
-            width: Math.max(160, scroll.width - 32)
-            spacing: 16
-            GridLayout {
-                Layout.fillWidth: true
-                columns: content.width < 560 ? 1 : 2
-                Column {
-                    Layout.fillWidth: true
-                    spacing: 4
-                    Label { text: "OUTBOUND"; font.pixelSize: theme.size * 2; font.letterSpacing: 5; font.bold: true }
-                    Label { text: "SEE WHERE YOUR APPS CONNECT"; font.pixelSize: theme.size * 0.75; color: theme.subdued }
-                }
-                RowLayout {
-                    ActionButton { text: root.expanded ? "Collapse" : "Expand"; onClicked: root.expandRequested() }
-                    ActionButton { text: "Close"; onClicked: root.closeRequested() }
-                }
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: banner.implicitHeight + 20
-                color: theme.wash
-                border.color: theme.text
-                Label {
-                    id: banner
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                    wrapMode: Text.Wrap
-                    text: "SIMULATED DATA / UI PROTOTYPE\nNo live connections are collected. IPs, applications and country assignments are examples."
-                    font.pixelSize: theme.size * 0.85
-                }
-            }
+            x: 12; y: 12
+            width: Math.max(200, scroll.width - 24)
+            spacing: 10
             RowLayout {
+                id: header
                 Layout.fillWidth: true
-                Repeater {
-                    model: [
-                        {value: root.service.rows.length, label: "SOCKETS"},
-                        {value: root.service.countryCount, label: "COUNTRIES"},
-                        {value: root.service.applications.length, label: "APPLICATIONS"}
-                    ]
-                    Column {
-                        required property var modelData
-                        Layout.fillWidth: true
-                        Label { text: String(parent.modelData.value).padStart(2, "0"); font.pixelSize: theme.size * 2.3 }
-                        Label { text: parent.modelData.label; font.pixelSize: theme.size * 0.75; color: theme.subdued }
-                    }
+                Layout.minimumHeight: 36
+                spacing: 12
+                Label { text: "OUTBOUND"; color: theme.accent; font.pixelSize: theme.size * 1.75; font.letterSpacing: 3 }
+                Label { visible: root.width > 920; text: "NETWORK OBSERVATORY"; color: theme.subdued; font.pixelSize: theme.size * 0.75; font.letterSpacing: 1 }
+                Item { Layout.fillWidth: true }
+                Label { text: "● DEMO"; color: theme.accent; font.pixelSize: theme.size * 0.8 }
+                ActionButton {
+                    text: globe.rotating ? "Ⅱ" : "▷"
+                    implicitWidth: 30
+                    hint: root.service.reducedMotion ? "Rotation disabled by reduced motion" : globe.rotating ? "Pause rotation" : "Rotate globe"
+                    enabled: !root.service.reducedMotion
+                    onClicked: globe.rotating = !globe.rotating
                 }
-            }
-            Flow {
-                Layout.fillWidth: true
-                Layout.preferredHeight: implicitHeight
-                spacing: 7
-                SearchField {
-                    id: search
-                    objectName: "connectionSearch"
-                    width: Math.min(240, content.width)
-                    placeholderText: "Search application, IP, state…"
-                    text: root.service.query
-                    onTextEdited: root.service.query = text
-                }
-                Choice {
-                    objectName: "applicationFilter"
-                    width: Math.min(205, content.width)
-                    description: "Application filter"
-                    model: ["All applications"].concat(root.service.applications.map(function(a) { return a.value; }))
-                    currentIndex: root.service.application ? model.indexOf(root.service.application) : 0
-                    onActivated: root.service.application = currentIndex === 0 ? "" : currentText
-                }
-                Choice {
-                    objectName: "familyFilter"
-                    width: 112
-                    description: "IP address family"
-                    model: ["All IPs", "IPv4", "IPv6"]
-                    currentIndex: root.service.family ? model.indexOf(root.service.family) : 0
-                    onActivated: root.service.family = currentIndex === 0 ? "" : currentText
-                }
-                ActionButton { text: "Clear filters"; onClicked: root.service.clearFilters() }
+                ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Display and simulated data settings"; onClicked: settings.open() }
+                ActionButton { visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
+                ActionButton { text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
             }
             GridLayout {
+                id: hero
                 Layout.fillWidth: true
-                columns: content.width >= 700 ? 2 : 1
-                columnSpacing: 16
-                rowSpacing: 12
-                ColumnLayout {
+                Layout.preferredHeight: root.wide
+                    ? Math.max(350, root.height - Math.max(36, header.implicitHeight) - table.implicitHeight - footer.implicitHeight - 54)
+                    : 900
+                columns: root.wide ? 2 : 1
+                columnSpacing: 10
+                rowSpacing: 10
+                Item {
+                    id: plot
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 620
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: root.wide ? content.width * 0.63 : content.width
+                    Layout.preferredHeight: root.wide ? 1 : 390
+                    Frame { anchors.fill: parent }
+                    Flow {
+                        id: filters
+                        x: 12; y: 12
+                        width: parent.width - 24
+                        spacing: 6
+                        Choice {
+                            objectName: "applicationFilter"
+                            width: Math.min(184, filters.width)
+                            description: "Application filter"
+                            model: ["All applications"].concat(root.service.applications.map(function(a) { return a.value; }))
+                            currentIndex: root.service.application ? model.indexOf(root.service.application) : 0
+                            onActivated: root.service.application = currentIndex === 0 ? "" : currentText
+                        }
+                        Choice {
+                            objectName: "familyFilter"
+                            width: 108
+                            description: "IP address family"
+                            model: ["All IPs", "IPv4", "IPv6"]
+                            currentIndex: root.service.family ? model.indexOf(root.service.family) : 0
+                            onActivated: root.service.family = currentIndex === 0 ? "" : currentText
+                        }
+                        SearchField {
+                            id: search
+                            objectName: "connectionSearch"
+                            width: Math.max(128, Math.min(190, filters.width - 346))
+                            placeholderText: "Search IP / app…"
+                            text: root.service.query
+                            onTextEdited: root.service.query = text
+                        }
+                        ActionButton { text: "↺"; implicitWidth: 30; hint: "Clear filters"; onClicked: root.service.clearFilters() }
+                    }
                     Globe {
                         id: globe
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: Math.min(430, Math.max(270, width * 0.73))
+                        anchors { top: filters.bottom; bottom: parent.bottom; left: parent.left; right: parent.right; topMargin: 3; bottomMargin: 6 }
                         service: root.service
                         active: root.active
                     }
-                    Flow {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        spacing: 6
-                        ActionButton { text: "Reset view"; onClicked: globe.reset() }
-                        ActionButton {
-                            text: globe.rotating && !root.service.reducedMotion ? "Pause rotation" : "Rotate"
-                            enabled: !root.service.reducedMotion
-                            onClicked: globe.rotating = !globe.rotating
-                        }
-                        Label { height: 32; verticalAlignment: Text.AlignVCenter; text: "Drag / arrow keys"; color: theme.subdued; font.pixelSize: theme.size * 0.8 }
+                    ActionButton {
+                        anchors { right: parent.right; bottom: parent.bottom; rightMargin: 12; bottomMargin: 47 }
+                        text: "⌖"; implicitWidth: 28; implicitHeight: 26
+                        hint: "Reset globe orientation (Home when globe is focused)"
+                        onClicked: globe.reset()
                     }
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 245
-                    Layout.alignment: Qt.AlignTop
-                    CountryList { Layout.fillWidth: true; service: root.service }
-                    Label {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: root.wide ? content.width * 0.37 : content.width
+                    Layout.preferredHeight: root.wide ? 1 : 500
+                    spacing: 10
+                    CountryList { Layout.fillWidth: true; Layout.fillHeight: true; service: root.service }
+                    Breakdown {
+                        objectName: "outboundApplications"
                         Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        text: "COUNTRY FILTER\n" + (root.service.country ? root.service.countryName(root.service.country) : "All destinations")
-                        color: theme.subdued
-                        font.pixelSize: theme.size * 0.85
-                    }
-                    Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        text: "APPLICATION\n" + (root.service.application || "All applications") + "\n" + root.service.filtered.length + " matching sockets"
-                    }
-                    Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        text: "Country markers are illustrative. Unknown and local destinations stay in the list."
-                        color: theme.subdued
-                        font.pixelSize: theme.size * 0.8
+                        Layout.fillHeight: true
+                        groups: root.service.countryApplications
+                        title: root.service.country ? root.service.countryName(root.service.country).toUpperCase() : "APPLICATIONS"
+                        subtitle: (root.service.country ? "APPLICATIONS IN SELECTED COUNTRY" : "ALL DESTINATIONS") + "  /  " + total + " SOCKETS"
+                        selectedValue: root.service.application
+                        accent: root.service.country ? theme.text : theme.accent
+                        labelFor: function(name) { return name; }
+                        badgeFor: function(name) { return root.service.appBadge(name); }
+                        onChosen: function(name) { root.service.chooseApplication(name); }
                     }
                 }
             }
             ConnectionTable {
+                id: table
                 Layout.fillWidth: true
                 service: root.service
                 onCopyRequested: function(text) { root.copyRequested(text); }
             }
+            GridLayout {
+                id: footer
+                Layout.fillWidth: true
+                columns: root.wide ? 2 : 1
+                Label {
+                    Layout.fillWidth: true
+                    text: root.feedback || "LOCAL GEOMETRY / NATURAL EARTH · DIRECTION UNKNOWN"
+                    color: theme.subdued
+                    font.pixelSize: theme.size * 0.7
+                }
+                Label {
+                    text: "SIMULATED DATA / " + root.service.rows.length + " SOCKETS / " + root.service.countryCount + " COUNTRIES"
+                    color: theme.accent
+                    font.pixelSize: theme.size * 0.7
+                }
+            }
+        }
+    }
+    C.Popup {
+        id: settings
+        objectName: "outboundSettings"
+        x: Math.max(12, root.width - width - 12)
+        y: 58
+        width: Math.min(410, root.width - 24)
+        padding: 16
+        focus: true
+        closePolicy: C.Popup.CloseOnEscape | C.Popup.CloseOnPressOutside
+        background: Rectangle {
+            color: theme.background
+            Frame { anchors.fill: parent; emphasized: true }
+        }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label { text: "DISPLAY / PROTOTYPE"; color: theme.accent; font.letterSpacing: 1 }
             Label {
                 Layout.fillWidth: true
-                visible: root.feedback !== ""
-                text: root.feedback
                 wrapMode: Text.Wrap
+                text: "All IPs, applications and country assignments are simulated. No live traffic or GeoIP lookup."
+                font.pixelSize: theme.size * 0.9
             }
-            Flow {
+            Choice {
+                objectName: "scenarioChoice"
                 Layout.fillWidth: true
-                Layout.preferredHeight: implicitHeight
-                spacing: 7
-                Choice {
-                    objectName: "scenarioChoice"
-                    description: "Simulated data scenario"
-                    model: ["Sample", "Empty", "Error", "Busy / long names"]
-                    currentIndex: ["sample", "empty", "error", "busy"].indexOf(root.service.scenario)
-                    onActivated: root.service.setScenario(["sample", "empty", "error", "busy"][currentIndex])
-                }
-                ActionButton {
-                    text: "Reduced motion: " + (root.service.reducedMotion ? "on" : "off")
-                    selected: root.service.reducedMotion
-                    onClicked: root.service.reducedMotion = !root.service.reducedMotion
-                }
-                ActionButton {
-                    text: "Scanlines: " + (root.service.scanlines ? "on" : "off")
-                    selected: root.service.scanlines
-                    onClicked: root.service.scanlines = !root.service.scanlines
-                }
+                description: "Simulated data scenario"
+                model: ["Sample", "Empty", "Error", "Busy / long names"]
+                currentIndex: ["sample", "empty", "error", "busy"].indexOf(root.service.scenario)
+                onActivated: root.service.setScenario(["sample", "empty", "error", "busy"][currentIndex])
             }
-            Label {
+            ActionButton {
                 Layout.fillWidth: true
-                wrapMode: Text.Wrap
-                text: "Made with Natural Earth · public-domain geometry\nDirection unknown · Endpoint arcs are not packet routes · No GeoIP lookup in this prototype"
-                color: theme.subdued
-                font.pixelSize: theme.size * 0.8
+                text: "Reduced motion: " + (root.service.reducedMotion ? "on" : "off")
+                selected: root.service.reducedMotion
+                onClicked: root.service.reducedMotion = !root.service.reducedMotion
             }
+            ActionButton {
+                Layout.fillWidth: true
+                text: "Glow: " + (root.service.glow ? "on" : "off")
+                selected: root.service.glow
+                onClicked: root.service.glow = !root.service.glow
+            }
+            ActionButton {
+                Layout.fillWidth: true
+                text: "Scanlines: " + (root.service.scanlines ? "on" : "off")
+                selected: root.service.scanlines
+                onClicked: root.service.scanlines = !root.service.scanlines
+            }
+            ActionButton { Layout.fillWidth: true; text: "Done"; onClicked: settings.close() }
         }
     }
 }

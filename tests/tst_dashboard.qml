@@ -34,14 +34,14 @@ Item {
             compare(service.query, "br");
             verify(service.filtered.length > 0);
             keyClick(Qt.Key_Left);
-            compare(dashboard.globe.longitude, 12);
+            compare(dashboard.globe.longitude, -15);
             keyClick(Qt.Key_Escape);
             compare(closeSpy.count, 1);
         }
         function test_globe_keyboard_country_and_motion() {
             dashboard.globe.forceActiveFocus();
             keyClick(Qt.Key_Right);
-            compare(dashboard.globe.longitude, 20);
+            compare(dashboard.globe.longitude, -7);
             service.chooseCountry("JP");
             compare(dashboard.globe.longitude, 138);
             compare(dashboard.globe.latitude, 37);
@@ -80,6 +80,21 @@ Item {
             for (var i = 0; i < 12; i++) keyClick(Qt.Key_Down);
             keyClick(Qt.Key_Space);
             compare(service.selection, "demo-12");
+        }
+        function test_overview_fits_desktop_and_settings_escape_stays_local() {
+            var page = findChild(dashboard, "outboundPage");
+            tryVerify(function() { return page.contentHeight <= page.height + 1; }, 1000, page.contentHeight + " exceeds " + page.height);
+            service.chooseCountry("DE");
+            compare(dashboard.globe.destinations.length, 8);
+            var applications = findChild(dashboard, "outboundApplications");
+            compare(applications.total, 8);
+            var button = findChild(dashboard, "displaySettingsButton");
+            button.clicked();
+            var popup = findChild(dashboard, "outboundSettings");
+            tryCompare(popup, "opened", true);
+            keyClick(Qt.Key_Escape);
+            tryCompare(popup, "opened", false);
+            compare(closeSpy.count, 0);
         }
     }
 }
