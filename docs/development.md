@@ -278,6 +278,10 @@ The other project's backend test and runtime-preparation commands do not apply.
 
 ## Later-phase validation
 
+An isolated [Ruby/Spinel feasibility probe](../experiments/spinel/README.md)
+checks Linux ARM64 and x86_64 backend building blocks without replacing the Rust
+collector or changing the plugin runtime.
+
 - Phase 1: manifest validation with `omarchy plugin validate .`; QML lint using
   `/usr/lib/qt6/bin/qmllint -I /usr/share/omarchy/shell` on the actual QML files;
   real host loading, all bar edges, multiple monitors, focus/Escape, small
