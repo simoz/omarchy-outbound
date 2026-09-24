@@ -16,6 +16,8 @@ The helper copies the prototype and installed `Commons`/`Ui` modules to a new
 temporary directory. It does not install a plugin or change the desktop bar.
 Rebuild the preview after editing source files. This is a simulated host,
 although it uses actual Omarchy theme components.
+The preview follows the installed Omarchy theme by default. Set
+`OUTBOUND_THEME=light` or `OUTBOUND_THEME=dark` only to force a visual-test palette.
 
 To capture only the prototype offscreen:
 

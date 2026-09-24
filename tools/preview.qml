@@ -31,11 +31,15 @@ ShellRoot {
         interval: 1000
         running: true
         onTriggered: {
-            var light = Quickshell.env("OUTBOUND_THEME") === "light";
-            Color.shellValues = {};
-            Color.background = light ? "#f5f2e8" : "#061017";
-            Color.foreground = light ? "#202a30" : "#c8e5eb";
-            Color.accent = light ? "#23595b" : "#53d6e8";
+            // Preserve the installed theme unless a visual-test palette is requested.
+            var palette = Quickshell.env("OUTBOUND_THEME");
+            if (palette === "light" || palette === "dark") {
+                var light = palette === "light";
+                Color.shellValues = {};
+                Color.background = light ? "#f5f2e8" : "#061017";
+                Color.foreground = light ? "#202a30" : "#c8e5eb";
+                Color.accent = light ? "#23595b" : "#53d6e8";
+            }
             service.setScenario(Quickshell.env("OUTBOUND_SCENARIO") || "sample");
             dashboard.globe.renderer = Quickshell.env("OUTBOUND_RENDERER") || "canvas";
             if (Quickshell.env("OUTBOUND_BENCHMARK")) {
