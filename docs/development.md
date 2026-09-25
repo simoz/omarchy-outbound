@@ -16,8 +16,11 @@ The launcher builds the Ruby collector when sources change and opens a fresh
 isolated preview. It prints the selected executable on stderr and overrides a
 saved preview backend path; `OUTBOUND_BACKEND` is still an explicit override.
 Use `OUTBOUND_ENGINE=rust ./run-ui.sh` to build and run the Rust reference.
-Open settings to change the backend/database paths, sample interval (1–60 s),
-manual origin or data source; pause/resume and retry are also available there.
+Settings groups controls into Collection, Globe, Appearance and About.
+Collection contains the data source, sample interval (1–60 s), pause/resume,
+retry and backend path. Globe contains the database and origin controls.
+The apply and close buttons stay visible while scrolling; switching sections
+preserves unsaved edits. Appearance controls apply immediately.
 Preview settings last for that session. Installed collection settings are saved
 through the host's inline plugin configuration; display toggles are session-only.
 The bar alone samples every 10 s; an open panel/window uses the configured interval.

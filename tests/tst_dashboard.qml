@@ -70,6 +70,26 @@ Item {
             compare(dashboard.globe.layers[2].length, 0);
             service.liveRows = [];
         }
+        function test_settings_sections_preserve_drafts_and_footer() {
+            var settings = findChild(dashboard, "outboundSettings");
+            settings.open();
+            tryCompare(settings, "opened", true);
+            settings.section = 0;
+            var backend = findChild(settings, "backendPathField");
+            backend.text = "/tmp/unsaved-backend";
+            var globeTab = findChild(settings, "settingsSections").itemAt(1);
+            globeTab.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            compare(settings.section, 1);
+            verify(findChild(settings, "originCityField").visible);
+            verify(!backend.visible);
+            var apply = findChild(settings, "applyCollectionSettings");
+            verify(apply.visible);
+            verify(apply.y + apply.height <= apply.parent.height);
+            settings.section = 0;
+            compare(backend.text, "/tmp/unsaved-backend");
+            settings.close();
+        }
         function test_city_choice_populates_and_saves_origin() {
             var settings = findChild(dashboard, "outboundSettings");
             settings.openOrigin();
