@@ -325,7 +325,6 @@ FocusScope {
                     enabled: !root.service.geoInstalling
                     onClicked: root.service.installGeoIp()
                 }
-                Label { width: parent.width; wrapMode: Text.Wrap; text: "IP Geolocation by DB-IP · CC BY 4.0"; font.pixelSize: theme.size * 0.8 }
             }
         }
     }

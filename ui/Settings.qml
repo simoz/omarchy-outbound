@@ -47,7 +47,7 @@ C.Popup {
             spacing: 4
             Repeater {
                 objectName: "settingsSections"
-                model: ["Collection", "Globe", "Appearance", "About"]
+                model: ["Collection", "Globe", "Appearance", "Credits"]
                 ActionButton {
                     required property int index
                     required property string modelData
@@ -130,7 +130,6 @@ C.Popup {
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Choosing a city saves the origin immediately. Use Done to save manual coordinates."; color:theme.subdued; font.pixelSize:theme.size*0.85 }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.originName !== ""; text:"Selected: " + root.originName }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.cityError !== ""; text:root.service.cityError }
-                    ActionButton { Layout.fillWidth:true; text:"City search: Photon / © OpenStreetMap contributors"; onClicked:Qt.openUrlExternally("https://photon.komoot.io/") }
                     RowLayout {
                         Layout.fillWidth:true
                         SearchField { id:latitude; objectName:"originLatitude"; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Latitude"; Accessible.name:"Origin latitude"; onTextEdited:root.originName="" }
@@ -151,13 +150,14 @@ C.Popup {
                     visible: root.section === 3
                     Layout.fillWidth: true
                     spacing: 10
-                    Label { text: "About the data"; font.bold: true }
+                    Label { text: "Credits"; font.bold: true }
                     Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Sources, licenses and limits of the connection view."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Country markers are approximate. Direction is unknown. Shared sockets can belong to several applications. No automatic GeoIP downloads."; font.pixelSize:theme.size*0.85 }
                     Label {
                         Layout.fillWidth:true; wrapMode:Text.Wrap; font.pixelSize:theme.size*0.85
                         text:"Made with Natural Earth. Managed database: IP Geolocation by DB-IP · CC BY 4.0. Outbound code: MIT."
                     }
+                    ActionButton { Layout.fillWidth:true; text:"City search: Photon / © OpenStreetMap contributors"; onClicked:Qt.openUrlExternally("https://photon.komoot.io/") }
                     ActionButton { Layout.fillWidth:true; text:"DB-IP data and attribution"; onClicked:Qt.openUrlExternally("https://db-ip.com/db/lite.php") }
                     ActionButton { Layout.fillWidth:true; text:"CC BY 4.0 license"; onClicked:Qt.openUrlExternally("https://creativecommons.org/licenses/by/4.0/") }
                 }

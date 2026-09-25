@@ -63,7 +63,7 @@ mismatched archives before decompression.
 The request downloads a complete country database; no observed connection IPs,
 process names or origin coordinates are sent to DB-IP. Country markers remain
 approximate. Unknown or unmapped countries remain visible in the connection
-list. Attribution is visible on the globe installation prompt and in settings,
+list. Attribution is available in Settings → Credits,
 and accompanies every installed version.
 
 ## Recorded verification — 2026-09-24

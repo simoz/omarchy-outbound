@@ -16,7 +16,8 @@ The launcher builds the Ruby collector when sources change and opens a fresh
 isolated preview. It prints the selected executable on stderr and overrides a
 saved preview backend path; `OUTBOUND_BACKEND` is still an explicit override.
 Use `OUTBOUND_ENGINE=rust ./run-ui.sh` to build and run the Rust reference.
-Settings groups controls into Collection, Globe, Appearance and About.
+Settings groups controls into Collection, Globe, Appearance and Credits.
+Credits collects map, city search and GeoIP attribution and license links.
 Collection contains the sample interval (1–60 s), pause/resume,
 retry and backend path. Globe contains the database and origin controls.
 Done saves collection settings and closes the editor; validation or save errors
