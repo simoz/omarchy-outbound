@@ -14,9 +14,11 @@ FocusScope {
     property real latitude: 18
     property string renderer: "canvas"
     property bool rotating: false
+    property real zoom: 1
+    readonly property real maximumZoom: 4
     signal originRequested()
     readonly property bool linksAnimating: active && visible && originPoint !== null && layers[2].length > 0 && !service.reducedMotion && !service.paused
-    readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48)
+    readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48) * zoom
     readonly property var originPoint: service.globeOrigin
     readonly property var grid: Projection.graticule()
     // Keep other destinations visible when a country is selected; its arc and
@@ -38,13 +40,14 @@ FocusScope {
     clip: true
     activeFocusOnTab: true
     Accessible.role: Accessible.Canvas
-    Accessible.name: "Destination globe. Drag or use arrow keys to rotate. Home resets the view."
+    Accessible.name: "Destination globe. Drag or use arrow keys to rotate. Scroll or use + and - to zoom. Home resets the view."
 
     function rotate(dx, dy) {
         longitude = Projection.wrap(longitude + dx);
         latitude = Math.max(-80, Math.min(80, latitude + dy));
     }
-    function reset() { longitude = -15; latitude = 18; }
+    function zoomBy(steps) { zoom = Math.max(1, Math.min(maximumZoom, zoom * Math.pow(1.2, steps))); }
+    function reset() { longitude = -15; latitude = 18; zoom = 1; }
     function focusCountry() {
         var country = service.countries.find(function(c) { return c.code === service.country; });
         if (country) { longitude = country.lon; latitude = country.lat; }
@@ -55,11 +58,16 @@ FocusScope {
         function onGlowChanged() { canvas.redraw(); }
     }
     Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Plus && (event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier)) {
+            zoomBy(1); event.accepted = true; return;
+        }
         if (event.modifiers !== Qt.NoModifier) return;
         if (event.key === Qt.Key_Left) rotate(-8, 0);
         else if (event.key === Qt.Key_Right) rotate(8, 0);
         else if (event.key === Qt.Key_Up) rotate(0, 8);
         else if (event.key === Qt.Key_Down) rotate(0, -8);
+        else if (event.key === Qt.Key_Minus) zoomBy(-1);
+        else if (event.key === Qt.Key_Equal) zoomBy(1);
         else if (event.key === Qt.Key_Home) reset();
         else return;
         event.accepted = true;
@@ -199,13 +207,19 @@ FocusScope {
     }
     MouseArea {
         anchors.fill: parent
+        objectName: "globeNavigation"
+        onWheel: function(wheel) {
+            if (wheel.modifiers !== Qt.NoModifier) { wheel.accepted = false; return; }
+            root.zoomBy(wheel.pixelDelta.y !== 0 ? wheel.pixelDelta.y / 80 : wheel.angleDelta.y / 120);
+            wheel.accepted = true;
+        }
         property real lastX: 0
         property real lastY: 0
         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
         onPressed: function(mouse) { lastX = mouse.x; lastY = mouse.y; root.forceActiveFocus(); }
         onPositionChanged: function(mouse) {
             if (!pressed) return;
-            root.rotate((lastX - mouse.x) * 0.45, (mouse.y - lastY) * 0.45);
+            root.rotate((lastX - mouse.x) * 0.45 / root.zoom, (mouse.y - lastY) * 0.45 / root.zoom);
             lastX = mouse.x; lastY = mouse.y;
         }
     }

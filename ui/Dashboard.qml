@@ -133,11 +133,34 @@ FocusScope {
                         service: root.service
                         active: root.active
                     }
-                    ActionButton {
+                    Row {
                         anchors { right: parent.right; bottom: parent.bottom; rightMargin: 12; bottomMargin: 47 }
-                        text: "⌖"; implicitWidth: 28; implicitHeight: 26
-                        hint: "Reset globe orientation (Home when globe is focused)"
-                        onClicked: globe.reset()
+                        spacing: 4
+                        ActionButton {
+                            objectName: "globeZoomOut"
+                            text: "−"; implicitWidth: 28; implicitHeight: 26
+                            hint: "Zoom out (− when globe is focused)"
+                            enabled: globe.zoom > 1
+                            C.ToolTip.visible: hovered
+                            C.ToolTip.text: hint
+                            onClicked: globe.zoomBy(-1)
+                        }
+                        ActionButton {
+                            objectName: "globeZoomIn"
+                            text: "+"; implicitWidth: 28; implicitHeight: 26
+                            hint: "Zoom in (+ when globe is focused)"
+                            enabled: globe.zoom < globe.maximumZoom
+                            C.ToolTip.visible: hovered
+                            C.ToolTip.text: hint
+                            onClicked: globe.zoomBy(1)
+                        }
+                        ActionButton {
+                            text: "⌖"; implicitWidth: 28; implicitHeight: 26
+                            hint: "Reset globe orientation and zoom (Home when globe is focused)"
+                            C.ToolTip.visible: hovered
+                            C.ToolTip.text: hint
+                            onClicked: globe.reset()
+                        }
                     }
                 }
                 ColumnLayout {

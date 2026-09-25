@@ -58,6 +58,40 @@ Item {
             keyClick(Qt.Key_Escape);
             compare(closeSpy.count, 1);
         }
+        function test_globe_zoom_inputs_limits_and_reset() {
+            var globe = dashboard.globe;
+            var baseRadius = globe.radius;
+            globe.forceActiveFocus();
+            keyClick(Qt.Key_Plus);
+            verify(globe.zoom > 1);
+            fuzzyCompare(globe.radius, baseRadius * globe.zoom, 0.001);
+            keyClick(Qt.Key_Minus);
+            fuzzyCompare(globe.zoom, 1, 0.001);
+            var navigation = findChild(globe, "globeNavigation");
+            mouseWheel(navigation, 20, 20, 0, 120);
+            verify(globe.zoom > 1);
+            globe.zoomBy(100);
+            compare(globe.zoom, globe.maximumZoom);
+            verify(!findChild(dashboard, "globeZoomIn").enabled);
+            globe.zoomBy(-100);
+            compare(globe.zoom, 1);
+            verify(!findChild(dashboard, "globeZoomOut").enabled);
+            findChild(dashboard, "globeZoomIn").clicked();
+            verify(globe.zoom > 1);
+            var savedZoom = globe.zoom;
+            dashboard.width = 760;
+            compare(globe.zoom, savedZoom);
+            dashboard.width = 1000;
+            globe.forceActiveFocus();
+            keyClick(Qt.Key_Home);
+            compare(globe.zoom, 1);
+            compare(globe.longitude, -15);
+            compare(globe.latitude, 18);
+            dashboard.searchField.forceActiveFocus();
+            keyClick(Qt.Key_Plus);
+            compare(globe.zoom, 1);
+            service.query = "";
+        }
         function test_live_globe_requires_manual_origin_for_arcs() {
             service.liveRows = [{id:"live-1", app:"Test", country:"IT", family:"IPv4", ip:"1.1.1.1"}];
             service.origin = null;

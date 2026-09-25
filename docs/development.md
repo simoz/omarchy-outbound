@@ -117,11 +117,12 @@ Set `OUTBOUND_LIVE=1` to use live data; `OUTBOUND_BACKEND` can override the bina
 The surrounding Omarchy theme components retain their usual host behavior.
 
 Open the keyboard guide with F1 or the header’s ? button. Escape closes the
-guide and restores focus; arrow keys and Page Up/Down scroll it. Hover tooltips
-are omitted; controls retain accessible names.
+guide and restores focus; arrow keys and Page Up/Down scroll it. Globe zoom and reset controls include hover tooltips and accessible names.
 
 Tab/Shift+Tab move through controls, Enter/Space activate buttons, and Escape
-closes the view. The focused globe accepts arrow keys and Home; search fields
+closes the view. The globe supports 1×–4× zoom with the mouse wheel, touchpad scrolling or
+the +/− buttons. When focused, +/− zoom, arrow keys rotate and Home resets
+both orientation and zoom; search fields
 retain those keys for editing. Drag rotates the globe; choose a country in the
 list or on the globe to filter. Connection arcs pulse by default; Reduced motion keeps them static. The pulse
 animates a cached vector overlay without repainting the globe Canvas, and stops
