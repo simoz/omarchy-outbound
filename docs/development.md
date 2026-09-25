@@ -170,7 +170,9 @@ normal shell IPC, and disable the temporary plugin after testing. A built collec
 
 ## Build the Ruby/Spinel collector
 
-The default backend lives in `backend/ruby/`. Ruby handles protocol, ownership,
+The default backend lives in `backend/ruby/`; see its
+[source guide](../backend/ruby/README.md) for the request flow and module responsibilities.
+Ruby handles protocol, ownership,
 address scope, identity, GeoIP cache, aggregation and output bounds. Small C
 adapters handle the Linux netlink ABI, blocking bounded stdin reads and libmaxminddb. The executable needs
 neither a Ruby interpreter nor Rust. This is a development port, not a release

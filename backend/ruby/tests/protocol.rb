@@ -8,8 +8,10 @@ STDOUT.sync = true
 while line = Input.read
   request = OutboundProtocol.parse(line)
   if request["error"]
-    puts JSON.generate({"version" => 1, "kind" => "error", "requestId" => nil,
-                        "code" => request["error"], "fatal" => true})
+    puts JSON.generate({
+      "version" => 1, "kind" => "error", "requestId" => nil,
+      "code" => request["error"], "fatal" => true
+    })
     exit 1
   end
   if request["command"] == "shutdown"

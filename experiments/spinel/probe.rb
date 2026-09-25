@@ -27,30 +27,32 @@ while line = STDIN.gets(4097)
     family = request["family"].to_i
     local_port = request["localPort"].to_i
     remote_port = request["remotePort"].to_i
-    pid = request["ownerPid"].to_i
-    if (family != 4 && family != 6) || local_port < 1 || local_port > 65535 || remote_port < 1 || remote_port > 65535 || pid < 1
+    owner_pid = request["ownerPid"].to_i
+    if (family != 4 && family != 6) || local_port < 1 || local_port > 65535 ||
+       remote_port < 1 || remote_port > 65535 || owner_pid < 1
       puts JSON.generate({"experiment" => "spinel", "error" => "invalidProbe"})
       next
     end
     inode = Native.outbound_loopback_inode(family, local_port, remote_port)
-    owned = false
+    owner_verified = false
     if inode > 0
-      Dir.children("/proc/#{pid}/fd").each do |fd|
+      Dir.children("/proc/#{owner_pid}/fd").each do |fd|
         begin
-          target = File.readlink("/proc/#{pid}/fd/#{fd}")
-          owned = true if target == "socket:[#{inode}]"
+          target = File.readlink("/proc/#{owner_pid}/fd/#{fd}")
+          owner_verified = true if target == "socket:[#{inode}]"
         rescue SystemCallError
           # The harness may close a descriptor between listing and readlink.
         end
       end
     end
+    # This documentation address belongs to the synthetic MMDB fixture only.
     country = Native.outbound_country(request["database"].to_s, "192.0.2.1")
     puts JSON.generate({
       "experiment" => "spinel",
       "requestId" => request["requestId"],
       "family" => family,
       "inode" => inode,
-      "ownerVerified" => owned,
+      "ownerVerified" => owner_verified,
       "syntheticCountry" => country
     })
   rescue JSON::ParserError

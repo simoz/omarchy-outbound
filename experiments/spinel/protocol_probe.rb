@@ -6,8 +6,10 @@ require_relative "protocol"
 STDOUT.sync = true
 while request = OutboundProtocol.read(STDIN)
   if request["error"]
-    puts JSON.generate({"version" => 1, "kind" => "error", "requestId" => nil,
-                        "code" => request["error"], "fatal" => true})
+    puts JSON.generate({
+      "version" => 1, "kind" => "error", "requestId" => nil,
+      "code" => request["error"], "fatal" => true
+    })
     exit 1
   end
   if request["command"] == "shutdown"

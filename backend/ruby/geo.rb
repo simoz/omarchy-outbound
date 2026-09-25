@@ -1,17 +1,27 @@
+# The native adapter retains an immutable database image for this process.
+# Ruby owns presentation metadata and a bounded cache, including negative hits.
 class Geo
+  OPEN_STATES = ["ready", "missing", "unreadable", "invalid"]
+  CACHE_CAPACITY = 8192
+  STALE_AFTER_SECONDS = 90 * 86400
+
   def initialize(path)
-    state = ["ready", "missing", "unreadable", "invalid"][Native.outbound_geo_open(path)]
-    epoch = state == "ready" ? Native.outbound_geo_epoch : nil
-    @status = {"state" => state, "buildEpochSeconds" => epoch,
-               "releaseMonth" => epoch.nil? ? nil : Time.at(epoch).utc.strftime("%Y-%m"),
-               "stale" => false, "lookupErrors" => 0}
+    state = OPEN_STATES[Native.outbound_geo_open(path)]
+    build_epoch = state == "ready" ? Native.outbound_geo_epoch : nil
+    @status = {
+      "state" => state,
+      "buildEpochSeconds" => build_epoch,
+      "releaseMonth" => build_epoch.nil? ? nil : Time.at(build_epoch).utc.strftime("%Y-%m"),
+      "stale" => false,
+      "lookupErrors" => 0
+    }
     @cache = {}
-    @order = []
+    @insertion_order = []
   end
 
   def status
-    epoch = @status["buildEpochSeconds"]
-    @status["stale"] = !epoch.nil? && Time.now.to_i - epoch > 90 * 86400
+    build_epoch = @status["buildEpochSeconds"]
+    @status["stale"] = !build_epoch.nil? && Time.now.to_i - build_epoch > STALE_AFTER_SECONDS
     @status
   end
 
@@ -19,15 +29,19 @@ class Geo
     Native.outbound_geo_is_country == 1
   end
 
-  def lookup(address, hex, scope)
+  def lookup(address, hex_address, scope)
     return nil unless scope == "public" && @status["state"] == "ready"
-    return @cache[hex] if @cache.key?(hex)
-    value = Native.outbound_geo_lookup(Scope.lookup_address(hex, address))
-    @status["lookupErrors"] += 1 if value == "!"
-    country = value == "!" || value == "" ? nil : value
-    @cache.delete(@order.shift) if @order.length == 8192
-    @order << hex
-    @cache[hex] = country
+    # key? distinguishes a cached miss (nil) from an address not yet queried.
+    return @cache[hex_address] if @cache.key?(hex_address)
+
+    result = Native.outbound_geo_lookup(Scope.lookup_address(hex_address, address))
+    @status["lookupErrors"] += 1 if result == "!"
+    country = result == "!" || result == "" ? nil : result
+
+    # FIFO eviction bounds memory without updating an LRU list on every hit.
+    @cache.delete(@insertion_order.shift) if @insertion_order.length == CACHE_CAPACITY
+    @insertion_order << hex_address
+    @cache[hex_address] = country
     country
   end
 end
