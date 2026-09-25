@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Ui as UI
+import "ui" as Outbound
 
 UI.BarWidget {
     id: root
@@ -31,9 +32,34 @@ UI.BarWidget {
         objectName: "outboundBarButton"
         anchors.fill: parent
         bar: root.bar
-        text: root.vertical ? "OB\n" + (root.service ? root.service.rows.length + "/" + root.service.countryCount : "—") + "\n" + (root.service ? root.service.status : "IDLE")
-            : "◎ " + (root.service ? root.service.rows.length + " / " + root.service.countryCount : "—") + "  " + (root.service ? root.service.status : "IDLE")
-        tooltipText: ""
+        labelVisible: false
+        hasVisualContent: true
+        fixedWidth: root.vertical ? barSize : barContents.implicitWidth + scaledHorizontalMargin * 2
+        fixedHeight: root.vertical ? barContents.implicitHeight + scaledVerticalPadding * 2 : barSize
+        tooltipText: "Outbound · " + (root.service ? root.service.status : "IDLE") + " · Open network globe"
+        Grid {
+            id: barContents
+            anchors.centerIn: parent
+            columns: root.vertical ? 1 : 2
+            spacing: 6
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
+            Outbound.GlobeIcon {
+                objectName: "outboundBarIcon"
+                ink: button.foreground
+            }
+            Text {
+                text: root.service ? root.service.rows.length + " / " + root.service.countryCount : "—"
+                color: button.foreground
+                font.family: button.fontFamily
+                font.pixelSize: button.fontSize
+            }
+        }
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            border.color: button.activeFocus ? button.foreground : "transparent"
+        }
         activeFocusOnTab: true
         Accessible.role: Accessible.Button
         Accessible.name: "Outbound sockets and countries. Open network globe."
