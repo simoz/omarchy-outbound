@@ -92,7 +92,7 @@ C.Popup {
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.service.coverageStatus; font.pixelSize:theme.size*0.85 }
                     Label { text:"Refresh interval · seconds (1–60)" }
                     SearchField { id:interval; Layout.fillWidth:true; Accessible.name:"Refresh interval in seconds" }
-                    Label { text:"Advanced · backend executable"; color: theme.subdued }
+                    Label { text:"Backend executable"; color: theme.subdued }
                     SearchField { id:backend; objectName:"backendPathField"; Layout.fillWidth:true; placeholderText:"Default: ~/.local/share/outbound/bin/outbound-engine"; Accessible.name:"Backend executable path" }
                 }
                 ColumnLayout {
