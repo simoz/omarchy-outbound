@@ -21,7 +21,6 @@ with tempfile.TemporaryDirectory(prefix="outbound-settings-test-") as config:
             }
             check(service.origin && service.origin.name === "Test origin" && service.origin.lat === 41.9 && service.origin.lon === 12.5, "origin restored");
             check(service.intervalSeconds === 3, "interval restored");
-            service.demoMode=false;
             service.liveRows=[{id:"test",app:"Test",country:"US",family:"IPv4",ip:"192.0.2.1"}];
             check(dashboard.globe.layers[2].length > 0, "restored origin produces arcs");
             check(dashboard.globe.linksAnimating, "arcs animate");
@@ -30,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix="outbound-settings-test-") as config:
             path.write_text(source)
             env = dict(os.environ, XDG_CONFIG_HOME=config, SETTINGS_MODE=mode,
                        QT_QPA_PLATFORM="offscreen", QT_QPA_PLATFORMTHEME="basic")
-            for name in ("OUTBOUND_BACKEND", "OUTBOUND_DATABASE", "OUTBOUND_LIVE"):
+            for name in ("OUTBOUND_BACKEND", "OUTBOUND_DATABASE"):
                 env.pop(name, None)
             result = subprocess.run(["qs", "-p", str(preview), "--no-color"], env=env, capture_output=True, text=True, timeout=10)
             output = result.stdout + result.stderr

@@ -237,7 +237,7 @@ FocusScope {
             width: 24; height: 24
             hoverEnabled: true
             focusPolicy: Qt.StrongFocus
-            Accessible.name: "Filter simulated destinations: " + modelData.name
+            Accessible.name: "Filter destinations: " + modelData.name
             onClicked: root.service.chooseCountry(modelData.code)
             background: Item {
                 Rectangle {
@@ -289,7 +289,7 @@ FocusScope {
     }
     Label {
         anchors { right: parent.right; bottom: parent.bottom; margins: 12 }
-        text: root.service.demoMode ? "ILLUSTRATIVE ORIGIN / ROME\nENDPOINT ARCS · NOT ROUTES" : root.originPoint ? "MANUAL ORIGIN / APPROXIMATE COUNTRIES\nENDPOINT ARCS · NOT ROUTES" : "ORIGIN NOT SET / DESTINATIONS ONLY"
+        text: root.originPoint ? "MANUAL ORIGIN / APPROXIMATE COUNTRIES\nENDPOINT ARCS · NOT ROUTES" : "ORIGIN NOT SET / DESTINATIONS ONLY"
         horizontalAlignment: Text.AlignRight
         font.pixelSize: theme.size * 0.65
         color: theme.subdued
@@ -298,7 +298,7 @@ FocusScope {
         objectName: "setGlobeOriginButton"
         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 44 }
         width: Math.min(330, parent.width - 24)
-        visible: !root.service.demoMode && !root.originPoint && !root.service.needsGeoIp
+        visible: !root.originPoint && !root.service.needsGeoIp
         text: "Set origin to connect destinations"
         onClicked: root.originRequested()
     }
@@ -306,7 +306,7 @@ FocusScope {
         anchors.centerIn: parent
         width: Math.min(360, parent.width - 40)
         spacing: 8
-        visible: !root.service.demoMode && (root.service.needsGeoIp || root.service.geoInstalling || root.service.geoInstallError !== "")
+        visible: (root.service.needsGeoIp || root.service.geoInstalling || root.service.geoInstallError !== "")
         Rectangle {
             width: parent.width
             height: installContent.implicitHeight + 24

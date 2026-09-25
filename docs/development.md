@@ -17,7 +17,7 @@ isolated preview. It prints the selected executable on stderr and overrides a
 saved preview backend path; `OUTBOUND_BACKEND` is still an explicit override.
 Use `OUTBOUND_ENGINE=rust ./run-ui.sh` to build and run the Rust reference.
 Settings groups controls into Collection, Globe, Appearance and About.
-Collection contains the data source, sample interval (1–60 s), pause/resume,
+Collection contains the sample interval (1–60 s), pause/resume,
 retry and backend path. Globe contains the database and origin controls.
 Done saves collection settings and closes the editor; validation or save errors
 keep it open. The button stays visible while scrolling, and switching sections
@@ -25,7 +25,7 @@ preserves unsaved edits. Appearance controls apply immediately.
 Preview settings last for that session. Installed collection settings are saved
 through the host's inline plugin configuration; display toggles are session-only.
 The bar alone samples every 10 s; an open panel/window uses the configured interval.
-Pausing, switching to simulated data or removing every view stops the process.
+Pausing or removing every view stops the process.
 No database or origin is fetched automatically. Click **Install GeoIP** on the
 globe, or **Install / update managed GeoIP** in settings, to download DB-IP Lite.
 The installer requires Python 3.11+, validates the database with the built
@@ -105,15 +105,14 @@ QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
 ```
 
 Optional environment controls: `OUTBOUND_WIDTH`, `OUTBOUND_HEIGHT`,
-`OUTBOUND_SCENARIO` (`sample`, `empty`, `error`, `busy`), `OUTBOUND_RENDERER`
+`OUTBOUND_RENDERER`
 (`canvas`, `shapes`), and `OUTBOUND_BENCHMARK=1`. The benchmark rotates the same
 geometry for 120 ticks, logs timing and an idle repaint count, then exits.
 Measurements from offscreen rendering are not GPU frame-rate guarantees.
 
-The default preview displays a simulated-data banner. The fixture uses
-documentation IP ranges with explicitly fictional country assignments; these
-must not become GeoIP expectations for the production collector. In simulated mode, the plugin starts no collector, download or DNS lookup.
-Set `OUTBOUND_LIVE=1` to use live data; `OUTBOUND_BACKEND` can override the binary.
+The preview uses real socket collection. `OUTBOUND_BACKEND` can override the
+binary. No demo mode or generated connections are available in the application.
+Synthetic fixtures remain test-only and are not copied into the preview.
 The surrounding Omarchy theme components retain their usual host behavior.
 
 Open the keyboard guide with F1 or the header’s ? button. Escape closes the
@@ -128,8 +127,7 @@ list or on the globe to filter. Connection arcs pulse by default; Reduced motion
 animates a cached vector overlay without repainting the globe Canvas, and stops
 when the view is hidden or collection is paused. Live arcs require a manual
 origin; use **Set origin to connect destinations** on the globe to open settings.
-No directional packet flow is inferred. Scenarios and
-display toggles are session-only prototype state, available from the header
+No directional packet flow is inferred. Display toggles are session-only prototype state, available from the header
 settings button. Selecting a country updates the application breakdown; selecting
 an application row filters the connections. The default preview is 1440×940.
 
@@ -160,13 +158,12 @@ ln -s /usr/share/omarchy/shell "$outbound_imports/qs"
 ```
 
 For a real host check, copy the runtime files (`manifest.json`, root QML/JS,
-`ui/`, `assets/`, `fixtures/`, `tools/update_geoip.py`, `tools/search_city.py`) into an unused
+`ui/`, `assets/`, `tools/update_geoip.py`, `tools/search_city.py`) into an unused
 `~/.config/omarchy/plugins/io.github.simoz.outbound/`, rescan with
 `omarchy-shell shell rescanPlugins`, and enable with
 `omarchy plugin enable io.github.simoz.outbound`. This changes the bar and must
 be intentional. Do not overwrite an existing plugin. Summon/hide through the
-normal shell IPC, and disable the temporary plugin after testing. There is no
-backend required to run the simulated UI.
+normal shell IPC, and disable the temporary plugin after testing. A built collector is required to display connections.
 
 ## Build the Ruby/Spinel collector
 

@@ -1,16 +1,19 @@
 import QtQuick
 import QtTest
 import ".." as Plugin
+import "../fixtures/Demo.js" as Fixture
 
 Item {
     Plugin.Service { id: service }
     TestCase {
         name: "OutboundService"
         function init() {
-            service.setScenario("sample");
+            service.clearFilters();
+            service.selection = "";
+            service.liveRows = Fixture.connections("sample");
+            service.origin = {lon:12.5, lat:41.9};
         }
         function test_view_demand_counts_all_monitors_and_preserves_pause() {
-            service.demoMode = false;
             service.setView("monitor-a",false);
             service.setView("monitor-b",true);
             verify(service.demanded);
@@ -51,19 +54,12 @@ Item {
             service.chooseCountry("unknown");
             compare(service.country, "");
         }
-        function test_scenario_resets_stale_filters_and_selection() {
-            service.query = "no match";
-            service.application = "Browser";
+        function test_empty_snapshot_clears_selection_without_inventing_rows() {
             service.selection = "demo-0";
-            service.setScenario("empty");
-            compare(service.query, "");
-            compare(service.application, "");
+            service.liveRows = [];
+            compare(service.rows.length, 0);
             compare(service.filtered.length, 0);
             compare(service.selection, "");
-            service.setScenario("error");
-            compare(service.filtered.length, 0);
-            service.setScenario("busy");
-            compare(service.filtered.length, 240);
         }
         function test_country_application_drilldown_retains_facet_totals() {
             service.chooseCountry("DE");

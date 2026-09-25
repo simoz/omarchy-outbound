@@ -1,5 +1,4 @@
 import QtQuick
-import "fixtures/Demo.js" as Demo
 import "Model.js" as Model
 import "assets/Countries.js" as Geography
 
@@ -9,7 +8,6 @@ Item {
     property var manifest: null
     property bool standalone: false
     property var saveConfiguration: null
-    property bool demoMode: false
     property bool paused: false
     property var views: []
     property string backendPath: ""
@@ -22,11 +20,11 @@ Item {
     property string phase: "idle"
     property string error: ""
     readonly property int openViews: views.filter(function(v) { return v.open; }).length
-    readonly property bool demanded: views.length > 0 && !demoMode && !paused
+    readonly property bool demanded: views.length > 0 && !paused
     readonly property int pollInterval: openViews > 0 ? intervalSeconds * 1000 : 10000
-    readonly property string status: demoMode ? "DEMO" : paused ? "PAUSED" : !views.length ? "IDLE" : phase.toUpperCase()
-    readonly property var globeOrigin: demoMode ? {lon:12.5, lat:41.9} : origin
-    readonly property string geoStatus: demoMode ? "Simulated countries" : !snapshot ? "GeoIP not sampled" : snapshot.database.state !== "ready" ? "GeoIP " + snapshot.database.state : "GeoIP " + snapshot.database.releaseMonth + (snapshot.database.stale ? " · outdated" : "") + (snapshot.database.lookupErrors ? " · lookup errors" : "")
+    readonly property string status: paused ? "PAUSED" : !views.length ? "IDLE" : phase.toUpperCase()
+    readonly property var globeOrigin: origin
+    readonly property string geoStatus: !snapshot ? "GeoIP not sampled" : snapshot.database.state !== "ready" ? "GeoIP " + snapshot.database.state : "GeoIP " + snapshot.database.releaseMonth + (snapshot.database.stale ? " · outdated" : "") + (snapshot.database.lookupErrors ? " · lookup errors" : "")
     readonly property string coverageStatus: !snapshot ? "No snapshot" : "IPv4: " + (snapshot.coverage.ipv4 || "ok") + " · IPv6: " + (snapshot.coverage.ipv6 || "ok") + " · Unknown owners: " + snapshot.aggregates.unknownOwners + " · Denied: " + snapshot.coverage.processes.denied + " · Races: " + snapshot.coverage.processes.races + " · Errors: " + snapshot.coverage.processes.errors + " · Omitted sockets: " + snapshot.coverage.omittedRows + " · Omitted owners: " + snapshot.coverage.processes.ownersOmitted + (snapshot.coverage.processes.timedOut ? " · Process scan timed out" : "") + (snapshot.coverage.processes.scanLimited ? " · Process scan limited" : "")
     Loader {
         id: transport
@@ -55,7 +53,7 @@ Item {
     function retry() { if (collector) collector.retry(); }
     readonly property bool geoInstalling: collector ? collector.geoInstalling : false
     readonly property string geoInstallError: collector ? collector.geoInstallError : ""
-    readonly property bool needsGeoIp: !demoMode && (!snapshot || snapshot.database.state !== "ready")
+    readonly property bool needsGeoIp: (!snapshot || snapshot.database.state !== "ready")
     function installGeoIp() { if (collector) collector.installGeoIp(); }
     function configure(backend, database, latitude, longitude, interval, originName) {
         var lat = latitude.trim(), lon = longitude.trim(), seconds = Number(interval);
@@ -76,7 +74,6 @@ Item {
         origin = config.origin && typeof config.origin.lat === "number" && typeof config.origin.lon === "number" && isFinite(config.origin.lat) && isFinite(config.origin.lon) && Math.abs(config.origin.lat) <= 90 && Math.abs(config.origin.lon) <= 180 ? config.origin : null;
         intervalSeconds = Number.isInteger(config.intervalSeconds) && config.intervalSeconds >= 1 && config.intervalSeconds <= 60 ? config.intervalSeconds : 2;
     }
-    property string scenario: "sample"
     property string query: ""
     property string application: ""
     property string country: ""
@@ -85,8 +82,8 @@ Item {
     property bool reducedMotion: false
     property bool scanlines: false
     property bool glow: true
-    readonly property var countries: demoMode ? Demo.countries : Geography.markers
-    readonly property var rows: demoMode ? Demo.connections(scenario) : liveRows
+    readonly property var countries: Geography.markers
+    readonly property var rows: liveRows
     readonly property var filtered: Model.filter(rows, query, application, country, family)
     readonly property var selected: Model.selected(filtered, selection)
     readonly property var applications: Model.groups(rows, "app")
@@ -112,13 +109,6 @@ Item {
     function chooseApplication(name) { application = application === name ? "" : name; }
     function countryBadge(code) { return Model.countryBadge(code); }
     function appBadge(name) { return Model.appBadge(name); }
-
-    function setScenario(value) {
-        demoMode = true;
-        clearFilters();
-        selection = "";
-        scenario = value;
-    }
 
     function countryName(code) { return Model.countryName(code, countries); }
     onFilteredChanged: if (!Model.selected(filtered, selection)) selection = ""

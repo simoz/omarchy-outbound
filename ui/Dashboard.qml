@@ -198,12 +198,12 @@ FocusScope {
                 columns: root.wide ? 2 : 1
                 Label {
                     Layout.fillWidth: true
-                    text: root.feedback || (root.service.demoMode ? "LOCAL GEOMETRY / NATURAL EARTH · DIRECTION UNKNOWN" : (root.service.error || root.service.geoStatus) + (root.service.snapshot ? " · " + new Date(root.service.snapshot.observedAtMs).toLocaleTimeString() : ""))
+                    text: root.feedback || ((root.service.error || root.service.geoStatus) + (root.service.snapshot ? " · " + new Date(root.service.snapshot.observedAtMs).toLocaleTimeString() : ""))
                     color: theme.subdued
                     font.pixelSize: theme.size * 0.7
                 }
                 Label {
-                    text: (root.service.demoMode ? "SIMULATED DATA / " : "OBSERVED / ") + root.service.rows.length + " SOCKETS / " + root.service.countryCount + " COUNTRIES"
+                    text: "OBSERVED / " + root.service.rows.length + " SOCKETS / " + root.service.countryCount + " COUNTRIES"
                     color: theme.accent
                     font.pixelSize: theme.size * 0.7
                 }

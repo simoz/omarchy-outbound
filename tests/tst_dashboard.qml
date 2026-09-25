@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import qs.Commons
 import ".." as Plugin
+import "../fixtures/Demo.js" as Fixture
 import "../ui" as Outbound
 
 Item {
@@ -20,7 +21,10 @@ Item {
         name: "OutboundDashboard"
         when: windowShown
         function init() {
-            service.setScenario("sample");
+            service.clearFilters();
+            service.selection = "";
+            service.liveRows = Fixture.connections("sample");
+            service.origin = {lon:12.5, lat:41.9};
             service.reducedMotion = true;
             dashboard.active = true;
             dashboard.globe.reset();
@@ -95,7 +99,6 @@ Item {
         function test_live_globe_requires_manual_origin_for_arcs() {
             service.liveRows = [{id:"live-1", app:"Test", country:"IT", family:"IPv4", ip:"1.1.1.1"}];
             service.origin = null;
-            service.demoMode = false;
             compare(dashboard.globe.destinations.length, 1);
             compare(dashboard.globe.layers[2].length, 0);
             service.origin = {lon:0, lat:45};
@@ -198,13 +201,14 @@ Item {
             keyClick(Qt.Key_Right);
             compare(dashboard.globe.longitude, -7);
             service.chooseCountry("JP");
-            compare(dashboard.globe.longitude, 138);
-            compare(dashboard.globe.latitude, 37);
+            var japan = service.countries.find(function(c) { return c.code === "JP"; });
+            compare(dashboard.globe.longitude, japan.lon);
+            compare(dashboard.globe.latitude, japan.lat);
             dashboard.globe.rotating = true;
             wait(90);
-            compare(dashboard.globe.longitude, 138);
+            compare(dashboard.globe.longitude, japan.lon);
             service.reducedMotion = false;
-            tryVerify(function() { return dashboard.globe.longitude !== 138; });
+            tryVerify(function() { return dashboard.globe.longitude !== japan.lon; });
             dashboard.active = false;
             var stopped = dashboard.globe.longitude;
             wait(90);
@@ -227,7 +231,7 @@ Item {
             Color.foreground = before;
         }
         function test_list_keyboard_reaches_virtualized_rows() {
-            service.setScenario("busy");
+            service.liveRows = Fixture.connections("busy");
             wait(20);
             var first = findChild(dashboard, "connection-demo-0");
             verify(first !== null);

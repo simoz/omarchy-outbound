@@ -5,7 +5,7 @@ See where your apps connect.
 **In development — live Linux TCP snapshots.** Outbound connects a Ruby socket
 collector compiled with Spinel to an Omarchy QML / Quickshell interface. Explore
 observed connections by application, remote IP and country. Ownership is best-effort; partial coverage
-and missing GeoIP are shown explicitly. Simulated data remains an explicit mode.
+and missing GeoIP are shown explicitly. Only observed connections are displayed.
 
 Run `./run-ui.sh` to build the Ruby collector and open an isolated live preview.
 See [build requirements](docs/development.md#build-the-rubyspinel-collector) for

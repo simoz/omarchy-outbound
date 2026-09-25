@@ -35,7 +35,7 @@ Item {
     property bool geoCancelled: false
     property string geoOriginalPath: ""
     function installGeoIp() {
-        if (geoInstalling || !service || service.demoMode || service.openViews === 0) return;
+        if (geoInstalling || !service || service.openViews === 0) return;
         geoInstallError = ""; geoCancelled = false; geoInstalling = true;
         geoOriginalPath = service.databasePath;
         installer.command = ["python3", "-B", decodeURIComponent(Qt.resolvedUrl("tools/update_geoip.py").toString().slice(7)), "--backend", executable];
@@ -51,7 +51,6 @@ Item {
     Connections {
         target: root.service
         function onOpenViewsChanged() { if (root.service.openViews === 0) root.cancelGeoIp(); }
-        function onDemoModeChanged() { if (root.service.demoMode) root.cancelGeoIp(); }
     }
     Timer { id: installDeadline; interval: 165000; onTriggered: root.cancelGeoIp() }
     Timer { id: installKill; interval: 500; onTriggered: if (installer.processId > 0) installer.signal(9) }

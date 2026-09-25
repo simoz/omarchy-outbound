@@ -12,7 +12,7 @@ plugin.mkdir()
 for pattern in ("*.qml", "*.js"):
     for source in repository.glob(pattern):
         shutil.copy2(source, plugin / source.name)
-for folder in ("ui", "assets", "fixtures"):
+for folder in ("ui", "assets"):
     shutil.copytree(repository / folder, plugin / folder)
 (plugin / "tools").mkdir()
 for helper in ("update_geoip.py", "search_city.py"):

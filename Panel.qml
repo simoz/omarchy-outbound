@@ -46,7 +46,7 @@ UI.Panel {
     }
     Window {
         id: expandedWindow
-        title: root.service && root.service.demoMode ? "Outbound — simulated data" : "Outbound"
+        title: "Outbound"
         width: 1160
         height: 920
         minimumWidth: 380

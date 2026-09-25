@@ -78,35 +78,18 @@ C.Popup {
                     Layout.fillWidth: true
                     spacing: 10
                     Label { text: "Connection collection"; font.bold: true }
-                    Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Choose a data source and control how often connections refresh."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
-                    Choice {
-                        Layout.fillWidth:true
-                        description:"Data source"
-                        model:["Real connections", "Simulated data"]
-                        currentIndex:root.service.demoMode ? 1 : 0
-                        onActivated:root.service.demoMode=currentIndex === 1
-                    }
+                    Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Control how often real connections refresh."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
                     Label {
                         Layout.fillWidth:true; wrapMode:Text.Wrap
-                        text:root.service.demoMode ? "IPs, applications and country assignments are simulated." : root.service.error || root.service.geoStatus
+                        text:root.service.error || root.service.geoStatus
                         font.pixelSize:theme.size*0.9
                     }
-                    Choice {
-                        objectName:"scenarioChoice"
-                        visible:root.service.demoMode
-                        Layout.fillWidth:true
-                        description:"Simulated data scenario"
-                        model:["Sample","Empty","Error","Busy / long names"]
-                        currentIndex:["sample","empty","error","busy"].indexOf(root.service.scenario)
-                        onActivated:root.service.setScenario(["sample","empty","error","busy"][currentIndex])
-                    }
                     RowLayout {
-                        visible:!root.service.demoMode
                         Layout.fillWidth:true
                         ActionButton { Layout.fillWidth:true; text:root.service.paused ? "Resume collection" : "Pause collection"; onClicked:root.service.paused=!root.service.paused }
                         ActionButton { text:"Retry"; onClicked:root.service.retry() }
                     }
-                    Label { visible:!root.service.demoMode; Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.service.coverageStatus; font.pixelSize:theme.size*0.85 }
+                    Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.service.coverageStatus; font.pixelSize:theme.size*0.85 }
                     Label { text:"Refresh interval · seconds (1–60)" }
                     SearchField { id:interval; Layout.fillWidth:true; Accessible.name:"Refresh interval in seconds" }
                     Label { text:"Advanced · backend executable"; color: theme.subdued }
@@ -121,7 +104,7 @@ C.Popup {
                     Label { text:"Country database"; font.bold:true }
                     SearchField { id:database; Layout.fillWidth:true; placeholderText:"Default: managed DB-IP Lite database"; Accessible.name:"Local GeoIP database path" }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
-                    ActionButton { Layout.fillWidth:true; visible:!root.service.demoMode; enabled:!root.service.geoInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
+                    ActionButton { Layout.fillWidth:true; enabled:!root.service.geoInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.geoInstallError !== ""; text:root.service.geoInstallError }
                     Label { text:"Origin · search a city or enter coordinates"; font.bold:true; Layout.topMargin:12; Layout.fillWidth:true; wrapMode:Text.Wrap }
                     RowLayout {

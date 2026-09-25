@@ -22,7 +22,7 @@ ShellRoot {
     property int stage:0
     property int ticks:0
     property int startTick:0
-    Plugin.Service { id: service; standalone:true; demoMode:true; Component.onCompleted:setView("test",true) }
+    Plugin.Service { id: service; standalone:true; paused:true; Component.onCompleted:setView("test",true) }
     function check(ok,msg) { if(!ok) { console.error("CITY_FAIL",msg); Qt.quit(); throw new Error(msg); } }
     Timer {
         interval:25; repeat:true; running:true

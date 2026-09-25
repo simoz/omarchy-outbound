@@ -22,4 +22,4 @@ esac
 export OUTBOUND_BACKEND="${OUTBOUND_BACKEND:-$default_backend}"
 printf 'Outbound backend: %s\n' "$OUTBOUND_BACKEND" >&2
 outbound_preview=$(python3 -B "$repository_dir/tools/prepare_preview.py")
-OUTBOUND_LIVE=1 exec qs -p "$outbound_preview"
+exec qs -p "$outbound_preview"
