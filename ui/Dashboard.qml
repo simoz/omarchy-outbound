@@ -67,6 +67,7 @@ FocusScope {
                 Item { Layout.fillWidth: true }
                 Label { text: "● " + root.service.status; color: theme.accent; font.pixelSize: theme.size * 0.8 }
                 ActionButton {
+                    flat: true
                     visible: root.wide
                     objectName: "globeRotationButton"
                     text: globe.rotating ? "Ⅱ" : "▷"
@@ -75,6 +76,7 @@ FocusScope {
                     onClicked: globe.rotating = !globe.rotating
                 }
                 ActionButton {
+                    flat: true
                     objectName: "keyboardHelpButton"
                     implicitWidth: 30
                     hint: "Keyboard guide (F1)"
@@ -83,9 +85,9 @@ FocusScope {
                     C.ToolTip.text: hint
                     onClicked: keyboardHelp.open()
                 }
-                ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
-                ActionButton { visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
-                ActionButton { text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
+                ActionButton { flat: true; objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
+                ActionButton { flat: true; visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
+                ActionButton { flat: true; text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
             }
             GridLayout {
                 id: hero
