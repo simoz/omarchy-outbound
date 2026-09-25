@@ -142,7 +142,7 @@ C.Popup {
                     spacing: 10
                     Label { text: "Appearance"; font.bold: true }
                     Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Display changes apply immediately for this session."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
-                    ActionButton { Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
+                    ActionButton { objectName:"reducedMotionButton"; Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
                     ActionButton { Layout.fillWidth:true; text:"Glow: " + (root.service.glow ? "on" : "off"); selected:root.service.glow; onClicked:root.service.glow=!root.service.glow }
                     ActionButton { Layout.fillWidth:true; text:"Scanlines: " + (root.service.scanlines ? "on" : "off"); selected:root.service.scanlines; onClicked:root.service.scanlines=!root.service.scanlines }
                 }

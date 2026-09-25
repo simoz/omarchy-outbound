@@ -68,13 +68,21 @@ FocusScope {
                 Label { text: "● " + root.service.status; color: theme.accent; font.pixelSize: theme.size * 0.8 }
                 ActionButton {
                     visible: root.wide
+                    objectName: "globeRotationButton"
                     text: globe.rotating ? "Ⅱ" : "▷"
                     implicitWidth: 30
-                    hint: root.service.reducedMotion ? "Rotation disabled by reduced motion" : globe.rotating ? "Pause rotation" : "Rotate globe"
-                    enabled: !root.service.reducedMotion
+                    hint: globe.rotating ? "Pause rotation" : "Rotate globe"
                     onClicked: globe.rotating = !globe.rotating
                 }
-                ActionButton { objectName: "keyboardHelpButton"; text: "?"; implicitWidth: 30; hint: "Keyboard guide (F1)"; onClicked: keyboardHelp.open() }
+                ActionButton {
+                    objectName: "keyboardHelpButton"
+                    implicitWidth: 30
+                    hint: "Keyboard guide (F1)"
+                    contentItem: Item { KeyboardIcon { anchors.centerIn: parent; ink: theme.accent } }
+                    C.ToolTip.visible: hovered
+                    C.ToolTip.text: hint
+                    onClicked: keyboardHelp.open()
+                }
                 ActionButton { objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
                 ActionButton { visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
                 ActionButton { text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }

@@ -196,6 +196,33 @@ Item {
             verify(!dashboard.globe.linksAnimating);
             verify(dashboard.globe.layers[2].length > 0);
         }
+        function test_play_after_reduced_motion_remains_available() {
+            service.reducedMotion = false;
+            var play = findChild(dashboard, "globeRotationButton");
+            mouseClick(play);
+            verify(dashboard.globe.rotating);
+            var settings = findChild(dashboard, "outboundSettings");
+            settings.open();
+            tryCompare(settings, "opened", true);
+            settings.section = 2;
+            mouseClick(findChild(settings, "reducedMotionButton"));
+            verify(service.reducedMotion);
+            verify(!dashboard.globe.rotating);
+            findChild(settings, "applyCollectionSettings").clicked();
+            tryCompare(settings, "opened", false);
+            verify(play.enabled);
+            var longitude = dashboard.globe.longitude;
+            play.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            tryVerify(function() { return dashboard.globe.longitude !== longitude; });
+            verify(service.reducedMotion);
+            verify(!dashboard.globe.linksAnimating);
+            mouseClick(play);
+            verify(!dashboard.globe.rotating);
+            longitude = dashboard.globe.longitude;
+            wait(90);
+            compare(dashboard.globe.longitude, longitude);
+        }
         function test_globe_keyboard_country_and_motion() {
             dashboard.globe.forceActiveFocus();
             keyClick(Qt.Key_Right);
@@ -204,10 +231,8 @@ Item {
             var japan = service.countries.find(function(c) { return c.code === "JP"; });
             compare(dashboard.globe.longitude, japan.lon);
             compare(dashboard.globe.latitude, japan.lat);
-            dashboard.globe.rotating = true;
-            wait(90);
-            compare(dashboard.globe.longitude, japan.lon);
             service.reducedMotion = false;
+            dashboard.globe.rotating = true;
             tryVerify(function() { return dashboard.globe.longitude !== japan.lon; });
             dashboard.active = false;
             var stopped = dashboard.globe.longitude;

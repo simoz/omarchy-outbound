@@ -56,6 +56,8 @@ FocusScope {
         target: root.service
         function onCountryChanged() { root.focusCountry(); canvas.redraw(); }
         function onGlowChanged() { canvas.redraw(); }
+        // Stop existing motion, but allow a subsequent explicit Play request.
+        function onReducedMotionChanged() { if (root.service.reducedMotion) root.rotating = false; }
     }
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Plus && (event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier)) {
@@ -330,7 +332,7 @@ FocusScope {
     }
     Timer {
         interval: 33; repeat: true
-        running: root.active && root.rotating && !root.service.reducedMotion
+        running: root.active && root.rotating
         onTriggered: root.rotate(0.3, 0)
     }
 }
