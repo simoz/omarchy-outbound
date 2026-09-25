@@ -90,6 +90,37 @@ Item {
             compare(backend.text, "/tmp/unsaved-backend");
             settings.close();
         }
+        function test_done_saves_drafts_and_only_closes_on_success() {
+            var settings = findChild(dashboard, "outboundSettings");
+            settings.open();
+            tryCompare(settings, "opened", true);
+            settings.section = 0;
+            var backend = findChild(settings, "backendPathField");
+            var done = findChild(settings, "applyCollectionSettings");
+            var previousBackend = service.backendPath;
+            backend.text = "relative/path";
+            done.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            verify(settings.opened);
+            verify(settings.validationError.length > 0);
+            compare(service.backendPath, previousBackend);
+            backend.text = "/tmp/outbound-test-backend";
+            service.saveConfiguration = function(config) { return false; };
+            done.clicked();
+            verify(settings.opened);
+            compare(settings.validationError, "Unable to save settings.");
+            compare(service.backendPath, previousBackend);
+            service.saveConfiguration = null;
+            done.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            tryCompare(settings, "opened", false);
+            compare(service.backendPath, "/tmp/outbound-test-backend");
+            settings.open();
+            tryCompare(settings, "opened", true);
+            compare(backend.text, "/tmp/outbound-test-backend");
+            settings.close();
+            service.configure(previousBackend, "", "", "", "2");
+        }
         function test_city_choice_populates_and_saves_origin() {
             var settings = findChild(dashboard, "outboundSettings");
             settings.openOrigin();

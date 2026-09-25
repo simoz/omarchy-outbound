@@ -144,7 +144,7 @@ C.Popup {
                             onClicked:root.chooseOrigin(modelData)
                         }
                     }
-                    Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Choosing a city saves the origin immediately. Apply settings to save manual coordinates."; color:theme.subdued; font.pixelSize:theme.size*0.85 }
+                    Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Choosing a city saves the origin immediately. Use Done to save manual coordinates."; color:theme.subdued; font.pixelSize:theme.size*0.85 }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.originName !== ""; text:"Selected: " + root.originName }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.cityError !== ""; text:root.service.cityError }
                     ActionButton { Layout.fillWidth:true; text:"City search: Photon / © OpenStreetMap contributors"; onClicked:Qt.openUrlExternally("https://photon.komoot.io/") }
@@ -183,10 +183,12 @@ C.Popup {
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: theme.border }
         Label { visible:root.validationError !== ""; Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.validationError }
         ActionButton {
-            objectName:"applyCollectionSettings"; Layout.fillWidth:true; text:"Apply collection settings"
-            onClicked:root.validationError=root.service.configure(backend.text.trim(),database.text.trim(),latitude.text,longitude.text,interval.text,root.originName)
+            objectName:"applyCollectionSettings"; Layout.fillWidth:true; text:"Done"
+            onClicked: {
+                root.validationError = root.service.configure(backend.text.trim(), database.text.trim(), latitude.text, longitude.text, interval.text, root.originName);
+                if (root.validationError === "") root.close();
+            }
         }
-        ActionButton { Layout.fillWidth:true; text:"Done"; onClicked:root.close() }
     }
     Connections {
         target: root.visible ? root.parent.Window.window : null

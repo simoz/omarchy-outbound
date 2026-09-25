@@ -19,7 +19,8 @@ Use `OUTBOUND_ENGINE=rust ./run-ui.sh` to build and run the Rust reference.
 Settings groups controls into Collection, Globe, Appearance and About.
 Collection contains the data source, sample interval (1–60 s), pause/resume,
 retry and backend path. Globe contains the database and origin controls.
-The apply and close buttons stay visible while scrolling; switching sections
+Done saves collection settings and closes the editor; validation or save errors
+keep it open. The button stays visible while scrolling, and switching sections
 preserves unsaved edits. Appearance controls apply immediately.
 Preview settings last for that session. Installed collection settings are saved
 through the host's inline plugin configuration; display toggles are session-only.
@@ -41,8 +42,8 @@ absolute path in settings. Copy the runtime files as described below.
 Open settings with the gear, or click **Set origin to connect destinations** on
 the globe. Under **Origin**, type a city (for example `Genoa, Italy`), press
 **Search** or Enter, then choose a result to save the origin immediately.
-Coordinates stay editable; use **Apply collection settings** to save manual
-edits, or clear both coordinates and apply to remove the origin. The preview
+Coordinates stay editable; use **Done** to save manual
+edits, or clear both coordinates and choose Done to remove the origin. The preview
 retains collection settings in `${XDG_CONFIG_HOME:-$HOME/.config}/outbound/preview.ini`
 across launches. `OUTBOUND_BACKEND` and `OUTBOUND_DATABASE` override saved paths.
 
