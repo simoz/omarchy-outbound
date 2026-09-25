@@ -18,5 +18,5 @@ The conversion is offline and refuses an input with a different checksum.
 The generated file also contains 175 country label anchors from `ISO_A2_EH`,
 `NAME_EN`, `LABEL_X` and `LABEL_Y`. These are illustrative country markers, not
 remote-host locations. Codes without an anchor remain visible in lists but are
-not plotted. Demo IP-country assignments are explicitly simulated. No GeoIP
-database is bundled; live lookup requires an explicitly supplied local MMDB.
+not plotted. No GeoIP database is bundled; lookup uses a local MMDB installed
+explicitly by the user. Synthetic IP-country assignments are confined to tests.

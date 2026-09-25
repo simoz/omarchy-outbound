@@ -9,7 +9,7 @@ function load(file) {
     return context;
 }
 const model = load('Model.js');
-const demo = load('fixtures/Demo.js');
+const demo = load('tests/fixtures/Connections.js');
 const projection = load('ui/Projection.js');
 
 test('filters combine without losing unknown and local rows', () => {

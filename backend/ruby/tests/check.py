@@ -1,6 +1,5 @@
 """Local fixtures and controlled sockets; never report unrelated connections."""
 import contextlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -10,12 +9,11 @@ import subprocess
 import tempfile
 import unittest
 
+import mmdb_fixture as fixture
+
 ROOT = Path(__file__).resolve().parents[3]
 BUILD = ROOT / "backend/ruby/build"
 ENGINE = BUILD / "outbound-engine"
-spec = importlib.util.spec_from_file_location("spinel_fixture", ROOT / "experiments/spinel/check.py")
-fixture = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(fixture)
 
 
 class BackendTest(unittest.TestCase):
@@ -165,7 +163,7 @@ class BackendTest(unittest.TestCase):
         self.assertIsNone(result["coverage"]["ipv6"], "IPv6 dump failed")
         return result
 
-    def test_controlled_ipv4_ipv6_ownership_and_rust_comparison(self):
+    def test_controlled_ipv4_ipv6_ownership(self):
         controlled = []
         for family, address in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
             server = self.resources.enter_context(socket.socket(family, socket.SOCK_STREAM))
@@ -183,8 +181,6 @@ class BackendTest(unittest.TestCase):
         second = self.snapshot(ruby, "second")
         self.assertEqual(second["session"], first["session"])
         self.assertEqual(second["sequence"], first["sequence"] + 1)
-        rust = os.environ.get("OUTBOUND_RUST_BACKEND")
-        reference = self.snapshot(self.start(rust), "rust") if rust else None
         for address, local_port, remote_port in controlled:
             def find(snapshot):
                 rows = [row for row in snapshot["connections"]
@@ -198,10 +194,6 @@ class BackendTest(unittest.TestCase):
             self.assertIsNone(row["country"])
             self.assertIn(os.getpid(), [o["pid"] for o in row["owners"]])
             self.assertEqual(row["id"], find(second)["id"])
-            if reference:
-                other = find(reference)
-                for key in ("family", "local", "remote", "state", "uid", "owners", "scope", "direction", "country"):
-                    self.assertEqual(row[key], other[key], f"controlled row differs: {key}")
             self.assertFalse(any(r["state"] == "LISTEN" for r in first["connections"]))
 
 

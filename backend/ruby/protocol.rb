@@ -89,10 +89,4 @@ module OutboundProtocol
       byte == 95 || byte == 45      # underscore or hyphen
   end
 
-  # Used by the standalone protocol experiment; production uses Input.read.
-  def self.read(input)
-    line = input.gets(MAX_COMMAND_BYTES + 1)
-    return nil if line.nil?
-    parse(line)
-  end
 end

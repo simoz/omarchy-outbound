@@ -8,7 +8,7 @@ import tempfile
 repository = Path(__file__).resolve().parents[1]
 preview = Path(subprocess.check_output([sys.executable, "-B", str(repository / "tools/prepare_preview.py")], text=True).strip())
 
-# Original tiny country MMDB, matching the Rust test's encoding.
+# Original synthetic country MMDB for local integration tests.
 def text(value):
     data = value.encode()
     return bytes([0x40 | len(data)]) + data

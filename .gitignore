@@ -5,12 +5,11 @@ __pycache__/
 *.py[cod]
 .venv/
 
-# Local agent instructions
+# Local agent instructions and generated analysis
 /AGENTS.md
 /PLAN.md
+/graphify-out/
 
-# Rust build output
-/backend/target/
-
-# Compiled Ruby/Spinel backend and native adapters
+# Local build products (including retired Rust builds)
 /backend/ruby/build/
+/backend/target/

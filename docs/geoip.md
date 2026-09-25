@@ -16,8 +16,7 @@ updates. Installing managed data selects it if the custom path was not changed
 while installation was running. The origin remains manually configured.
 
 The updater needs Python 3.11+ and a built backend with `--check-database` support.
-It runs only after an explicit click. Closing the last panel/window or switching
-to simulated mode cancels installation; keeping only the bar does not keep a
+It runs only after an explicit click. Closing the last panel/window cancels installation; keeping only the bar does not keep a
 download alive. The ordinary collector makes no GeoIP network requests.
 
 ## From the terminal
@@ -56,7 +55,7 @@ timeout and a 120-second download deadline checked between reads. Compressed
 and uncompressed files are bounded to 64 MiB. Validation has a 30-second timeout
 and invokes the selected backend's reader, including structural and
 build-timestamp validation. The Ruby backend uses libmaxminddb over a sealed
-local copy; Rust uses its existing in-memory reader. Hashes record provenance; locally computed hashes
+local copy. Hashes record provenance; locally computed hashes
 are not independent provider signatures. An optional expected SHA-256 rejects
 mismatched archives before decompression.
 
@@ -66,19 +65,10 @@ approximate. Unknown or unmapped countries remain visible in the connection
 list. Attribution is available in Settings → Credits,
 and accompanies every installed version.
 
-## Recorded verification — 2026-09-24
+## Verification
 
-Offline tests cover atomic replacement, retained previous versions, checksum
-mismatch, corrupt gzip, decompression limits, validation rejection, failed
-publication and invalid release syntax. Rust tests verify the standalone
-validator accepts the synthetic country fixture and rejects other metadata or
-corruption. Real Quickshell fixture checks cover successful button-triggered
-installation/reload, visible failure and cancellation without a surviving helper.
-Offscreen dark/light captures cover the prompt at desktop and narrow sizes.
-
-A real September 2026 DB-IP country download was validated in `/tmp`, without
-changing personal managed data. Archive SHA-256:
-`cb0578ce59f569f2c933bb40feb820804a334855a60739011b0a89cab1d6e4ed`.
-The provider rejected Python's default User-Agent; the installer now identifies
-itself as `Outbound-GeoIP-Updater/0.1`, which succeeded. The UI lifecycle tests
-use local fixtures; they do not repeatedly download the provider dataset.
+Offline updater tests cover atomic replacement, retained previous versions,
+checksum mismatch, corrupt gzip, decompression limits and validation failures.
+The Ruby backend suite validates synthetic country databases and rejects invalid
+metadata or corruption. Quickshell fixture checks cover installation/reload,
+visible failures and cancellation. See [test commands](development.md#automated-checks).

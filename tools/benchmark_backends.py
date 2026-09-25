@@ -194,7 +194,6 @@ def measure(binary, endpoints, samples, warmup, idle_seconds):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ruby", type=Path, default=ROOT / "backend/ruby/build/outbound-engine")
-    parser.add_argument("--rust", type=Path, default=ROOT / "backend/target/release/outbound-engine")
     parser.add_argument("--reference-ruby", type=Path, help="Optional previous Ruby binary for same-load comparison")
     parser.add_argument("--pairs", type=int, nargs="+", default=[0, 32, 256])
     parser.add_argument("--samples", type=int, default=30)
@@ -208,7 +207,7 @@ def main():
     fd_limit = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
     if fd_limit != resource.RLIM_INFINITY and 2 * max(args.pairs) + 32 > fd_limit:
         parser.error("The requested socket count exceeds the process fd limit")
-    binaries = {"ruby": args.ruby.resolve(), "rust": args.rust.resolve()}
+    binaries = {"ruby": args.ruby.resolve()}
     if args.reference_ruby:
         binaries["ruby_before"] = args.reference_ruby.resolve()
     report = {

@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 import ".." as Plugin
-import "../fixtures/Demo.js" as Fixture
+import "fixtures/Connections.js" as Fixture
 
 Item {
     Plugin.Service { id: service }

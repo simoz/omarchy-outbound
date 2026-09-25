@@ -28,9 +28,7 @@ for building and [the protocol](../../docs/protocol.md) for wire fields and boun
 - `native.rb`: the Spinel FFI declarations; implementations live in `native/`.
 
 Keep numeric protocol limits explicit and preserve validation order: callers
-observe error codes, not just whether a command was rejected. The separate
-validator in `experiments/spinel/protocol.rb` stays self-contained for the
-historical feasibility harness and must agree with the production validator.
+observe error codes, not just whether a command was rejected.
 
 `tests/unit.rb` covers scope, identity, aggregation, encoding and fixture-based
 ownership/GeoIP. `tests/protocol.rb` is a parsing-only driver. `check.sh` builds

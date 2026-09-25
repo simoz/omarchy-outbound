@@ -1,6 +1,6 @@
 # Collector protocol v1
 
-Implemented by `backend/ruby/` (default) and `backend/src/` (Rust reference), Linux only, and consumed by `Collector.qml` through
+Implemented by `backend/ruby/`, Linux only, and consumed by `Collector.qml` through
 `Protocol.js`.
 
 ## Invocation and framing
@@ -8,7 +8,7 @@ Implemented by `backend/ruby/` (default) and `backend/src/` (Rust reference), Li
 `outbound-engine [--database /absolute/path/to/country.mmdb]` runs as the current
 user. It performs no downloads, DNS queries, HTTP requests, packet capture,
 shell commands or privilege changes. Collection uses a kernel netlink socket;
-there is no network listener. Only the development test invokes `ss`.
+there is no network listener.
 
 Stdin/stdout carry UTF-8 JSON objects, one per newline. Snapshot output escapes
 non-ASCII characters as JSON Unicode escapes (including surrogate pairs), so
@@ -17,8 +17,8 @@ logs. Stderr errors contain neither process names nor IPs nor input contents.
 There is no autonomous sampling: the caller requests a snapshot at its chosen
 cadence and must keep draining stdout. EOF exits after any current bounded
 sample/write; `shutdown` exits after acknowledging. A closed output pipe exits
-cleanly. There is no worker process or detached thread. Host termination and lifecycle checks are recorded in
-[integration-validation.md](integration-validation.md).
+cleanly. There is no worker process or detached thread. Host termination and lifecycle checks are described in
+[development](development.md#automated-checks).
 
 Commands have exactly these fields:
 
@@ -133,8 +133,8 @@ Replacement waits for the previous process to exit.
 ## GeoIP and address scope
 
 No database is bundled. An explicitly supplied country MMDB is read once,
-limited to 64 MiB, structurally verified and cached in memory. Rust uses the
-`maxminddb` crate. Ruby uses libmaxminddb against a sealed anonymous copy of the
+limited to 64 MiB, structurally verified and cached in memory.
+The collector uses libmaxminddb against a sealed anonymous copy of the
 file; its adapter checks search-tree cycles/depth and decodes referenced records
 before exposing the reader. Replacing or truncating the source cannot change
 an already loaded database. Database states are `missing`, `unreadable`, `invalid`, `ready`.
@@ -162,5 +162,4 @@ tunnel ranges (`64:ff9b::/96`, local NAT64, Teredo, 6to4), benchmarking,
 unspecified/deprecated/reserved ranges and IPv6 outside current `2000::/3`
 global unicast, with ULA/link-local/multicast classified separately. This policy
 is stricter than IANA's globally-reachable flag and does not assert routability.
-No registry is fetched at runtime. See [data licensing](data-and-distribution.md)
-for the planned DB-IP distribution and attribution requirements.
+No registry is fetched at runtime. See [GeoIP data](geoip.md) for DB-IP installation and attribution.

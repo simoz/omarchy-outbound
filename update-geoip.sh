@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repository_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+backend="$repository_dir/backend/ruby/build/outbound-engine"
 if [[ "${1:-}" != "--help" ]]; then
-  cargo build --manifest-path "$repository_dir/backend/Cargo.toml" --release --locked
+  backend=$("$repository_dir/backend/ruby/build.sh")
 fi
-exec python3 -B "$repository_dir/tools/update_geoip.py" --backend "$repository_dir/backend/target/release/outbound-engine" "$@"
+exec python3 -B "$repository_dir/tools/update_geoip.py" --backend "$backend" "$@"

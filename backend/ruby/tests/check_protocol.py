@@ -1,7 +1,6 @@
 """Check the production command envelope against the compiled Ruby driver."""
 
 import json
-import os
 import subprocess
 import unittest
 
@@ -16,11 +15,6 @@ class ProtocolTest(unittest.TestCase):
 
     def error(self, data, code):
         status, rows = self.run_driver(data)
-        rust = os.environ.get("OUTBOUND_RUST_BACKEND")
-        if rust:
-            reference = subprocess.run([rust], input=data, capture_output=True, timeout=5)
-            self.assertNotEqual(reference.returncode, 0)
-            self.assertEqual(rows, [json.loads(line) for line in reference.stdout.splitlines()])
         self.assertNotEqual(status, 0)
         self.assertEqual(rows, [{"version": 1, "kind": "error", "requestId": None,
                                 "code": code, "fatal": True}])

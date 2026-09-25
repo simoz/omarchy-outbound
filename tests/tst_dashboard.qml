@@ -2,7 +2,7 @@ import QtQuick
 import QtTest
 import qs.Commons
 import ".." as Plugin
-import "../fixtures/Demo.js" as Fixture
+import "fixtures/Connections.js" as Fixture
 import "../ui" as Outbound
 
 Item {
