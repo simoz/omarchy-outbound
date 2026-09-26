@@ -23,6 +23,12 @@ RELEASES = "https://github.com/simoz/omarchy-outbound/releases/download"
 RELEASE_FILE = Path(__file__).resolve().with_name("engine-release.json")
 # `uname -m` spellings mapped to the architecture names used by release assets.
 ARCHITECTURES = {"x86_64": "x86_64", "amd64": "x86_64", "aarch64": "aarch64", "arm64": "aarch64"}
+# Exit status reserved for "no pinned asset", so the UI can explain it without reading stderr.
+UNAVAILABLE = 3
+
+
+class Unavailable(ValueError):
+    pass
 
 
 class HttpsRedirect(urllib.request.HTTPRedirectHandler):
@@ -92,7 +98,7 @@ def asset_for(release, machine):
     architecture = ARCHITECTURES.get(machine)
     asset = release["assets"].get(architecture) if architecture else None
     if not asset:
-        raise ValueError(f"No prebuilt collector {version} for {machine}. Build it from source; see docs/development.md.")
+        raise Unavailable(f"No prebuilt collector {version} for {machine}. Build it from source; see docs/development.md.")
     name = f"outbound-engine-{version}-linux-{architecture}"
     if asset["name"] != name + ".tar.gz" or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
         raise ValueError("Invalid asset entry in engine-release.json")
@@ -155,6 +161,8 @@ def main():
     try:
         release = json.loads(RELEASE_FILE.read_text())
         path, version = install(args.data_dir, release, platform.machine())
+    except Unavailable as error:
+        parser.exit(UNAVAILABLE, f"{error}\n")
     except KeyboardInterrupt:
         parser.exit(1, "Collector installation cancelled; the previous collector is unchanged.\n")
     except (OSError, ValueError, KeyError, EOFError, http.client.HTTPException, tarfile.TarError, subprocess.SubprocessError) as error:

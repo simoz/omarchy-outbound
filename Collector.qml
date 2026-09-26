@@ -88,8 +88,11 @@ Item {
             if (root.destroying) { root.installTask = ""; return; }
             if (root.installCancelled) { root.installFinished(name + " installation cancelled."); return; }
             if (exitCode !== 0) {
+                // install_engine.py exits with 3 when no asset is pinned for this version and machine.
                 root.installFinished(task === "geoip"
                     ? "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details."
+                    : exitCode === 3
+                    ? "No prebuilt collector is published yet for this version and architecture. Update the plugin later, or build the collector from source."
                     : "Collector installation failed. Check your connection and retry, or build it from source.");
                 return;
             }

@@ -82,9 +82,9 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(len(list((self.data / "engine/versions").iterdir())), 1)
 
     def test_missing_asset_never_downloads(self):
-        with self.assertRaisesRegex(ValueError, "No prebuilt collector"):
+        with self.assertRaises(installer.Unavailable):
             self.install(release={"version": "0.1.0", "assets": {}})
-        with self.assertRaisesRegex(ValueError, "No prebuilt collector"):
+        with self.assertRaises(installer.Unavailable):
             self.install(machine="riscv64")
         self.assertEqual(self.fetched, [])
 

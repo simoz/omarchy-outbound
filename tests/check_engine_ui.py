@@ -13,6 +13,7 @@ preview = Path(subprocess.check_output([sys.executable, "-B", str(repository / "
 pathlib.Path(os.environ['ENGINE_PID']).write_text(str(os.getpid()))
 mode=os.environ['ENGINE_MODE']
 if mode == 'failure': sys.exit(1)
+if mode == 'unavailable': sys.exit(3)
 if mode == 'cancel': time.sleep(30)
 folder=pathlib.Path(os.environ['XDG_DATA_HOME'])/'outbound/bin'
 folder.mkdir(parents=True,exist_ok=True)
@@ -51,7 +52,9 @@ ShellRoot {
             } else if(root.stage === 1) {
                 if(root.mode === "cancel" && root.ticks > 30) { service.setView("test",false); root.stage=2; }
                 else if(root.mode === "failure" && !service.engineInstalling) {
-                    root.check(service.engineInstallError !== "" && service.needsEngine,"failure visible"); root.pass();
+                    root.check(service.engineInstallError.indexOf("failed") >= 0 && service.needsEngine,"failure visible"); root.pass();
+                } else if(root.mode === "unavailable" && !service.engineInstalling) {
+                    root.check(service.engineInstallError.indexOf("No prebuilt collector") >= 0 && service.needsEngine,"unavailable asset explained"); root.pass();
                 } else if((root.mode === "success" || root.mode === "custom") && service.snapshot) {
                     root.check(service.backendPath === "","managed path selected");
                     root.check(!service.engineInstalling && !service.needsEngine && service.engineInstallError === "","ready UI");
@@ -65,7 +68,7 @@ ShellRoot {
 }
 ''')
 try:
-    for mode in ["success", "custom", "failure", "cancel"]:
+    for mode in ["success", "custom", "failure", "unavailable", "cancel"]:
         with tempfile.TemporaryDirectory(prefix="outbound-engine-test-") as data:
             pid = Path(data) / "pid"
             env = dict(os.environ, XDG_DATA_HOME=data, ENGINE_MODE=mode, ENGINE_PID=str(pid),
