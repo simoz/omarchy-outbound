@@ -25,7 +25,7 @@ jobs:
             runner: ubuntu-22.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check versions
         run: |
@@ -82,7 +82,7 @@ jobs:
           sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
           echo "$name ($glibc): $(cut -d' ' -f1 "$name.tar.gz.sha256")" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: engine-${{ matrix.arch }}
           path: outbound-engine-*.tar.gz*
@@ -94,7 +94,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: engine-*
           merge-multiple: true
