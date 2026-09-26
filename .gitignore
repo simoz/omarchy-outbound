@@ -7,6 +7,7 @@ __pycache__/
 
 # Local agent instructions and generated analysis
 /AGENTS.md
+/CLAUDE.md
 /PLAN.md
 /graphify-out/
 
