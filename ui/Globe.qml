@@ -305,10 +305,13 @@ FocusScope {
         onClicked: root.originRequested()
     }
     Column {
+        id: installCard
         anchors.centerIn: parent
         width: Math.min(360, parent.width - 40)
         spacing: 8
-        visible: (root.service.needsGeoIp || root.service.geoInstalling || root.service.geoInstallError !== "")
+        // Without a collector nothing can be observed, so its install precedes GeoIP.
+        readonly property bool engineStep: root.service.needsEngine || root.service.engineInstalling || root.service.engineInstallError !== ""
+        visible: engineStep || root.service.needsGeoIp || root.service.geoInstalling || root.service.geoInstallError !== ""
         Rectangle {
             width: parent.width
             height: installContent.implicitHeight + 24
@@ -318,13 +321,27 @@ FocusScope {
                 id: installContent
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                 spacing: 8
-                Label { width: parent.width; text: "COUNTRY GEOLOCATION"; color: theme.accent }
-                Label { width: parent.width; wrapMode: Text.Wrap; text: root.service.geoInstallError || "Install the local country database to show destinations on the globe." }
+                Label { width: parent.width; text: installCard.engineStep ? "CONNECTION COLLECTOR" : "COUNTRY GEOLOCATION"; color: theme.accent }
+                Label {
+                    width: parent.width; wrapMode: Text.Wrap
+                    text: installCard.engineStep
+                        ? root.service.engineInstallError || "Install the prebuilt collector to observe connections. It is downloaded from the Outbound GitHub release and checked against a pinned SHA-256."
+                        : root.service.geoInstallError || "Install the local country database to show destinations on the globe."
+                }
+                ActionButton {
+                    objectName: "installEngineButton"
+                    width: parent.width
+                    visible: installCard.engineStep
+                    text: root.service.engineInstalling ? "Downloading and verifying…" : "Install collector"
+                    enabled: !root.service.engineInstalling && !root.service.geoInstalling
+                    onClicked: root.service.installEngine()
+                }
                 ActionButton {
                     objectName: "installGeoIpButton"
                     width: parent.width
+                    visible: !installCard.engineStep
                     text: root.service.geoInstalling ? "Downloading and validating…" : "Install GeoIP"
-                    enabled: !root.service.geoInstalling
+                    enabled: !root.service.geoInstalling && !root.service.engineInstalling
                     onClicked: root.service.installGeoIp()
                 }
             }

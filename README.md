@@ -18,16 +18,31 @@ Spinel. Only real connections are displayed.
 
 ## Requirements
 
-- Linux and the Omarchy Quattro built-in bar with Quickshell.
-- A compiled `outbound-engine` for the machine's architecture.
-- Python 3.11+ for GeoIP installation and city search.
+- Linux x86_64 or ARM64 with glibc 2.35 or newer.
+- The Omarchy Quattro built-in bar with Quickshell.
+- Python 3.11+ for collector and GeoIP installation and city search.
 
 Ruby and Spinel are build tools, not runtime requirements. The current Ruby
 collector and isolated Quickshell integration have been tested on Linux ARM64.
-x86_64, physical multi-monitor behavior and a portable release binary remain
-unverified. This repository does not provide prebuilt releases.
+Release binaries are built and checked natively on x86_64 and ARM64 in CI, but
+the x86_64 desktop integration and physical multi-monitor behavior remain
+unverified.
 
-## Build and run
+## Install
+
+```bash
+omarchy plugin add https://github.com/simoz/omarchy-outbound.git --enable
+```
+
+Open Outbound and click **Install collector** on the globe. Outbound downloads
+the prebuilt collector for its version and architecture from the GitHub release,
+checks it against the SHA-256 pinned in `tools/engine-release.json` and installs
+it under `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/`. Nothing is downloaded
+before that click. Then use **Install GeoIP** to show destination countries.
+See [collector installation](docs/development.md#install-the-plugin) for
+details and building from source.
+
+## Build and run from source
 
 Prepare the pinned Spinel compiler and static libmaxminddb as described in the
 [development guide](docs/development.md#build-the-rubyspinel-collector), then run:
@@ -44,7 +59,6 @@ country database:
 OUTBOUND_DATABASE=/absolute/path/to/country.mmdb ./run-ui.sh
 ```
 
-For the installed bar widget, follow the [installation steps](docs/development.md#install-the-plugin).
 The default installed collector path is
 `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/bin/outbound-engine`.
 
@@ -52,8 +66,8 @@ The default installed collector path is
 
 Open settings with the gear button:
 
-- **Collection**: refresh interval, pause/resume, retry, coverage details and
-  backend executable path.
+- **Collection**: refresh interval, pause/resume, retry, coverage details,
+  prebuilt collector installation and backend executable path.
 - **Globe**: install/update GeoIP, choose a custom MMDB and set the origin.
 - **Appearance**: reduced motion, glow and scanlines.
 - **Credits**: data sources, attribution and licenses.
@@ -98,5 +112,7 @@ history.
 - [Native dependency notices](backend/DEPENDENCIES.md)
 
 Outbound code is [MIT](LICENSE). Natural Earth geometry is public domain.
+The prebuilt collector includes the Spinel runtime (MIT) and libmaxminddb
+(Apache-2.0); their notices are installed beside it.
 Managed DB-IP Lite data is separately licensed under CC BY 4.0; provider and
 license links are available in Credits and accompany each installed database.

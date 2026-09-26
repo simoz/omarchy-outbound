@@ -126,7 +126,7 @@ The application accumulator is bounded; Qt allocates each incoming chunk before
 JavaScript sees it. This is not a sandbox for arbitrary hostile executables.
 
 Transient exits retry after 1, 2, 4, 8 and 16 seconds. Invalid output or failure to
-start requires explicit retry or a path change. Cancellation closes stdin,
+start requires explicit retry, a path change or a collector installation. Cancellation closes stdin,
 ignores late output, and escalates to TERM/KILL after bounded grace periods.
 Replacement waits for the previous process to exit.
 

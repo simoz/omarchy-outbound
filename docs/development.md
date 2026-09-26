@@ -61,19 +61,55 @@ To request one real snapshot from the terminal:
 
 ## Install the plugin
 
-Build the collector first. Place its executable at the default runtime path:
+```bash
+omarchy plugin add https://github.com/simoz/omarchy-outbound.git --enable
+```
+
+`omarchy plugin add` clones and validates the repository; it never runs
+scripts or downloads the collector. Enabling changes the desktop bar.
+
+### Prebuilt collector
+
+When the collector is missing, the globe shows **Install collector**; Settings →
+Collection offers **Install / update prebuilt collector** at any time. Only that
+explicit click runs `tools/install_engine.py`, which:
+
+- reads the version and per-architecture SHA-256 pinned in
+  `tools/engine-release.json` (`x86_64` or `aarch64`, from `uname -m`);
+- downloads `outbound-engine-VERSION-linux-ARCH.tar.gz` from the matching
+  GitHub release over HTTPS, with HTTPS-only redirects, a 15-second socket
+  timeout, a 120-second deadline and a 32 MiB limit;
+- rejects a checksum mismatch before unpacking, accepts only regular files
+  inside the expected top-level directory and runs `outbound-engine --help`;
+- publishes `engine/versions/VERSION-ID/` with the binary, license notices and
+  `provenance.json`, then atomically switches the
+  `bin/outbound-engine` symlink and removes older versions.
+
+Everything lives under `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/`. Failures
+leave the previous collector unchanged. Success selects the default path (unless
+the backend field changed meanwhile) and restarts collection. Closing the last
+panel/window cancels the download. Without an asset for the machine, the helper
+fails with a message pointing to the source build. From a terminal:
+`python3 -B tools/install_engine.py [--data-dir /absolute/path]`.
+
+### Collector built from source
+
+Build the collector first and place it at the default runtime path:
 
 ```bash
 install -Dm755 backend/ruby/build/outbound-engine \
   "${XDG_DATA_HOME:-$HOME/.local/share}/outbound/bin/outbound-engine"
 ```
 
-Copy these files into an **unused**
-`~/.config/omarchy/plugins/io.github.simoz.outbound/` directory, preserving paths:
+A custom absolute executable path can be saved in Settings → Collection instead.
+To install from a working copy without `omarchy plugin add`, copy into an
+**unused** `~/.config/omarchy/plugins/io.github.simoz.outbound/` directory,
+preserving paths:
 
 - `manifest.json`, `LICENSE`, root `*.qml` and `*.js` files.
 - `ui/` and `assets/`.
-- `tools/search_city.py` and `tools/update_geoip.py`.
+- `tools/search_city.py`, `tools/update_geoip.py`, `tools/install_engine.py`
+  and `tools/engine-release.json`.
 
 Then validate and enable the plugin:
 
@@ -83,32 +119,35 @@ omarchy-shell shell rescanPlugins
 omarchy plugin enable io.github.simoz.outbound
 ```
 
-Enabling changes the desktop bar. Do not overwrite an existing installation
-without preserving its configuration. The runtime does not build or download
-a collector automatically. A custom absolute executable path can be saved in
-Settings → Collection. Installed collection settings use the host's inline
-plugin configuration; Appearance settings are session-only.
+Do not overwrite an existing installation without preserving its
+configuration. Installed collection settings use the host's inline plugin
+configuration; Appearance settings are session-only.
 
 The bar alone samples every 10 seconds. An open panel/window uses the configured
 1–60 second interval. Pause survives view transitions. Removing every registered
 view stops collection; closing the last open view cancels helper downloads and
 city searches. See [architecture](architecture.md).
 
-## Origin and GeoIP
+## Release
 
-Settings → Globe contains city search, manual coordinates and GeoIP controls.
-Search or Enter sends an explicit query to Photon/OpenStreetMap; typing does
-not contact the provider. Choosing a result saves the origin immediately.
-**Done** saves manual coordinates; clear both coordinates to remove the origin.
+1. Set the new version in `manifest.json` and commit. Leave
+   `tools/engine-release.json` on the previous release until step 4.
+2. Push a `vVERSION` tag. `.github/workflows/release.yml` builds on native
+   Ubuntu 22.04 x86_64 and ARM64 runners (glibc 2.35 baseline), runs
+   `backend/ruby/check.sh`, packages each binary with `LICENSE`, the Spinel and
+   libmaxminddb notices and `NOTICE.txt`, and creates a draft release with
+   `SHA256SUMS`.
+3. Check the draft: glibc requirement in the job summary, assets and notes.
+4. Publish the draft, then commit the `tools/engine-release.json` printed in its
+   notes to `main`. Installed plugins receive the new pins with
+   `omarchy plugin update`.
 
-Search is limited to six results, cached for the session (20 queries) and spaced
-by at least 1.1 seconds. Changing the query, closing settings or closing the last
-view cancels the search and ignores late replies. Queries contain the city text,
-never observed IPs or process names. Manual coordinates work without a lookup.
-
-No database is bundled. Use **Install GeoIP** or **Install / update managed
-GeoIP** to download and validate one explicitly. A custom MMDB path overrides
-the managed database. See [GeoIP details](geoip.md).
+Checksums are known only after the tag is built, so the pins live on `main`
+rather than in the tagged commit. Until step 4, installs keep using the
+previous pinned release; draft assets are not downloadable, so the pins must not
+be committed before publication. The first release has no previous pins:
+**Install collector** reports that no prebuilt collector is available until
+step 4.
 
 ## Automated checks
 
@@ -122,6 +161,7 @@ QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
   /usr/lib/qt6/bin/qmltestrunner -input tests -import tests/stubs -o -,txt
 python3 -B tests/check_transport.py
 python3 -B tests/check_geoip_ui.py
+python3 -B tests/check_engine_ui.py
 python3 -B tests/check_origin_search.py
 python3 -B tests/check_preview_settings.py
 omarchy plugin validate .

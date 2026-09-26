@@ -12,7 +12,8 @@ compiled with Spinel, with small C adapters for Linux and libmaxminddb.
   expanded views, preserving filters, selection and globe camera state.
 - `Service.qml` owns settings, filters and observed rows across views.
 - `Collector.qml` owns the single backend process, snapshot requests, bounded
-  framing, retry state and GeoIP installer lifecycle.
+  framing, retry state and the lifecycle of the explicit installers (prebuilt
+  collector and GeoIP), which never run concurrently.
 - `OriginSearch.qml` runs explicit city searches, caches results and rejects
   cancelled or stale replies.
 - `ui/Globe.qml` draws local geometry and observed destination markers using

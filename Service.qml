@@ -55,6 +55,10 @@ Item {
     readonly property string geoInstallError: collector ? collector.geoInstallError : ""
     readonly property bool needsGeoIp: (!snapshot || snapshot.database.state !== "ready")
     function installGeoIp() { if (collector) collector.installGeoIp(); }
+    readonly property bool engineInstalling: collector ? collector.engineInstalling : false
+    readonly property string engineInstallError: collector ? collector.engineInstallError : ""
+    readonly property bool needsEngine: collector ? collector.engineMissing : false
+    function installEngine() { if (collector) collector.installEngine(); }
     function configure(backend, database, latitude, longitude, interval, originName) {
         var lat = latitude.trim(), lon = longitude.trim(), seconds = Number(interval);
         if ((backend && backend[0] !== "/") || (database && database[0] !== "/") || backend.length > 4096 || database.length > 4096 || /[\x00-\x1f]/.test(backend + database)) return "Use absolute file paths.";

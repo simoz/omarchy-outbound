@@ -94,6 +94,8 @@ C.Popup {
                     SearchField { id:interval; Layout.fillWidth:true; Accessible.name:"Refresh interval in seconds" }
                     Label { text:"Backend executable"; color: theme.subdued }
                     SearchField { id:backend; objectName:"backendPathField"; Layout.fillWidth:true; placeholderText:"Default: ~/.local/share/outbound/bin/outbound-engine"; Accessible.name:"Backend executable path" }
+                    ActionButton { objectName:"installEngineSettingsButton"; Layout.fillWidth:true; enabled:!root.service.engineInstalling && !root.service.geoInstalling; text:root.service.engineInstalling ? "Downloading and verifying…" : "Install / update prebuilt collector"; onClicked:root.service.installEngine() }
+                    Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:root.service.engineInstallError || "Downloads the collector for this version from the Outbound GitHub release, verifies its pinned SHA-256 and uses the default path."; font.pixelSize:theme.size*0.85 }
                 }
                 ColumnLayout {
                     visible: root.section === 1
@@ -104,7 +106,7 @@ C.Popup {
                     Label { text:"Country database"; font.bold:true }
                     SearchField { id:database; Layout.fillWidth:true; placeholderText:"Default: managed DB-IP Lite database"; Accessible.name:"Local GeoIP database path" }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
-                    ActionButton { Layout.fillWidth:true; enabled:!root.service.geoInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
+                    ActionButton { Layout.fillWidth:true; enabled:!root.service.geoInstalling && !root.service.engineInstalling; text:root.service.geoInstalling ? "Downloading and validating…" : "Install / update managed GeoIP"; onClicked:root.service.installGeoIp() }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; visible:root.service.geoInstallError !== ""; text:root.service.geoInstallError }
                     Label { text:"Origin · search a city or enter coordinates"; font.bold:true; Layout.topMargin:12; Layout.fillWidth:true; wrapMode:Text.Wrap }
                     RowLayout {
@@ -155,7 +157,7 @@ C.Popup {
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Country markers are approximate. Direction is unknown. Shared sockets can belong to several applications. No automatic GeoIP downloads."; font.pixelSize:theme.size*0.85 }
                     Label {
                         Layout.fillWidth:true; wrapMode:Text.Wrap; font.pixelSize:theme.size*0.85
-                        text:"Made with Natural Earth. Managed database: IP Geolocation by DB-IP · CC BY 4.0. Outbound code: MIT."
+                        text:"Made with Natural Earth. Managed database: IP Geolocation by DB-IP · CC BY 4.0. Outbound code: MIT. Prebuilt collector: Spinel runtime (MIT) and libmaxminddb (Apache-2.0); license notices are installed beside it."
                     }
                     ActionButton { Layout.fillWidth:true; text:"City search: Photon / © OpenStreetMap contributors"; onClicked:Qt.openUrlExternally("https://photon.komoot.io/") }
                     ActionButton { Layout.fillWidth:true; text:"DB-IP data and attribution"; onClicked:Qt.openUrlExternally("https://db-ip.com/db/lite.php") }

@@ -30,56 +30,78 @@ Item {
     readonly property bool retryWaiting: retryTimer.running
     readonly property var processId: process.processId
 
-    property bool geoInstalling: false
+    // One explicit helper at a time: "geoip" (DB-IP database) or "engine" (prebuilt collector).
+    property string installTask: ""
+    readonly property bool geoInstalling: installTask === "geoip"
+    readonly property bool engineInstalling: installTask === "engine"
     property string geoInstallError: ""
-    property bool geoCancelled: false
-    property string geoOriginalPath: ""
-    function installGeoIp() {
-        if (geoInstalling || !service || service.openViews === 0) return;
-        geoInstallError = ""; geoCancelled = false; geoInstalling = true;
-        geoOriginalPath = service.databasePath;
-        installer.command = ["python3", "-B", decodeURIComponent(Qt.resolvedUrl("tools/update_geoip.py").toString().slice(7)), "--backend", executable];
+    property string engineInstallError: ""
+    property bool engineMissing: false
+    property bool installCancelled: false
+    property string installOriginalPath: ""
+    function helper(name) { return decodeURIComponent(Qt.resolvedUrl("tools/" + name).toString().slice(7)); }
+    function runInstaller(task, command, originalPath) {
+        if (installTask || !service || service.openViews === 0) return;
+        if (task === "geoip") geoInstallError = ""; else engineInstallError = "";
+        installCancelled = false; installTask = task;
+        installOriginalPath = originalPath;
+        installer.command = command;
         installDeadline.restart();
         installer.running = true;
     }
-    function cancelGeoIp() {
-        if (!geoInstalling) return;
-        geoCancelled = true;
+    function installGeoIp() {
+        if (service) runInstaller("geoip", ["python3", "-B", helper("update_geoip.py"), "--backend", executable], service.databasePath);
+    }
+    function installEngine() {
+        if (service) runInstaller("engine", ["python3", "-B", helper("install_engine.py")], service.backendPath);
+    }
+    function cancelInstall() {
+        if (!installTask) return;
+        installCancelled = true;
         if (installer.processId > 0) installer.signal(15);
         installKill.restart();
     }
+    function installFinished(message) {
+        if (installTask === "geoip") geoInstallError = message; else engineInstallError = message;
+        installTask = ""; installDeadline.stop(); installKill.stop();
+    }
     Connections {
         target: root.service
-        function onOpenViewsChanged() { if (root.service.openViews === 0) root.cancelGeoIp(); }
+        function onOpenViewsChanged() { if (root.service.openViews === 0) root.cancelInstall(); }
     }
-    Timer { id: installDeadline; interval: 165000; onTriggered: root.cancelGeoIp() }
+    Timer { id: installDeadline; interval: 165000; onTriggered: root.cancelInstall() }
     Timer { id: installKill; interval: 500; onTriggered: if (installer.processId > 0) installer.signal(9) }
     Process {
         id: installer
         property bool started: false
         stdout: SplitParser { splitMarker: ""; onRead: function(data) {} }
         stderr: SplitParser { splitMarker: ""; onRead: function(data) {} }
-        onStarted: { started = true; if (root.geoCancelled) root.cancelGeoIp(); }
+        onStarted: { started = true; if (root.installCancelled) root.cancelInstall(); }
         onRunningChanged: {
             if (running) started = false;
-            else if (!started && root.geoInstalling) {
-                root.geoInstalling = false; installDeadline.stop(); installKill.stop();
-                root.geoInstallError = "Installer unavailable. Python 3 is required.";
-            }
+            else if (!started && root.installTask) root.installFinished("Installer unavailable. Python 3 is required.");
         }
         // qmllint disable signal-handler-parameters
         onExited: function(exitCode) {
-            root.geoInstalling = false; installDeadline.stop(); installKill.stop();
-            if (root.destroying) return;
-            if (root.geoCancelled) root.geoInstallError = "GeoIP installation cancelled.";
-            else if (exitCode !== 0) root.geoInstallError = "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details.";
-            else {
-                if (root.service.databasePath === root.geoOriginalPath) {
-                    var origin = root.service.origin;
-                    root.geoInstallError = root.service.configure(root.service.backendPath, "", origin ? String(origin.lat) : "", origin ? String(origin.lon) : "", String(root.service.intervalSeconds));
-                }
-                root.retry();
+            var task = root.installTask;
+            var name = task === "geoip" ? "GeoIP" : "Collector";
+            if (root.destroying) { root.installTask = ""; return; }
+            if (root.installCancelled) { root.installFinished(name + " installation cancelled."); return; }
+            if (exitCode !== 0) {
+                root.installFinished(task === "geoip"
+                    ? "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details."
+                    : "Collector installation failed. Check your connection and retry, or build it from source.");
+                return;
             }
+            root.installFinished("");
+            // Switch to the managed file unless the user chose another path meanwhile.
+            var origin = root.service.origin;
+            var coordinates = [origin ? String(origin.lat) : "", origin ? String(origin.lon) : "", String(root.service.intervalSeconds)];
+            if (task === "geoip" && root.service.databasePath === root.installOriginalPath)
+                root.geoInstallError = root.service.configure(root.service.backendPath, "", coordinates[0], coordinates[1], coordinates[2]);
+            else if (task === "engine" && root.service.backendPath === root.installOriginalPath)
+                root.engineInstallError = root.service.configure("", root.service.databasePath, coordinates[0], coordinates[1], coordinates[2]);
+            root.retry();
         }
         // qmllint enable signal-handler-parameters
     }
@@ -91,7 +113,7 @@ Item {
     function start() {
         if (!wanted || busy || fatal || destroying || retryTimer.running) return;
         if (executable[0] !== "/" || (database && database[0] !== "/")) { fatal = true; service.phase = "error"; service.error = "Configure absolute backend and database paths."; return; }
-        generation++; busy = true; accepting = true; stopping = false; started = false;
+        generation++; busy = true; accepting = true; stopping = false; started = false; engineMissing = false;
         pending = ""; buffer = ""; session = ""; sequence = 0;
         service.phase = "starting"; service.error = "";
         process.stdinEnabled = true;
@@ -152,7 +174,7 @@ Item {
     }
     onExecutableChanged: if (ready) retry()
     onDatabaseChanged: if (ready) retry()
-    Component.onDestruction: { destroying = true; cancelGeoIp(); stop(); if (process.processId > 0) process.signal(15); }
+    Component.onDestruction: { destroying = true; cancelInstall(); stop(); if (process.processId > 0) process.signal(15); }
     Timer { id: poll; interval: root.service ? root.service.pollInterval : 2000; onTriggered: root.request() }
     Timer { id: retryTimer; onTriggered: root.start() }
     Timer { id: watchdog; interval: 5000; onTriggered: root.failed("Backend response timed out.", false) }
@@ -178,7 +200,8 @@ Item {
         onRunningChanged: {
             if (root.busy && !running && !root.started) {
                 root.busy = false; killTimer.stop(); watchdog.stop();
-                root.failed("Backend unavailable. Build it and set its absolute path in settings.",true);
+                root.engineMissing = true;
+                root.failed("Collector unavailable. Install it or set its absolute path in settings.",true);
             }
         }
         // Quickshell exposes QProcess::ExitStatus without its enum in qmltypes.

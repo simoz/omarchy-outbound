@@ -8,12 +8,15 @@ binary is committed. See [build instructions](../docs/development.md#build-the-r
 Spinel's compiler/runtime uses the MIT license; libmaxminddb uses Apache-2.0.
 Redistributing compiled binaries requires retaining the applicable upstream
 license texts and notices, including those of bundled runtime components.
-This repository does not currently ship a binary release bundle.
+Release archives built by `.github/workflows/release.yml` contain the binary,
+Outbound's `LICENSE`, `licenses/spinel-LICENSE`, `licenses/libmaxminddb-LICENSE`,
+`licenses/libmaxminddb-NOTICE` and a `NOTICE.txt` with the source commit and
+glibc requirement. The in-app installer keeps these files beside the binary.
 
 The compiled collector does not require a Ruby interpreter, Spinel or Rust at
 runtime. It statically links libmaxminddb and uses system C runtime libraries;
-builds must be checked against the target architecture and glibc baseline before
-redistribution.
+release builds run on Ubuntu 22.04 (glibc 2.35) natively for x86_64 and ARM64
+and pass `backend/ruby/check.sh` there before packaging.
 
 The generated MMDB used by tests is original synthetic data under this project's
 MIT license. No provider database is bundled. Managed DB-IP Lite data has its

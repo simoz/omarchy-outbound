@@ -1,0 +1,128 @@
+name: Release collector
+
+# A version tag builds and checks the collector natively on each architecture,
+# then creates a draft release. Publishing the draft is a manual step.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  SPINEL_REVISION: 66ae8c07f2d94f86f31fe7902650e796a79895fc
+  MAXMIND_VERSION: 1.12.2
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # Ubuntu 22.04 fixes the glibc 2.35 baseline for both binaries.
+          - arch: x86_64
+            runner: ubuntu-22.04
+          - arch: aarch64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check versions
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          test "$(jq -r .version manifest.json)" = "$version"
+          test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Prepare Spinel and libmaxminddb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake
+          tools="$RUNNER_TEMP/tools"
+          git clone https://github.com/matz/spinel.git "$tools/spinel"
+          git -C "$tools/spinel" checkout --detach "$SPINEL_REVISION"
+          make -C "$tools/spinel" deps
+          make -C "$tools/spinel" -j"$(nproc)"
+          git clone --depth 1 --branch "$MAXMIND_VERSION" https://github.com/maxmind/libmaxminddb.git "$tools/maxmind"
+          cmake -S "$tools/maxmind" -B "$tools/maxmind/build" \
+            -DBUILD_TESTING=OFF -DMAXMINDDB_BUILD_BINARIES=OFF \
+            -DCMAKE_INSTALL_PREFIX="$tools/maxmind-install"
+          cmake --build "$tools/maxmind/build" -j"$(nproc)"
+          cmake --install "$tools/maxmind/build"
+          echo "SPINEL=$tools/spinel/bin/spinel" >> "$GITHUB_ENV"
+          echo "MAXMIND_PREFIX=$tools/maxmind-install" >> "$GITHUB_ENV"
+          echo "TOOLS=$tools" >> "$GITHUB_ENV"
+
+      - name: Build and check
+        run: |
+          backend/ruby/build.sh --force
+          backend/ruby/check.sh
+
+      - name: Package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          name="outbound-engine-$version-linux-${{ matrix.arch }}"
+          package="$RUNNER_TEMP/$name"
+          mkdir -p "$package/licenses"
+          install -m755 backend/ruby/build/outbound-engine "$package/outbound-engine"
+          cp LICENSE "$package/LICENSE"
+          cp "$TOOLS/spinel/LICENSE" "$package/licenses/spinel-LICENSE"
+          cp "$TOOLS/maxmind/LICENSE" "$package/licenses/libmaxminddb-LICENSE"
+          cp "$TOOLS/maxmind/NOTICE" "$package/licenses/libmaxminddb-NOTICE"
+          glibc=$(objdump -T "$package/outbound-engine" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+          cat > "$package/NOTICE.txt" <<EOF
+          Outbound collector $version for Linux ${{ matrix.arch }} (requires $glibc or newer).
+          Built from $GITHUB_SERVER_URL/$GITHUB_REPOSITORY at commit $GITHUB_SHA.
+          Outbound code: MIT (LICENSE).
+          Compiled with Spinel $SPINEL_REVISION: MIT (licenses/spinel-LICENSE).
+          Statically links libmaxminddb $MAXMIND_VERSION: Apache-2.0 (licenses/libmaxminddb-*).
+          No GeoIP database is included.
+          EOF
+          tar -C "$RUNNER_TEMP" --sort=name --owner=0 --group=0 --numeric-owner \
+            --mtime="@$(git log -1 --format=%ct)" -czf "$name.tar.gz" "$name"
+          sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
+          echo "$name ($glibc): $(cut -d' ' -f1 "$name.tar.gz.sha256")" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: engine-${{ matrix.arch }}
+          path: outbound-engine-*.tar.gz*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: engine-*
+          merge-multiple: true
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # The pinned checksums for tools/engine-release.json, ready to commit.
+          jq -n --arg version "$version" '{version: $version, assets: {}}' > release.json
+          for arch in x86_64 aarch64; do
+            name="outbound-engine-$version-linux-$arch.tar.gz"
+            sha=$(cut -d' ' -f1 "$name.sha256")
+            jq --arg arch "$arch" --arg name "$name" --arg sha "$sha" \
+              '.assets[$arch] = {name: $name, sha256: $sha}' release.json > release.next
+            mv release.next release.json
+          done
+          cat outbound-engine-*.sha256 > SHA256SUMS
+          {
+            echo "Prebuilt collector for Linux x86_64 and aarch64."
+            echo
+            echo "Before publishing, commit this as \`tools/engine-release.json\` on main:"
+            echo
+            echo '```json'
+            cat release.json
+            echo '```'
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "Outbound $version" --notes-file notes.md \
+            outbound-engine-*.tar.gz SHA256SUMS

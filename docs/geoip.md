@@ -8,14 +8,15 @@ No provider database is included in the repository or relicensed as MIT.
 
 ## From the interface
 
-Start `./run-ui.sh`, then click **Install GeoIP** on the globe when geolocation
-is unavailable. The button shows download/validation activity and any failure.
+Open Outbound (or `./run-ui.sh`), then click **Install GeoIP** on the globe when
+geolocation is unavailable. A collector must be installed first; see
+[collector installation](development.md#prebuilt-collector). The button shows download/validation activity and any failure.
 Success reloads the backend automatically and hides the installation prompt.
 Settings provides **Install / update managed GeoIP** for subsequent monthly
 updates. Installing managed data selects it if the custom path was not changed
 while installation was running. The origin remains manually configured.
 
-The updater needs Python 3.11+ and a built backend with `--check-database` support.
+The updater needs Python 3.11+ and an installed or built backend with `--check-database` support.
 It runs only after an explicit click. Closing the last panel/window cancels installation; keeping only the bar does not keep a
 download alive. The ordinary collector makes no GeoIP network requests.
 
