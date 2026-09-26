@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.simoz.outbound",
   "name": "Outbound",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Simone Merli",
   "license": "MIT",
   "description": "Explore observed Linux TCP connections by application, IP and country.",
