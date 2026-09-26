@@ -93,6 +93,14 @@ exits with status 3 and the interface says that no prebuilt collector is
 published yet, pointing to a plugin update or the source build. From a terminal:
 `python3 -B tools/install_engine.py [--data-dir /absolute/path]`.
 
+### Reinstall from scratch
+
+`./reinstall.sh` removes the plugin (and with it its bar entry and settings),
+deletes `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/` unless `--keep-data` is
+given, adds the plugin again from GitHub and restarts the Omarchy shell. The
+restart matters: the shell's automatic plugin reload can keep the previous QML
+in memory. It asks for confirmation unless `--yes` is given.
+
 ### Collector built from source
 
 Build the collector first and place it at the default runtime path:
