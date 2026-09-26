@@ -40,6 +40,23 @@ Item {
             compare(service.configure("","","","","2"),"");
             compare(service.origin,null);
         }
+        function test_unchanged_configuration_is_saved_without_error() {
+            var stored = null, writes = 0;
+            // Mirrors the shell: an identical entry is reported as not updated.
+            service.saveConfiguration = function(config) {
+                var same = JSON.stringify(config) === JSON.stringify(stored);
+                stored = config; writes++; return !same;
+            };
+            compare(service.configure("/tmp/engine","","","","4"),"");
+            compare(service.configure("/tmp/engine","","","","4"),"");
+            compare(writes,1);
+            stored = null;
+            service.saveConfiguration = function() { return false; };
+            compare(service.configure("/tmp/engine","","","","5"),"Unable to save settings.");
+            compare(service.intervalSeconds,4);
+            service.saveConfiguration = null;
+            compare(service.configure("","","","","2"),"");
+        }
         function test_selection_tracks_combined_filters() {
             compare(service.rows.length, 24);
             compare(service.countryCount, 8);

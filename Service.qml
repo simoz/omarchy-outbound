@@ -66,8 +66,10 @@ Item {
         if (!Number.isInteger(seconds) || seconds < 1 || seconds > 60) return "Refresh interval must be 1–60 seconds.";
         var name = typeof originName === "string" ? originName.slice(0,240) : origin && origin.lat === Number(lat) && origin.lon === Number(lon) ? origin.name || "" : "";
         var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds});
-        if (shell && !shell.updateEntryInline("io.github.simoz.outbound", config)) return "Unable to save settings.";
-        if (!shell && saveConfiguration && !saveConfiguration(config)) return "Unable to save settings.";
+        // The shell reports an unchanged entry as not updated, so only a real change can fail.
+        var changed = JSON.stringify(config) !== JSON.stringify(savedConfiguration);
+        if (changed && shell && !shell.updateEntryInline("io.github.simoz.outbound", config)) return "Unable to save settings.";
+        if (changed && !shell && saveConfiguration && !saveConfiguration(config)) return "Unable to save settings.";
         loadConfiguration(config); return "";
     }
     function loadConfiguration(config) {
