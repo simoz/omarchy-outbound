@@ -42,6 +42,17 @@ before that click. Then use **Install GeoIP** to show destination countries.
 See [collector installation](docs/development.md#install-the-plugin) for
 details and building from source.
 
+## Uninstall
+
+```bash
+omarchy plugin remove io.github.simoz.outbound
+rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/outbound"
+```
+
+The first command disables the plugin and deletes its folder. The second
+removes the installed collector and GeoIP database; skip it to keep them for a
+later reinstall.
+
 ## Build and run from source
 
 Prepare the pinned Spinel compiler and static libmaxminddb as described in the
