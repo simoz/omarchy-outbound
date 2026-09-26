@@ -86,7 +86,17 @@ FocusScope {
                     onClicked: keyboardHelp.open()
                 }
                 ActionButton { flat: true; objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
-                ActionButton { flat: true; visible: root.surfaceSwitchAvailable; text: root.expanded ? "↙" : "↗"; implicitWidth: 30; hint: root.expanded ? "Collapse into panel" : "Expand into window"; onClicked: root.expandRequested() }
+                ActionButton {
+                    flat: true
+                    visible: root.surfaceSwitchAvailable
+                    objectName: "surfaceSwitchButton"
+                    implicitWidth: 30
+                    hint: root.expanded ? "Collapse into panel" : "Expand into window"
+                    contentItem: Item { ExpandIcon { anchors.centerIn: parent; ink: theme.accent } }
+                    C.ToolTip.visible: hovered
+                    C.ToolTip.text: hint
+                    onClicked: root.expandRequested()
+                }
                 ActionButton { flat: true; text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
             }
             GridLayout {

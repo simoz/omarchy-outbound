@@ -24,7 +24,8 @@ C.Button {
     background: Rectangle {
         color: root.flat ? "transparent" : root.selected || root.hovered || root.down ? theme.fade(theme.text, 0.12) : theme.wash
         radius: root.flat ? 3 : 0
-        border.color: root.activeFocus ? theme.text : root.flat ? (root.hovered || root.down ? theme.subdued : "transparent") : root.selected ? theme.accent : theme.border
-        border.width: root.activeFocus || root.selected ? 2 : 1
+        // visualFocus ignores focus taken by a mouse click, so only keyboard focus stays outlined.
+        border.color: root.visualFocus ? theme.text : root.flat ? (root.hovered || root.down ? theme.subdued : "transparent") : root.selected ? theme.accent : theme.border
+        border.width: root.visualFocus || root.selected ? 2 : 1
     }
 }
