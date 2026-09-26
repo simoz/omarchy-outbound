@@ -1,7 +1,7 @@
 # Spinel FFI declarations for the local C adapters. Native buffers and the GeoIP
 # database are process-global; the collector calls them sequentially.
 module Native
-  ffi_cflags "netlink.o geo.o input.o maxmind.o"
+  ffi_cflags "netlink.o geo.o input.o crypt.o maxmind.o"
   ffi_func :outbound_read_frame, [], :int
   ffi_func :outbound_frame_hex, [], :str
 
