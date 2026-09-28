@@ -40,7 +40,9 @@ UI.Panel {
         open: root.opened && !root.expanded
         focusTarget: root.scene
         contentWidth: fittedContentWidth(1060)
-        contentHeight: fittedContentHeight(820)
+        // Ask for more than any common screen: the host clamps the card below the bar,
+        // so the globe gets the full height left after the connection table.
+        contentHeight: fittedContentHeight(1400)
         Item {
             id: compactHost
             anchors.fill: parent
