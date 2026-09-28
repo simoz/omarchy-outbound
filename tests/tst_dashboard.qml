@@ -31,6 +31,46 @@ Item {
             closeSpy.clear();
             copySpy.clear();
         }
+        function test_collection_toggle_preserves_rows_and_globe_rotation() {
+            var toggle = findChild(dashboard, "collectionToggleButton");
+            service.paused = false;
+            service.phase = "partial";
+            service.error = "";
+            dashboard.globe.rotating = true;
+            var rows = service.liveRows;
+            compare(toggle.text, "● LIVE");
+            mouseClick(toggle);
+            verify(service.paused);
+            compare(toggle.text, "Ⅱ PAUSED");
+            verify(dashboard.globe.rotating);
+            compare(service.liveRows, rows);
+            toggle.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            verify(!service.paused);
+            compare(toggle.text, "● LIVE");
+            service.error = "Socket collection failed.";
+            compare(toggle.text, "! ERROR");
+            service.error = "";
+            service.phase = "idle";
+            dashboard.globe.rotating = false;
+        }
+        function test_globe_rotation_control_remains_available_in_narrow_view() {
+            dashboard.width = 380;
+            var play = findChild(dashboard, "globeRotationButton");
+            verify(play.visible);
+            var origin = findChild(dashboard, "setGlobeOriginButton");
+            var playBottom = play.mapToItem(dashboard.globe, 0, play.height);
+            verify(playBottom.y <= origin.y);
+            dashboard.globe.rotating = false;
+            service.paused = true;
+            play.clicked();
+            verify(dashboard.globe.rotating);
+            verify(service.paused);
+            play.clicked();
+            verify(!dashboard.globe.rotating);
+            service.paused = false;
+            dashboard.width = 1000;
+        }
         function test_keyboard_guide_restores_focus_and_keeps_escape_local() {
             dashboard.searchField.forceActiveFocus();
             keyClick(Qt.Key_F1);

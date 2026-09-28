@@ -65,15 +65,12 @@ FocusScope {
                 Label { text: "OUTBOUND"; color: theme.accent; font.pixelSize: theme.size * (root.wide ? 1.75 : 1.2); font.letterSpacing: root.wide ? 3 : 1 }
                 Label { visible: root.width > 920; text: "NETWORK OBSERVATORY"; color: theme.subdued; font.pixelSize: theme.size * 0.75; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
-                Label { text: "● " + root.service.status; color: theme.accent; font.pixelSize: theme.size * 0.8 }
                 ActionButton {
                     flat: true
-                    visible: root.wide
-                    objectName: "globeRotationButton"
-                    text: globe.rotating ? "Ⅱ" : "▷"
-                    implicitWidth: 30
-                    hint: globe.rotating ? "Pause rotation" : "Rotate globe"
-                    onClicked: globe.rotating = !globe.rotating
+                    objectName: "collectionToggleButton"
+                    text: root.service.paused ? "Ⅱ PAUSED" : root.service.error ? "! ERROR" : "● LIVE"
+                    hint: root.service.paused ? "Resume collection" : "Pause collection"
+                    onClicked: root.service.paused = !root.service.paused
                 }
                 ActionButton {
                     flat: true
@@ -156,8 +153,17 @@ FocusScope {
                         active: root.active
                     }
                     Row {
-                        anchors { right: parent.right; bottom: parent.bottom; rightMargin: 12; bottomMargin: 47 }
+                        anchors { right: parent.right; bottom: parent.bottom; rightMargin: 12; bottomMargin: parent.width < 650 ? 90 : 47 }
                         spacing: 4
+                        ActionButton {
+                            objectName: "globeRotationButton"
+                            text: globe.rotating ? "Ⅱ" : "▷"
+                            implicitWidth: 28; implicitHeight: 26
+                            hint: globe.rotating ? "Pause rotation" : "Rotate globe"
+                            C.ToolTip.visible: hovered
+                            C.ToolTip.text: hint
+                            onClicked: globe.rotating = !globe.rotating
+                        }
                         ActionButton {
                             objectName: "globeZoomOut"
                             text: "−"; implicitWidth: 28; implicitHeight: 26

@@ -78,6 +78,9 @@ The default installed collector path is
 Left-click the bar widget to toggle the compact panel. Right-click it to open
 the expanded window directly, or bring it into focus if it is already open.
 
+Use **LIVE / PAUSED** in the header to pause or resume collection. The button
+shows **ERROR** if collection fails; details and retry are in Settings → Collection.
+
 Open settings with the gear button:
 
 - **Collection**: refresh interval, pause/resume, retry, coverage details,
@@ -89,6 +92,7 @@ Open settings with the gear button:
 save failure keep it open.
 Glow and scanlines are enabled. Selecting a city saves the origin immediately.
 
+Use Play/Pause inside the globe to toggle rotation independently of collection.
 Drag the globe to rotate it. Use the wheel, touchpad scrolling or **+/−** to
 zoom. With the globe focused, arrow keys rotate, **+/−** zoom and **Home** resets
 the view. The keyboard button or **F1** opens the complete shortcut guide.
