@@ -130,7 +130,7 @@ omarchy plugin enable io.github.simoz.outbound
 
 Do not overwrite an existing installation without preserving its
 configuration. Installed collection settings use the host's inline plugin
-configuration; reduced motion is session-only.
+configuration.
 
 The bar alone samples every 10 seconds. An open panel/window uses the configured
 1–60 second interval. Pause survives view transitions. Removing every registered

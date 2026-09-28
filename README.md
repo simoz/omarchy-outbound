@@ -14,7 +14,7 @@ Spinel. Only real connections are displayed.
 - Rotatable globe with 1×–4× zoom, country markers and connection arcs.
 - Local GeoIP lookup, with an optional database download started by the user.
 - Origin selection by city search or manual coordinates.
-- Keyboard controls, Omarchy theme colors and reduced-motion settings.
+- Keyboard controls and Omarchy theme colors.
 
 ## Requirements
 
@@ -82,18 +82,16 @@ Open settings with the gear button:
 
 - **Collection**: refresh interval, pause/resume, retry, coverage details,
   prebuilt collector installation and backend executable path.
-- **Globe**: install/update GeoIP, choose a custom MMDB, set the origin and reduce motion.
+- **Globe**: install/update GeoIP, choose a custom MMDB and set the origin.
 - **Credits**: data sources, attribution and licenses.
 
 **Done** saves collection settings and closes the editor. Invalid values or a
-save failure keep it open. Reduced motion applies immediately for the session.
+save failure keep it open.
 Glow and scanlines are enabled. Selecting a city saves the origin immediately.
 
 Drag the globe to rotate it. Use the wheel, touchpad scrolling or **+/−** to
 zoom. With the globe focused, arrow keys rotate, **+/−** zoom and **Home** resets
 the view. The keyboard button or **F1** opens the complete shortcut guide.
-Reduced motion stops rotation and arc pulses; Play can explicitly restart
-rotation while keeping the arcs static.
 
 If geolocation is missing, use **Install GeoIP**. Downloads never start
 automatically. Without an origin, the globe shows destination countries without

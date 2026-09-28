@@ -201,15 +201,8 @@ Item {
             var play = findChild(dashboard, "globeRotationButton");
             mouseClick(play);
             verify(dashboard.globe.rotating);
-            var settings = findChild(dashboard, "outboundSettings");
-            settings.open();
-            tryCompare(settings, "opened", true);
-            settings.section = 1;
-            mouseClick(findChild(settings, "reducedMotionButton"));
-            verify(service.reducedMotion);
+            service.reducedMotion = true;
             verify(!dashboard.globe.rotating);
-            findChild(settings, "applyCollectionSettings").clicked();
-            tryCompare(settings, "opened", false);
             verify(play.enabled);
             var longitude = dashboard.globe.longitude;
             play.forceActiveFocus();
