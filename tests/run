@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Portable checks that need no collector build toolchain: JavaScript, Python
+# helpers, QML units and Quickshell integration scripts. The collector suite is
+# backend/ruby/check.sh (see docs/development.md#automated-checks).
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+
+qmltestrunner="${QMLTESTRUNNER:-/usr/lib/qt6/bin/qmltestrunner}"
+node --test tests/*.test.cjs
+python3 -B -m unittest discover -s tests -p 'test_*.py'
+QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
+  "$qmltestrunner" -input tests -import tests/stubs -o -,txt
+for check in tests/check_*.py; do
+  python3 -B "$check"
+done
+git diff --check

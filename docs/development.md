@@ -178,6 +178,9 @@ omarchy plugin validate .
 git diff --check
 ```
 
+`tests/run` runs every check above except `backend/ruby/check.sh` and
+`omarchy plugin validate .`, so it needs no collector build toolchain.
+
 The backend suite covers native framing, protocol validation, process identity,
 shared descriptors, Unicode, scope, synthetic GeoIP, bounds and controlled
 IPv4/IPv6 sockets. Socket tests need ordinary loopback/netlink access. A sandbox
