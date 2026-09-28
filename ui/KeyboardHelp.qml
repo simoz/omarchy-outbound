@@ -45,32 +45,74 @@ C.Popup {
                 spacing: 14
                 Repeater {
                     model: [
-                        ["GENERAL", ""],
-                        ["F1", "Open or close this guide"],
-                        ["Tab / Shift+Tab", "Move to the next / previous control"],
-                        ["Enter / Space", "Activate the focused button or list row"],
-                        ["Esc", "Close the open menu or guide; otherwise close Outbound"],
-                        ["GLOBE · WHEN FOCUSED", ""],
-                        ["← ↑ → ↓", "Rotate the globe"],
-                        ["+ / − · Scroll", "Zoom in / out on the globe"],
-                        ["Home", "Reset globe orientation and zoom"],
-                        ["FILTERS AND CONNECTIONS", ""],
-                        ["↑ / ↓", "Move between rows in the focused country, application or connection list"],
-                        ["Enter / Space", "Toggle a country/application filter, or select a connection"],
-                        ["Space, ↑ / ↓, Enter", "Open a dropdown, choose an option and confirm"],
-                        ["Search", "Type to filter by IP or application. Editing keys keep their normal behavior."],
-                        ["Copy IP", "Select a connection, then focus and activate Copy IP"],
-                        ["THIS GUIDE", ""],
-                        ["↑ / ↓ · PgUp / PgDn", "Scroll the guide"]
+                        [[], "GENERAL"],
+                        [["F1"], "Open or close this guide"],
+                        [["Tab", "Shift+Tab"], "Move to the next / previous control"],
+                        [["Enter", "Space"], "Activate the focused button or list row"],
+                        [["Esc"], "Close the open menu or guide; otherwise close Outbound"],
+                        [[], "GLOBE · WHEN FOCUSED"],
+                        [["←", "↑", "→", "↓"], "Rotate the globe"],
+                        [["+", "−"], "Zoom in / out; scrolling also zooms"],
+                        [["Home"], "Reset globe orientation and zoom"],
+                        [[], "FILTERS AND CONNECTIONS"],
+                        [["↑", "↓"], "Move between rows in the focused country, application or connection list"],
+                        [["Enter", "Space"], "Toggle a country/application filter, or select a connection"],
+                        [["Space", "↑", "↓", "Enter"], "Open a dropdown, choose an option and confirm"],
+                        [[], "THIS GUIDE"],
+                        [["↑", "↓", "PgUp", "PgDn"], "Scroll the guide"]
                     ]
                     Column {
                         id: entry
                         required property var modelData
                         width: contents.width
                         spacing: 4
-                        Label { width: parent.width; text: entry.modelData[0]; color: theme.accent; wrapMode: Text.Wrap; font.bold: true }
-                        Label { width: parent.width; visible: text !== ""; text: entry.modelData[1]; wrapMode: Text.Wrap }
+                        Label {
+                            width: parent.width
+                            visible: entry.modelData[0].length === 0
+                            text: entry.modelData[1]
+                            color: theme.accent
+                            wrapMode: Text.Wrap
+                            font.bold: true
+                        }
+                        Row {
+                            visible: entry.modelData[0].length > 0
+                            width: parent.width
+                            spacing: 12
+                            Flow {
+                                id: keyCaps
+                                width: contents.width >= 480 ? 180 : 110
+                                spacing: 4
+                                Repeater {
+                                    model: entry.modelData[0]
+                                    Rectangle {
+                                        required property string modelData
+                                        width: Math.max(24, keyLabel.implicitWidth + 12)
+                                        height: Math.max(24, keyLabel.implicitHeight + 8)
+                                        color: "transparent"
+                                        border.color: theme.subdued
+                                        Label {
+                                            id: keyLabel
+                                            anchors.centerIn: parent
+                                            text: parent.modelData
+                                            font.pixelSize: theme.size * 0.85
+                                        }
+                                    }
+                                }
+                            }
+                            Label {
+                                width: parent.width - keyCaps.width - parent.spacing
+                                text: entry.modelData[1]
+                                wrapMode: Text.WordWrap
+                            }
+                        }
                     }
+                }
+                Rectangle { width: parent.width; height: 1; color: theme.border }
+                Label {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    color: theme.subdued
+                    text: "Use LIVE / PAUSED to control collection and Play/Pause inside the globe to rotate.\nType in Search to filter by IP or application. Select a connection, then use Copy IP to copy its address."
                 }
             }
         }
