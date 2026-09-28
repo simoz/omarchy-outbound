@@ -100,6 +100,7 @@ FocusScope {
             }
             GridLayout {
                 id: hero
+                visible: !table.expanded
                 Layout.fillWidth: true
                 Layout.preferredHeight: root.wide
                     ? Math.max(350, root.height - Math.max(36, header.implicitHeight) - table.implicitHeight - footer.implicitHeight - 54)
@@ -217,6 +218,10 @@ FocusScope {
             ConnectionTable {
                 id: table
                 Layout.fillWidth: true
+                // Expanded, the list fills the page between header and footer; 44 covers margins and spacing.
+                Layout.preferredHeight: expanded
+                    ? Math.max(implicitHeight, root.height - Math.max(36, header.implicitHeight) - footer.implicitHeight - 44)
+                    : implicitHeight
                 service: root.service
                 onCopyRequested: function(text) { root.copyRequested(text); }
             }

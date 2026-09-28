@@ -298,6 +298,22 @@ Item {
             keyClick(Qt.Key_Space);
             compare(service.selection, "demo-12");
         }
+        function test_connection_list_expands_to_page_height() {
+            service.liveRows = Fixture.connections("busy");
+            var toggle = findChild(dashboard, "connectionListToggleButton");
+            var list = findChild(dashboard, "outboundConnections");
+            var page = findChild(dashboard, "outboundPage");
+            var collapsed = list.height;
+            mouseClick(toggle);
+            verify(!dashboard.globe.visible);
+            tryVerify(function() { return list.height > collapsed * 2; });
+            tryVerify(function() { return page.contentHeight <= page.height + 1; });
+            compare(toggle.Accessible.name, "Collapse connection list");
+            toggle.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            verify(dashboard.globe.visible);
+            tryCompare(list, "height", collapsed);
+        }
         function test_overview_fits_desktop_and_settings_escape_stays_local() {
             var page = findChild(dashboard, "outboundPage");
             tryVerify(function() { return page.contentHeight <= page.height + 1; }, 1000, page.contentHeight + " exceeds " + page.height);

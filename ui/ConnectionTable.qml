@@ -5,6 +5,8 @@ import QtQuick.Controls.Basic as C
 Item {
     id: root
     required property var service
+    // When true the dashboard hides the globe and facets so the list takes the page height.
+    property bool expanded: false
     signal copyRequested(string text)
     readonly property bool narrow: width < 680
     readonly property var proportions: [0.21, 0.27, 0.2, 0.07, 0.17, 0.08]
@@ -21,11 +23,21 @@ Item {
     Frame { anchors.fill: parent; emphasized: true }
     Label {
         x: 14; y: 10
-        width: parent.width - 28
+        width: parent.width - 28 - listToggle.width
         text: "CONNECTIONS  /  " + root.service.filtered.length + " SHOWN"
         font.pixelSize: theme.size * 1.05
         font.letterSpacing: 1.2
         color: theme.accent
+    }
+    ActionButton {
+        id: listToggle
+        flat: true
+        objectName: "connectionListToggleButton"
+        anchors { right: parent.right; rightMargin: 8; top: parent.top; topMargin: 2 }
+        implicitWidth: 30
+        hint: root.expanded ? "Collapse connection list" : "Expand connection list"
+        contentItem: Item { ExpandIcon { anchors.centerIn: parent; ink: theme.accent } }
+        onClicked: root.expanded = !root.expanded
     }
     Item {
         x: 14; y: 38; width: parent.width - 36; height: 23
