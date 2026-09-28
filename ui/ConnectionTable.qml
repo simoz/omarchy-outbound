@@ -13,7 +13,10 @@ Item {
         for (var i = 0; i < index; i++) offset += proportions[i];
         return offset * available;
     }
-    implicitHeight: narrow ? 308 : 230
+    // Rows visible without scrolling the list; narrow rows stack cells on three lines.
+    readonly property int visibleRows: narrow ? 5 : 8
+    readonly property real rowHeight: narrow ? 66 : Math.max(38, theme.size * 2.9)
+    implicitHeight: list.anchors.topMargin + visibleRows * rowHeight + list.anchors.bottomMargin + details.height + details.anchors.margins
     Theme { id: theme }
     Frame { anchors.fill: parent; emphasized: true }
     Label {
@@ -55,7 +58,7 @@ Item {
             readonly property bool selected: root.service.selection === modelData.id
             objectName: "connection-" + modelData.id
             width: list.width - 8
-            height: root.narrow ? 66 : Math.max(38, theme.size * 2.9)
+            height: root.rowHeight
             padding: 2
             focusPolicy: Qt.StrongFocus
             Accessible.name: modelData.app + ", " + modelData.ip + ", port " + modelData.port + ", " + root.service.countryName(modelData.country) + ", " + modelData.state
