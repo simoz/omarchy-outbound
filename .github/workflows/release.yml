@@ -10,9 +10,8 @@ permissions:
   contents: read
 
 env:
-  SPINEL_REVISION: 66ae8c07f2d94f86f31fe7902650e796a79895fc
+  # Spinel and libmaxminddb (1.12.2) are pinned by the full commits in their checkouts below.
   MAXMIND_VERSION: 1.12.2
-  MAXMIND_COMMIT: cba618d6581b7dbe83478c798d9e58faeaa6b582
   # Gems that Spinel's `make deps` would fetch unverified; versions match its Makefile.
   PRISM_VERSION: 1.9.0
   PRISM_SHA256: 7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
@@ -45,7 +44,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends build-essential cmake
           tools="$RUNNER_TEMP/tools"
           git clone https://github.com/matz/spinel.git "$tools/spinel"
-          git -C "$tools/spinel" checkout --detach "$SPINEL_REVISION"
+          git -C "$tools/spinel" checkout --detach 66ae8c07f2d94f86f31fe7902650e796a79895fc
           # Vendor the parser gems after checking their digests, so `make deps` has nothing to fetch.
           fetch_gem() {
             curl -fsSL --max-filesize 20000000 -o "$RUNNER_TEMP/$1.gem" "https://rubygems.org/gems/$1-$2.gem"
@@ -60,14 +59,15 @@ jobs:
           test -f "$tools/spinel/vendor/rbs/include/rbs/parser.h"
           make -C "$tools/spinel" -q deps
           make -C "$tools/spinel" -j"$(nproc)"
-          git clone --depth 1 --branch "$MAXMIND_VERSION" https://github.com/maxmind/libmaxminddb.git "$tools/maxmind"
-          test "$(git -C "$tools/maxmind" rev-parse HEAD)" = "$MAXMIND_COMMIT"
+          git clone https://github.com/maxmind/libmaxminddb.git "$tools/maxmind"
+          git -C "$tools/maxmind" checkout --detach cba618d6581b7dbe83478c798d9e58faeaa6b582
           cmake -S "$tools/maxmind" -B "$tools/maxmind/build" \
             -DBUILD_TESTING=OFF -DMAXMINDDB_BUILD_BINARIES=OFF \
             -DCMAKE_INSTALL_PREFIX="$tools/maxmind-install"
           cmake --build "$tools/maxmind/build" -j"$(nproc)"
           cmake --install "$tools/maxmind/build"
           echo "SPINEL=$tools/spinel/bin/spinel" >> "$GITHUB_ENV"
+          echo "SPINEL_REVISION=$(git -C "$tools/spinel" rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "MAXMIND_PREFIX=$tools/maxmind-install" >> "$GITHUB_ENV"
           echo "TOOLS=$tools" >> "$GITHUB_ENV"
 
