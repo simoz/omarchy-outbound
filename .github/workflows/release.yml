@@ -12,6 +12,12 @@ permissions:
 env:
   SPINEL_REVISION: 66ae8c07f2d94f86f31fe7902650e796a79895fc
   MAXMIND_VERSION: 1.12.2
+  MAXMIND_COMMIT: cba618d6581b7dbe83478c798d9e58faeaa6b582
+  # Gems that Spinel's `make deps` would fetch unverified; versions match its Makefile.
+  PRISM_VERSION: 1.9.0
+  PRISM_SHA256: 7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
+  RBS_VERSION: 4.0.1
+  RBS_SHA256: e237fd49787fb265bf0f389f2f0f5788fdcdf1f49bb54b4f7952cea904162a07
 
 jobs:
   build:
@@ -25,7 +31,7 @@ jobs:
             runner: ubuntu-22.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check versions
         run: |
@@ -40,9 +46,22 @@ jobs:
           tools="$RUNNER_TEMP/tools"
           git clone https://github.com/matz/spinel.git "$tools/spinel"
           git -C "$tools/spinel" checkout --detach "$SPINEL_REVISION"
-          make -C "$tools/spinel" deps
+          # Vendor the parser gems after checking their digests, so `make deps` has nothing to fetch.
+          fetch_gem() {
+            curl -fsSL --max-filesize 20000000 -o "$RUNNER_TEMP/$1.gem" "https://rubygems.org/gems/$1-$2.gem"
+            echo "$3  $RUNNER_TEMP/$1.gem" | sha256sum -c -
+            mkdir -p "$tools/spinel/vendor/$1" "$RUNNER_TEMP/$1-gem"
+            tar -xf "$RUNNER_TEMP/$1.gem" -C "$RUNNER_TEMP/$1-gem" data.tar.gz
+            tar -xzf "$RUNNER_TEMP/$1-gem/data.tar.gz" -C "$tools/spinel/vendor/$1"
+          }
+          fetch_gem prism "$PRISM_VERSION" "$PRISM_SHA256"
+          fetch_gem rbs "$RBS_VERSION" "$RBS_SHA256"
+          test -f "$tools/spinel/vendor/prism/include/prism/diagnostic.h"
+          test -f "$tools/spinel/vendor/rbs/include/rbs/parser.h"
+          make -C "$tools/spinel" -q deps
           make -C "$tools/spinel" -j"$(nproc)"
           git clone --depth 1 --branch "$MAXMIND_VERSION" https://github.com/maxmind/libmaxminddb.git "$tools/maxmind"
+          test "$(git -C "$tools/maxmind" rev-parse HEAD)" = "$MAXMIND_COMMIT"
           cmake -S "$tools/maxmind" -B "$tools/maxmind/build" \
             -DBUILD_TESTING=OFF -DMAXMINDDB_BUILD_BINARIES=OFF \
             -DCMAKE_INSTALL_PREFIX="$tools/maxmind-install"
@@ -86,7 +105,7 @@ jobs:
           sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
           echo "$name ($glibc): $(cut -d' ' -f1 "$name.tar.gz.sha256")" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-${{ matrix.arch }}
           path: outbound-engine-*.tar.gz*
@@ -98,7 +117,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: engine-*
           merge-multiple: true
