@@ -75,17 +75,19 @@ The default installed collector path is
 
 ## Using Outbound
 
+Left-click the bar widget to toggle the compact panel. Right-click it to open
+the expanded window directly, or bring it into focus if it is already open.
+
 Open settings with the gear button:
 
 - **Collection**: refresh interval, pause/resume, retry, coverage details,
   prebuilt collector installation and backend executable path.
-- **Globe**: install/update GeoIP, choose a custom MMDB and set the origin.
-- **Appearance**: reduced motion, glow and scanlines.
+- **Globe**: install/update GeoIP, choose a custom MMDB, set the origin and reduce motion.
 - **Credits**: data sources, attribution and licenses.
 
 **Done** saves collection settings and closes the editor. Invalid values or a
-save failure keep it open. Display options apply immediately for the session;
-selecting a city saves the origin immediately.
+save failure keep it open. Reduced motion applies immediately for the session.
+Glow and scanlines are enabled. Selecting a city saves the origin immediately.
 
 Drag the globe to rotate it. Use the wheel, touchpad scrolling or **+/−** to
 zoom. With the globe focused, arrow keys rotate, **+/−** zoom and **Home** resets

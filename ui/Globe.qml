@@ -276,7 +276,8 @@ FocusScope {
         }
     }
     Repeater {
-        model: root.service.scanlines ? Math.floor(root.height/6) : 0
+        // Layout can briefly assign a negative height while the surface is resized.
+        model: root.service.scanlines ? Math.max(0, Math.floor(root.height/6)) : 0
         Rectangle {
             required property int index
             y: index*6; width: root.width; height: 1

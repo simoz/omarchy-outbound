@@ -130,7 +130,7 @@ omarchy plugin enable io.github.simoz.outbound
 
 Do not overwrite an existing installation without preserving its
 configuration. Installed collection settings use the host's inline plugin
-configuration; Appearance settings are session-only.
+configuration; reduced motion is session-only.
 
 The bar alone samples every 10 seconds. An open panel/window uses the configured
 1–60 second interval. Pause survives view transitions. Removing every registered
@@ -173,6 +173,7 @@ python3 -B tests/check_geoip_ui.py
 python3 -B tests/check_engine_ui.py
 python3 -B tests/check_origin_search.py
 python3 -B tests/check_preview_settings.py
+python3 -B tests/check_panel_ui.py
 omarchy plugin validate .
 git diff --check
 ```
@@ -185,7 +186,8 @@ permission failure is not a passing integration test.
 QtTest uses a minimal `qs.Commons` facade. The Python integration scripts use
 real Quickshell and local helpers without modifying personal settings or
 contacting public providers. Synthetic connection data lives in `tests/fixtures/`
-and is never copied into the runtime. Physical multi-monitor behavior and the
+and is never copied into the runtime. The panel check simulates the layer-shell surface while using the installed
+host button and controller. Physical multi-monitor behavior and the
 real bar still require testing in the installed host.
 
 ## Visual checks

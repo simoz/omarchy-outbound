@@ -81,11 +81,16 @@ FocusScope {
                     implicitWidth: 30
                     hint: "Keyboard guide (F1)"
                     contentItem: Item { KeyboardIcon { anchors.centerIn: parent; ink: theme.accent } }
-                    C.ToolTip.visible: hovered
-                    C.ToolTip.text: hint
                     onClicked: keyboardHelp.open()
                 }
-                ActionButton { flat: true; objectName: "displaySettingsButton"; text: "⚙"; implicitWidth: 30; hint: "Collection and display settings"; onClicked: settings.open() }
+                ActionButton {
+                    flat: true
+                    objectName: "displaySettingsButton"
+                    implicitWidth: 30
+                    hint: "Collection and display settings"
+                    contentItem: Item { SettingsIcon { anchors.centerIn: parent; ink: theme.accent } }
+                    onClicked: settings.open()
+                }
                 ActionButton {
                     flat: true
                     visible: root.surfaceSwitchAvailable
@@ -93,8 +98,6 @@ FocusScope {
                     implicitWidth: 30
                     hint: root.expanded ? "Collapse into panel" : "Expand into window"
                     contentItem: Item { ExpandIcon { anchors.centerIn: parent; ink: theme.accent } }
-                    C.ToolTip.visible: hovered
-                    C.ToolTip.text: hint
                     onClicked: root.expandRequested()
                 }
                 ActionButton { flat: true; text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }

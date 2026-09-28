@@ -36,7 +36,7 @@ UI.BarWidget {
         hasVisualContent: true
         fixedWidth: root.vertical ? barSize : barContents.implicitWidth + scaledHorizontalMargin * 2
         fixedHeight: root.vertical ? barContents.implicitHeight + scaledVerticalPadding * 2 : barSize
-        tooltipText: "Outbound · " + (root.service ? root.service.status : "IDLE") + " · Open network globe"
+        tooltipText: "Outbound · " + (root.service ? root.service.status : "IDLE") + " · Open network globe · Right-click to expand"
         Grid {
             id: barContents
             anchors.centerIn: parent
@@ -66,7 +66,10 @@ UI.BarWidget {
         Accessible.onPressAction: root.toggle()
         Keys.onSpacePressed: root.toggle()
         Keys.onReturnPressed: root.toggle()
-        onPressed: function(button) { if (button === Qt.LeftButton) root.toggle(); }
+        onPressed: function(button) {
+            if (button === Qt.LeftButton) root.toggle();
+            else if (button === Qt.RightButton) panel.openExpanded();
+        }
     }
     Panel {
         id: panel

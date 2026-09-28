@@ -47,7 +47,7 @@ C.Popup {
             spacing: 4
             Repeater {
                 objectName: "settingsSections"
-                model: ["Collection", "Globe", "Appearance", "Credits"]
+                model: ["Collection", "Globe", "Credits"]
                 ActionButton {
                     required property int index
                     required property string modelData
@@ -103,6 +103,7 @@ C.Popup {
                     spacing: 10
                     Label { text: "Globe & location"; font.bold: true }
                     Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Configure country lookup and the starting point of connection arcs."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
+                    ActionButton { objectName:"reducedMotionButton"; Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
                     Label { text:"Country database"; font.bold:true }
                     SearchField { id:database; Layout.fillWidth:true; placeholderText:"Default: managed DB-IP Lite database"; Accessible.name:"Local GeoIP database path" }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
@@ -140,16 +141,6 @@ C.Popup {
                 }
                 ColumnLayout {
                     visible: root.section === 2
-                    Layout.fillWidth: true
-                    spacing: 10
-                    Label { text: "Appearance"; font.bold: true }
-                    Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Display changes apply immediately for this session."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
-                    ActionButton { objectName:"reducedMotionButton"; Layout.fillWidth:true; text:"Reduced motion: " + (root.service.reducedMotion ? "on" : "off"); selected:root.service.reducedMotion; onClicked:root.service.reducedMotion=!root.service.reducedMotion }
-                    ActionButton { Layout.fillWidth:true; text:"Glow: " + (root.service.glow ? "on" : "off"); selected:root.service.glow; onClicked:root.service.glow=!root.service.glow }
-                    ActionButton { Layout.fillWidth:true; text:"Scanlines: " + (root.service.scanlines ? "on" : "off"); selected:root.service.scanlines; onClicked:root.service.scanlines=!root.service.scanlines }
-                }
-                ColumnLayout {
-                    visible: root.section === 3
                     Layout.fillWidth: true
                     spacing: 10
                     Label { text: "Credits"; font.bold: true }

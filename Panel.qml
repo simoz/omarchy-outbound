@@ -19,6 +19,14 @@ UI.Panel {
         controller.hide();
         expanded = false;
     }
+    function openExpanded() {
+        expanded = true;
+        open();
+        Qt.callLater(function() {
+            expandedWindow.requestActivate();
+            if (root.scene) root.scene.forceActiveFocus();
+        });
+    }
     function changeSurface() {
         expanded = !expanded;
         Qt.callLater(function() { if (root.scene) root.scene.forceActiveFocus(); });

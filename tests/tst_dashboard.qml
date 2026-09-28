@@ -204,7 +204,7 @@ Item {
             var settings = findChild(dashboard, "outboundSettings");
             settings.open();
             tryCompare(settings, "opened", true);
-            settings.section = 2;
+            settings.section = 1;
             mouseClick(findChild(settings, "reducedMotionButton"));
             verify(service.reducedMotion);
             verify(!dashboard.globe.rotating);
