@@ -36,7 +36,7 @@ Item {
         anchors { right: parent.right; rightMargin: 8; top: parent.top; topMargin: 2 }
         implicitWidth: 30
         hint: root.expanded ? "Collapse connection list" : "Expand connection list"
-        contentItem: Item { ExpandIcon { anchors.centerIn: parent; ink: theme.accent } }
+        contentItem: Item { VerticalExpandIcon { anchors.centerIn: parent; ink: theme.accent; collapse: root.expanded } }
         onClicked: root.expanded = !root.expanded
     }
     Item {
