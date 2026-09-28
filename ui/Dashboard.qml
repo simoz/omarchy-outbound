@@ -100,7 +100,6 @@ FocusScope {
                     contentItem: Item { ExpandIcon { anchors.centerIn: parent; ink: theme.accent } }
                     onClicked: root.expandRequested()
                 }
-                ActionButton { flat: true; text: "×"; implicitWidth: 30; hint: "Close Outbound"; onClicked: root.closeRequested() }
             }
             GridLayout {
                 id: hero
