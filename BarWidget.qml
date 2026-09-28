@@ -11,6 +11,9 @@ UI.BarWidget {
     readonly property bool popoutSwitchClosing: panel.popoutSwitchClosing
     implicitWidth: button.implicitWidth
     implicitHeight: button.implicitHeight
+    // Fill the widget slot instead of the host's default 55% active marker.
+    readonly property real openPanelIndicatorWidth: width
+    readonly property real openPanelIndicatorHeight: height
     property var registeredService: null
     function syncView() {
         if (registeredService && registeredService !== service) registeredService.removeView(root);
