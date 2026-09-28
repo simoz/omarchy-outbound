@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Fictional Outbound collector for demos: speaks protocol v1, never touches sockets.
+
+Addresses come from documentation ranges (RFC 5737 / RFC 3849). Countries and
+process names are fictional assignments, not observations or GeoIP lookups.
+"""
+import json
+import sys
+import time
+
+APPS = [  # name, pid, destinations as (country, count)
+    ("firefox", 2101, [("US", 9), ("DE", 4), ("GB", 3), ("FR", 2), ("NL", 2), ("IE", 1)]),
+    ("spotify", 2230, [("SE", 3), ("US", 2), ("NL", 1)]),
+    ("code", 2344, [("US", 4), ("NL", 1)]),
+    ("slack", 2412, [("US", 3), ("JP", 1)]),
+    ("syncthing", 2520, [("DE", 2), ("FI", 1), ("CA", 1), ("AU", 1)]),
+    ("ssh", 2633, [("DE", 1), ("ES", 1)]),
+    ("discord", 2701, [("US", 2), ("BR", 1)]),
+    ("thunderbird", 2788, [("CH", 1), ("IT", 2)]),
+    ("steam", 2890, [("US", 1), ("IN", 1), ("ZA", 1)]),
+]
+PORTS = {"ssh": 22, "thunderbird": 993, "syncthing": 22000}
+
+
+def rows(sequence):
+    out, n = [], 0
+    for app, pid, targets in APPS:
+        for country, count in targets:
+            for _ in range(count):
+                n += 1
+                v6 = n % 4 == 0
+                remote = "2001:db8:%x::%x" % (n % 7 + 1, n) if v6 else ("198.51.100.%d" if n % 2 else "203.0.113.%d") % (n * 3 % 250 + 1)
+                local = "2001:db8:ffff::10" if v6 else "192.0.2.10"
+                out.append({
+                    "id": "demo-%d" % n,
+                    "family": "IPv6" if v6 else "IPv4",
+                    "local": {"address": local, "port": 40000 + n * 17},
+                    "remote": {"address": remote, "port": PORTS.get(app, 443)},
+                    "state": "TIME_WAIT" if n % 11 == 0 else "ESTABLISHED",
+                    "uid": 1000,
+                    "owners": [{"pid": pid, "startTimeTicks": str(pid * 31), "name": app}],
+                    "scope": "public",
+                    "direction": "unknown",
+                    "country": country,
+                })
+    # A couple of connections come and go so the view feels live.
+    if sequence % 3 == 0:
+        out = out[:-2]
+    return out
+
+
+def snapshot(request_id, sequence):
+    conns = rows(sequence)
+    countries, apps = {}, {}
+    for r in conns:
+        countries[r["country"]] = countries.get(r["country"], 0) + 1
+        name = r["owners"][0]["name"]
+        apps[name] = apps.get(name, 0) + 1
+    return {
+        "version": 1, "kind": "snapshot", "requestId": request_id,
+        "session": "0123456789abcdef0123456789abcdef", "sequence": sequence,
+        "observedAtMs": int(time.time() * 1000), "status": "ok",
+        "coverage": {"ipv4": None, "ipv6": None, "namespace": "current", "truncated": False, "omittedRows": 0,
+                     "processes": {"denied": 0, "races": 0, "errors": 0, "timedOut": False, "scanLimited": False, "ownersOmitted": 0}},
+        "database": {"state": "ready", "stale": False, "lookupErrors": 0, "buildEpochSeconds": 1788220800, "releaseMonth": "2026-09"},
+        "connections": conns,
+        "aggregates": {"sockets": len(conns), "countries": countries, "applications": apps, "unknownOwners": 0},
+    }
+
+
+def main():
+    sequence = 0
+    for line in sys.stdin:
+        command = json.loads(line)
+        if command.get("command") == "shutdown":
+            print(json.dumps({"version": 1, "kind": "stopped", "requestId": command["requestId"]}), flush=True)
+            return
+        sequence += 1
+        print(json.dumps(snapshot(command["requestId"], sequence), ensure_ascii=True), flush=True)
+
+
+if __name__ == "__main__":
+    main()

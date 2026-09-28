@@ -14,3 +14,7 @@ __pycache__/
 # Local build products (including retired Rust builds)
 /backend/ruby/build/
 /backend/target/
+
+# Demo media: soundtrack and rendered videos stay local
+/demo/*.mp3
+/demo/*.mp4

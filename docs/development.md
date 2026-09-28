@@ -208,6 +208,23 @@ for 120 ticks and reports timings and idle repaint counts; these are not GPU
 frame-rate guarantees. A normal preview uses real connections: inspect captures
 before sharing them. Offscreen rendering is not a real desktop integration test.
 
+### Screenshots and launch video
+
+`demo/run` renders README stills and videos offscreen from the fictional
+collector `demo/fixtures/outbound-engine`, in temporary Quickshell and XDG
+directories with `TZ=UTC`; it never starts the real collector or changes the
+bar. Regenerate the stills after visible UI changes:
+
+```bash
+DEMO_SCENE=Screenshots DEMO_STILLS=/tmp/outbound-shots demo/run
+cp /tmp/outbound-shots/overview.png preview.png
+cp /tmp/outbound-shots/{country,connections}.png docs/screenshots/
+```
+
+`DEMO_SCENE=Launch` renders the 28.8 s launch video; pass a soundtrack with
+`DEMO_AUDIO` and its start offset with `DEMO_AUDIO_START`. Audio and rendered
+videos are not versioned.
+
 ## Performance and manual connections
 
 Measure the current collector using controlled local sockets:

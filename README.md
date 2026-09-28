@@ -7,6 +7,8 @@ application, remote IP and country, with an interactive globe. The interface
 uses QML/Quickshell; the collector is Ruby compiled to a native executable with
 Spinel. Only real connections are displayed.
 
+![Outbound dashboard with the globe, destination countries, applications and connections](preview.png)
+
 ## Features
 
 - Bar counter, compact panel and expanded window sharing the same view state.
@@ -15,6 +17,13 @@ Spinel. Only real connections are displayed.
 - Local GeoIP lookup, with an optional database download started by the user.
 - Origin selection by city search or manual coordinates.
 - Keyboard controls and Omarchy theme colors.
+
+| Country and application filters | Connection list expanded |
+| --- | --- |
+| ![Germany and firefox selected, globe zoomed on Europe](docs/screenshots/country.png) | ![Connection list filling the window](docs/screenshots/connections.png) |
+
+Screenshots use the fictional collector in `demo/fixtures/`, with addresses from
+documentation ranges; the plugin itself has no demo mode.
 
 ## Requirements
 
@@ -91,6 +100,9 @@ Open settings with the gear button:
 **Done** saves collection settings and closes the editor. Invalid values or a
 save failure keep it open.
 Glow and scanlines are enabled. Selecting a city saves the origin immediately.
+
+The arrow button in the connection list header expands the list to the full
+height, hiding the globe and facets; press it again to restore them.
 
 Use Play/Pause inside the globe to toggle rotation independently of collection.
 Drag the globe to rotate it. Use the wheel, touchpad scrolling or **+/−** to
