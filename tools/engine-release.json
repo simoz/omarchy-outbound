@@ -1,13 +1,13 @@
 {
-  "version": "0.1.1",
+  "version": "0.2.0",
   "assets": {
     "x86_64": {
-      "name": "outbound-engine-0.1.1-linux-x86_64.tar.gz",
-      "sha256": "b5650bf45fa0b836737e7cf615b28220e46a48885eae8433ae0bc4117c5861b7"
+      "name": "outbound-engine-0.2.0-linux-x86_64.tar.gz",
+      "sha256": "aced4936954adda7582363bef5ed90f1498fc60a403364865b39d7b04fa4dda4"
     },
     "aarch64": {
-      "name": "outbound-engine-0.1.1-linux-aarch64.tar.gz",
-      "sha256": "c89894a13c45a7afb5fa82254e607e7577a3813409cda287657ea56613b4fe16"
+      "name": "outbound-engine-0.2.0-linux-aarch64.tar.gz",
+      "sha256": "23d3d94ff7417f601c5c2c99abf1e83b86684e165a19a4573547b1b81c7744f7"
     }
   }
 }
