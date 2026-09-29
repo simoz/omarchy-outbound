@@ -93,8 +93,6 @@ Item {
     property string family: ""
     property string selection: ""
     property bool reducedMotion: false
-    property bool scanlines: true
-    property bool glow: true
     readonly property var countries: Geography.markers
     readonly property var rows: liveRows
     readonly property var filtered: Model.filter(rows, query, application, country, family)

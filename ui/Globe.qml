@@ -55,7 +55,6 @@ FocusScope {
     Connections {
         target: root.service
         function onCountryChanged() { root.focusCountry(); canvas.redraw(); }
-        function onGlowChanged() { canvas.redraw(); }
         // Stop existing motion, but allow a subsequent explicit Play request.
         function onReducedMotionChanged() { if (root.service.reducedMotion) root.rotating = false; }
     }
@@ -89,7 +88,7 @@ FocusScope {
             var cx = width/2, cy = height/2, r = root.radius;
             var halo = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 1.12);
             halo.addColorStop(0, "transparent");
-            halo.addColorStop(0.78, theme.fade(theme.accent, root.service.glow ? 0.09 : 0.025));
+            halo.addColorStop(0.78, theme.fade(theme.accent, 0.09));
             halo.addColorStop(1, "transparent");
             ctx.fillStyle = halo;
             ctx.fillRect(0, 0, width, height);
@@ -126,7 +125,7 @@ FocusScope {
                 (root.originPoint ? root.destinations : []).forEach(function(c) {
                     var selected = !root.service.country || root.service.country === c.code;
                     var arc = Projection.path(Projection.arc([root.originPoint.lon, root.originPoint.lat], [c.lon, c.lat]), root.longitude, root.latitude, r, cx, cy);
-                    if (root.service.glow && selected) {
+                    if (selected) {
                         stroke(arc, theme.fade(theme.accent, 0.05), 9);
                         stroke(arc, theme.fade(theme.accent, 0.13), 4);
                     }
@@ -136,13 +135,11 @@ FocusScope {
             var origin = root.originPoint ? Projection.project(root.originPoint.lon, root.originPoint.lat, root.longitude, root.latitude) : null;
             if (origin && origin.z > 0) {
                 var ox = cx + origin.x*r, oy = cy - origin.y*r;
-                if (root.service.glow) {
-                    var glow = ctx.createRadialGradient(ox, oy, 0, ox, oy, 19);
-                    glow.addColorStop(0, theme.fade(theme.text, 0.75));
-                    glow.addColorStop(0.3, theme.fade(theme.accent, 0.3));
-                    glow.addColorStop(1, "transparent");
-                    ctx.fillStyle = glow; ctx.fillRect(ox-19, oy-19, 38, 38);
-                }
+                var glow = ctx.createRadialGradient(ox, oy, 0, ox, oy, 19);
+                glow.addColorStop(0, theme.fade(theme.text, 0.75));
+                glow.addColorStop(0.3, theme.fade(theme.accent, 0.3));
+                glow.addColorStop(1, "transparent");
+                ctx.fillStyle = glow; ctx.fillRect(ox-19, oy-19, 38, 38);
                 ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI*2);
                 ctx.fillStyle = theme.text; ctx.fill();
             }
@@ -190,7 +187,7 @@ FocusScope {
         visible: root.linksAnimating
         ShapePath {
             fillColor: "transparent"
-            strokeColor: theme.fade(theme.accent, root.service.glow ? 0.22 : 0)
+            strokeColor: theme.fade(theme.accent, 0.22)
             strokeWidth: 6
             PathSvg { path: Projection.svg(root.pulsePaths) }
         }
@@ -244,7 +241,7 @@ FocusScope {
             background: Item {
                 Rectangle {
                     anchors.centerIn: parent
-                    width: root.service.glow ? 26 : 12; height: width; radius: width/2
+                    width: 26; height: width; radius: width/2
                     color: theme.fade(theme.accent, 0.12)
                     border.color: marker.activeFocus || marker.selected ? theme.text : "transparent"
                 }
@@ -277,7 +274,7 @@ FocusScope {
     }
     Repeater {
         // Layout can briefly assign a negative height while the surface is resized.
-        model: root.service.scanlines ? Math.max(0, Math.floor(root.height/6)) : 0
+        model: Math.max(0, Math.floor(root.height/6))
         Rectangle {
             required property int index
             y: index*6; width: root.width; height: 1

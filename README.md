@@ -111,7 +111,7 @@ Open settings with the gear button:
 the editor. Invalid values or a save failure keep it open. **Esc** or clicking
 outside closes without saving those edits. To search for an origin, type a city
 and press **Enter** or **Search**, then choose a result; this saves the origin
-immediately. Glow and scanlines are enabled.
+immediately.
 
 The arrow button in the main header switches between compact panel and expanded
 window, preserving filters, selection and globe position.
