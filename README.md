@@ -104,16 +104,14 @@ Open settings with the gear button:
 
 - **Collection**: refresh interval, pause/resume, retry, coverage details,
   prebuilt collector installation and backend executable path.
-- **Globe**: install/update GeoIP, choose a custom MMDB, set the origin and
-  toggle reduced motion, glow and scanlines.
+- **Globe**: install/update GeoIP, choose a custom MMDB and set the origin.
 - **Credits**: data sources, attribution and licenses.
 
 **Done** saves paths, refresh interval and manual origin coordinates, then closes
 the editor. Invalid values or a save failure keep it open. **Esc** or clicking
 outside closes without saving those edits. To search for an origin, type a city
 and press **Enter** or **Search**, then choose a result; this saves the origin
-immediately. Display toggles also save immediately: glow and scanlines start
-enabled, and **Reduce motion** stops the connection pulse and globe rotation.
+immediately. Glow and scanlines are enabled.
 
 The arrow button in the main header switches between compact panel and expanded
 window, preserving filters, selection and globe position.
