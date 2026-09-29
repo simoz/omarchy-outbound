@@ -12,7 +12,6 @@ FocusScope {
     property bool active: true
     property real longitude: -15
     property real latitude: 18
-    property string renderer: "canvas"
     property bool rotating: false
     property real zoom: 1
     readonly property real maximumZoom: 4
@@ -26,14 +25,18 @@ FocusScope {
     readonly property var destinations: service.countries.filter(function(c) {
         return service.destinations.some(function(group) { return group.value === c.code; });
     })
+    // Great-circle points depend on origin and destinations only, so rotation and
+    // zoom reproject them without recomputing the arcs.
+    readonly property var arcs: originPoint ? destinations.map(function(c) {
+        return {code: c.code, points: Projection.arc([originPoint.lon, originPoint.lat], [c.lon, c.lat])};
+    }) : []
     readonly property var layers: active ? [
         Projection.paths(grid, longitude, latitude, radius, width/2, height/2),
         Projection.paths(Geography.outlines, longitude, latitude, radius, width/2, height/2),
-        Projection.paths(originPoint ? destinations.map(function(c) { return Projection.arc([originPoint.lon, originPoint.lat], [c.lon, c.lat]); }) : [],
-                         longitude, latitude, radius, width/2, height/2)
+        Projection.paths(arcs.map(function(a) { return a.points; }), longitude, latitude, radius, width/2, height/2)
     ] : [[], [], []]
     readonly property var pulsePaths: !service.country ? layers[2] : Projection.paths(
-        active && originPoint ? destinations.filter(function(c) { return c.code === root.service.country; }).map(function(c) { return Projection.arc([root.originPoint.lon, root.originPoint.lat], [c.lon, c.lat]); }) : [],
+        active ? arcs.filter(function(a) { return a.code === root.service.country; }).map(function(a) { return a.points; }) : [],
         longitude, latitude, radius, width/2, height/2)
     property int paintCount: 0
     Theme { id: theme }
@@ -119,19 +122,17 @@ FocusScope {
                 });
                 ctx.strokeStyle = color; ctx.lineWidth = weight; ctx.stroke();
             }
-            if (root.renderer === "canvas") {
-                stroke(root.layers[0], theme.fade(theme.accent, 0.16), 0.6);
-                stroke(root.layers[1], theme.fade(theme.accent, 0.5), 0.7);
-                (root.originPoint ? root.destinations : []).forEach(function(c) {
-                    var selected = !root.service.country || root.service.country === c.code;
-                    var arc = Projection.path(Projection.arc([root.originPoint.lon, root.originPoint.lat], [c.lon, c.lat]), root.longitude, root.latitude, r, cx, cy);
-                    if (selected) {
-                        stroke(arc, theme.fade(theme.accent, 0.05), 9);
-                        stroke(arc, theme.fade(theme.accent, 0.13), 4);
-                    }
-                    stroke(arc, theme.fade(theme.accent, selected ? 0.95 : 0.2), selected ? 1.4 : 0.8);
-                });
-            }
+            stroke(root.layers[0], theme.fade(theme.accent, 0.16), 0.6);
+            stroke(root.layers[1], theme.fade(theme.accent, 0.5), 0.7);
+            root.arcs.forEach(function(a) {
+                var selected = !root.service.country || root.service.country === a.code;
+                var arc = Projection.path(a.points, root.longitude, root.latitude, r, cx, cy);
+                if (selected) {
+                    stroke(arc, theme.fade(theme.accent, 0.05), 9);
+                    stroke(arc, theme.fade(theme.accent, 0.13), 4);
+                }
+                stroke(arc, theme.fade(theme.accent, selected ? 0.95 : 0.2), selected ? 1.4 : 0.8);
+            });
             var origin = root.originPoint ? Projection.project(root.originPoint.lon, root.originPoint.lat, root.longitude, root.latitude) : null;
             if (origin && origin.z > 0) {
                 var ox = cx + origin.x*r, oy = cy - origin.y*r;
@@ -150,32 +151,11 @@ FocusScope {
             target: root
             function onLayersChanged() { canvas.redraw(); }
             function onActiveChanged() { canvas.redraw(); }
-            function onRendererChanged() { canvas.redraw(); }
         }
         Connections {
             target: theme
             function onTextChanged() { canvas.redraw(); }
             function onAccentChanged() { canvas.redraw(); }
-        }
-    }
-    // The alternative renderer shares the decorative Canvas; compare vector
-    // geometry paths independently when profiling on another graphics backend.
-    Loader {
-        anchors.fill: parent
-        active: root.renderer === "shapes" && root.active
-        sourceComponent: Shape {
-            ShapePath {
-                fillColor: "transparent"; strokeColor: theme.fade(theme.accent, 0.16); strokeWidth: 0.6
-                PathSvg { path: Projection.svg(root.layers[0]) }
-            }
-            ShapePath {
-                fillColor: "transparent"; strokeColor: theme.fade(theme.accent, 0.5); strokeWidth: 0.7
-                PathSvg { path: Projection.svg(root.layers[1]) }
-            }
-            ShapePath {
-                fillColor: "transparent"; strokeColor: theme.accent; strokeWidth: 1.4
-                PathSvg { path: Projection.svg(root.layers[2]) }
-            }
         }
     }
     // Animate only a cached vector overlay: geography stays event-driven.
@@ -272,13 +252,21 @@ FocusScope {
             color: theme.accent
         }
     }
-    Repeater {
-        // Layout can briefly assign a negative height while the surface is resized.
-        model: Math.max(0, Math.floor(root.height/6))
-        Rectangle {
-            required property int index
-            y: index*6; width: root.width; height: 1
-            color: theme.fade(theme.text, 0.025)
+    // Static scanlines: one texture repainted on resize or theme change, not an item per line.
+    Canvas {
+        id: scanlines
+        anchors.fill: parent
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.reset();
+            ctx.fillStyle = theme.fade(theme.text, 0.025);
+            for (var y = 0; y < height; y += 6) ctx.fillRect(0, y, width, 1);
+        }
+        Connections {
+            target: theme
+            function onTextChanged() { scanlines.requestPaint(); }
         }
     }
     Label {

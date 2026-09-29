@@ -207,8 +207,7 @@ QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=basic \
 ```
 
 Supported controls: `OUTBOUND_THEME` (`light`/`dark`, otherwise the installed
-theme), `OUTBOUND_WIDTH`, `OUTBOUND_HEIGHT`, `OUTBOUND_RENDERER`
-(`canvas`/`shapes`) and `OUTBOUND_BENCHMARK=1`. The benchmark rotates the globe
+theme), `OUTBOUND_WIDTH`, `OUTBOUND_HEIGHT` and `OUTBOUND_BENCHMARK=1`. The benchmark rotates the globe
 for 120 ticks and reports timings and idle repaint counts; these are not GPU
 frame-rate guarantees. A normal preview uses real connections: inspect captures
 before sharing them. Offscreen rendering is not a real desktop integration test.

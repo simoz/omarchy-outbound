@@ -70,7 +70,6 @@ ShellRoot {
                 Color.foreground = light ? "#202a30" : "#c8e5eb";
                 Color.accent = light ? "#23595b" : "#53d6e8";
             }
-            dashboard.globe.renderer = Quickshell.env("OUTBOUND_RENDERER") || "canvas";
             if (Quickshell.env("OUTBOUND_BENCHMARK")) {
                 previousTick = Date.now();
                 benchmark.start();
@@ -90,7 +89,6 @@ ShellRoot {
             stop();
             var sorted = root.sampleIntervals.slice().sort(function(a,b) { return a-b; });
             console.log("OUTBOUND_PROFILE", JSON.stringify({
-                renderer: dashboard.globe.renderer,
                 ticks: sorted.length,
                 meanIntervalMs: root.sampleIntervals.reduce(function(a,b) { return a+b; }, 0) / sorted.length,
                 p95IntervalMs: sorted[Math.floor(sorted.length * 0.95)],
