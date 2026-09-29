@@ -38,6 +38,25 @@ FocusScope {
     readonly property var pulsePaths: !service.country ? layers[2] : Projection.paths(
         active ? arcs.filter(function(a) { return a.code === root.service.country; }).map(function(a) { return a.points; }) : [],
         longitude, latitude, radius, width/2, height/2)
+    readonly property real labelHeight: width > 550 ? 26 : 14
+    // Marker labels, placed top to bottom, move below any earlier label on the
+    // same side of the globe that they would overlap. Values are pixel offsets.
+    readonly property var labelShifts: {
+        var placed = [], shifts = {};
+        destinations.map(function(c) {
+            var p = Projection.project(c.lon, c.lat, longitude, latitude);
+            return {code: c.code, visible: p.z > 0.05, left: p.x < 0, x: p.x * radius, y: -p.y * radius};
+        }).filter(function(m) { return m.visible; }).sort(function(a, b) { return a.y - b.y; }).forEach(function(m) {
+            var top = m.y;
+            placed.forEach(function(other) {
+                if (other.left === m.left && Math.abs(other.x - m.x) < 48 && top < other.top + labelHeight && top + labelHeight > other.top)
+                    top = other.top + labelHeight;
+            });
+            placed.push({left: m.left, x: m.x, top: top});
+            shifts[m.code] = top - m.y;
+        });
+        return shifts;
+    }
     property int paintCount: 0
     Theme { id: theme }
     clip: true
@@ -232,7 +251,7 @@ FocusScope {
                 }
                 Label {
                     x: marker.point.x < 0 ? -width - 2 : parent.width + 2
-                    y: marker.modelData.code === "GB" ? -26 : marker.modelData.code === "DE" ? 15 : 0
+                    y: root.labelShifts[marker.modelData.code] || 0
                     text: marker.modelData.code + (root.width > 550 ? "\n" + Math.abs(marker.modelData.lat).toFixed(1) + "°" + (marker.modelData.lat >= 0 ? "N" : "S") : "")
                     font.pixelSize: theme.size * 0.72
                     color: theme.text

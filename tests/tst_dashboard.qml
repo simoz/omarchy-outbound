@@ -360,6 +360,18 @@ Item {
             verify(!dashboard.globe.linksAnimating);
             verify(dashboard.globe.layers[2].length > 0);
         }
+        function test_nearby_marker_labels_stack_without_overlap() {
+            service.liveRows = ["NL", "BE", "LU"].map(function(code) {
+                return {id:code, app:"Test", apps:["Test"], country:code, family:"IPv4", ip:"1.1.1.1"};
+            });
+            dashboard.globe.longitude = -40;
+            dashboard.globe.latitude = 40;
+            var shifts = dashboard.globe.labelShifts;
+            compare(shifts.NL, 0);
+            verify(shifts.BE > 0);
+            verify(shifts.LU > shifts.BE);
+            dashboard.globe.reset();
+        }
         function test_play_after_reduced_motion_remains_available() {
             service.reducedMotion = false;
             var play = findChild(dashboard, "globeRotationButton");
