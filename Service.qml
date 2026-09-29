@@ -5,7 +5,6 @@ import "assets/Countries.js" as Geography
 Item {
     id: root
     property var shell: null
-    property var manifest: null
     property bool standalone: false
     property var saveConfiguration: null
     property bool paused: false
@@ -28,7 +27,6 @@ Item {
         snapshot = null;
         liveRows = [];
     }
-    readonly property var globeOrigin: origin
     readonly property string geoStatus: !snapshot ? "GeoIP not sampled" : snapshot.database.state !== "ready" ? "GeoIP " + snapshot.database.state : "GeoIP " + snapshot.database.releaseMonth + (snapshot.database.stale ? " · outdated" : "") + (snapshot.database.lookupErrors ? " · lookup errors" : "")
     readonly property string coverageStatus: !snapshot ? "No snapshot" : "IPv4: " + (snapshot.coverage.ipv4 || "ok") + " · IPv6: " + (snapshot.coverage.ipv6 || "ok") + " · Unknown owners: " + snapshot.aggregates.unknownOwners + " · Denied: " + snapshot.coverage.processes.denied + " · Races: " + snapshot.coverage.processes.races + " · Errors: " + snapshot.coverage.processes.errors + " · Omitted sockets: " + snapshot.coverage.omittedRows + " · Omitted owners: " + snapshot.coverage.processes.ownersOmitted + (snapshot.coverage.processes.timedOut ? " · Process scan timed out" : "") + (snapshot.coverage.processes.scanLimited ? " · Process scan limited" : "")
     Loader {
@@ -48,6 +46,8 @@ Item {
     readonly property var cityResults: citySearch ? citySearch.results : []
     readonly property string cityError: citySearch ? citySearch.error : ""
     function searchCity(query) { if (citySearch) citySearch.search(query); }
+    // Runtime helpers are Python scripts shipped in tools/ beside this file.
+    function helperPath(name) { return decodeURIComponent(Qt.resolvedUrl("tools/" + name).toString().slice(7)); }
     function clearCitySearch() { if (citySearch) citySearch.clear(); }
     function setView(token, open) {
         var next = views.filter(function(v) { return v.token !== token; });
@@ -119,7 +119,6 @@ Item {
 
     function chooseApplication(name) { application = application === name ? "" : name; }
     function countryBadge(code) { return Model.countryBadge(code); }
-    function appBadge(name) { return Model.appBadge(name); }
 
     function countryName(code) { return Model.countryName(code, countries); }
     onFilteredChanged: if (!Model.selected(filtered, selection)) selection = ""

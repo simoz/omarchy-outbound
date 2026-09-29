@@ -25,7 +25,7 @@ Item {
         if (previous) { results = previous.places; if (!results.length) error = "No cities found. Try adding the country."; return; }
         if (Date.now() - lastSearch < 1100) { error = "Please wait a moment before searching again."; return; }
         lastSearch = Date.now(); buffer = ""; busy = true;
-        process.command = ["python3", "-B", decodeURIComponent(Qt.resolvedUrl("tools/search_city.py").toString().slice(7)), query];
+        process.command = ["python3", "-B", service.helperPath("search_city.py"), query];
         deadline.restart(); process.running = true;
     }
     function receive(data) {

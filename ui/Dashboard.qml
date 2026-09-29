@@ -256,7 +256,6 @@ FocusScope {
                         selectedValue: root.service.application
                         accent: root.service.country ? theme.text : theme.accent
                         labelFor: function(name) { return name; }
-                        badgeFor: function(name) { return root.service.appBadge(name); }
                         onChosen: function(name) { root.service.chooseApplication(name); }
                     }
                 }

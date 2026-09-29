@@ -29,7 +29,7 @@ test('scenario totals and facet counts refer to emitted sockets', () => {
         const rows = demo.connections(scenario);
         assert.equal(model.groups(rows, 'app').reduce((n, g) => n + g.count, 0), rows.length);
         assert.equal(new Set(rows.map(r => r.id)).size, rows.length);
-        assert.ok(rows.every(r => r.direction === 'Unknown'));
+        assert.ok(rows.every(r => r.apps.length === 1 && r.apps[0] === r.app));
     }
     assert.equal(demo.connections('busy').length, 240);
 });

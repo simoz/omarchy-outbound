@@ -19,7 +19,7 @@ FocusScope {
     signal originRequested()
     readonly property bool linksAnimating: active && visible && originPoint !== null && layers[2].length > 0 && !service.reducedMotion && !service.paused
     readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48) * zoom
-    readonly property var originPoint: service.globeOrigin
+    readonly property var originPoint: service.origin
     readonly property var grid: Projection.graticule()
     // Keep other destinations visible when a country is selected; its arc and
     // marker carry the emphasis while the table shows the filtered sockets.

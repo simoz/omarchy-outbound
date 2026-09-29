@@ -50,7 +50,7 @@ UI.Panel {
                 anchors.fill: parent
                 visible: root.service === null
                 wrapMode: Text.Wrap
-                text: "Outbound service unavailable. This prototype requires the built-in Omarchy bar."
+                text: "Outbound service unavailable. Outbound requires the built-in Omarchy bar."
             }
         }
     }

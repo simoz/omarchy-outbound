@@ -82,7 +82,7 @@ function rows(snapshot) {
     return snapshot.connections.map(function(r) {
         var names=Array.from(new Set(r.owners.map(function(o) { return o.name || "Unnamed process"; })));
         return { id:r.id, app:names.length ? names.join(" / ") : "Unknown process", apps:names.length ? names : ["Unknown process"],
-            pid:r.owners.length === 1 ? r.owners[0].pid : null, owners:r.owners, family:r.family,
-            ip:r.remote.address, port:r.remote.port, state:r.state, country:r.country || (r.scope === "public" ? "unknown" : "local"), direction:"Unknown" };
+            family:r.family, ip:r.remote.address, port:r.remote.port, state:r.state,
+            country:r.country || (r.scope === "public" ? "unknown" : "local") };
     });
 }

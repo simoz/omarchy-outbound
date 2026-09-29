@@ -25,18 +25,17 @@ function connections(scenario) {
             app: scenario === "busy" && i % 7 === 0
                 ? "Development workspace — extraordinarily long application name"
                 : apps[i % apps.length],
-            pid: 1200 + i % apps.length,
             family: ipv6 ? "IPv6" : "IPv4",
             ip: ipv6 ? "2001:db8::" + (i + 1).toString(16) : "203.0.113." + (i + 1),
             port: i % 5 === 0 ? 22 : 443,
             state: i % 7 === 0 ? "CLOSE_WAIT" : "ESTABLISHED",
-            country: scenario === "busy" ? (i === 16 ? "unknown" : i === 17 ? "local" : country.code) : sampleCountries[i],
-            direction: "Unknown"
+            country: scenario === "busy" ? (i === 16 ? "unknown" : i === 17 ? "local" : country.code) : sampleCountries[i]
         });
     }
     rows[16].app = "Unknown process";
-    rows[16].pid = null;
     rows[17].ip = "127.0.0.1";
     rows[17].family = "IPv4";
+    // Protocol.rows always lists owner names separately from the joined label.
+    rows.forEach(function(row) { row.apps = [row.app]; });
     return rows;
 }

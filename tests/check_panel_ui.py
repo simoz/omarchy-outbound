@@ -92,7 +92,7 @@ ShellRoot {
                 coverage:{ipv4:null, ipv6:null, omittedRows:0,
                     processes:{denied:0, races:0, errors:0, ownersOmitted:0}},
                 aggregates:{unknownOwners:0}};
-            service.liveRows = [{id:"test", app:"Test", country:"DE"}];
+            service.liveRows = [{id:"test", app:"Test", apps:["Test"], country:"DE"}];
             check(counts.visible && counts.text === "1 / 1", "snapshot shows counts");
             service.paused = true;
             check(button.dimmed && !counts.visible && counts.text === "", "pause dims icon and hides counts");

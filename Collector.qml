@@ -41,7 +41,6 @@ Item {
     property bool engineMissing: false
     property bool installCancelled: false
     property string installOriginalPath: ""
-    function helper(name) { return decodeURIComponent(Qt.resolvedUrl("tools/" + name).toString().slice(7)); }
     function runInstaller(task, command, originalPath) {
         if (installTask || !service || service.openViews === 0) return;
         if (task === "geoip") geoInstallError = ""; else engineInstallError = "";
@@ -52,10 +51,10 @@ Item {
         installer.running = true;
     }
     function installGeoIp() {
-        if (service) runInstaller("geoip", ["python3", "-B", helper("update_geoip.py"), "--backend", executable], service.databasePath);
+        if (service) runInstaller("geoip", ["python3", "-B", service.helperPath("update_geoip.py"), "--backend", executable], service.databasePath);
     }
     function installEngine() {
-        if (service) runInstaller("engine", ["python3", "-B", helper("install_engine.py")], service.backendPath);
+        if (service) runInstaller("engine", ["python3", "-B", service.helperPath("install_engine.py")], service.backendPath);
     }
     function cancelInstall() {
         if (!installTask) return;

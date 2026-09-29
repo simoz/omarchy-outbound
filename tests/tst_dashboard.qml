@@ -261,7 +261,7 @@ Item {
             service.query = "";
         }
         function test_live_globe_requires_manual_origin_for_arcs() {
-            service.liveRows = [{id:"live-1", app:"Test", country:"IT", family:"IPv4", ip:"1.1.1.1"}];
+            service.liveRows = [{id:"live-1", app:"Test", apps:["Test"], country:"IT", family:"IPv4", ip:"1.1.1.1"}];
             service.origin = null;
             compare(dashboard.globe.destinations.length, 1);
             compare(dashboard.globe.layers[2].length, 0);
