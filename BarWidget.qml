@@ -52,7 +52,7 @@ UI.BarWidget {
                 ink: button.foreground
             }
             Text {
-                text: root.service ? root.service.rows.length + " / " + root.service.countryCount : "—"
+                text: root.service && root.service.snapshot ? root.service.rows.length + " / " + root.service.countryCount : "—"
                 color: button.foreground
                 font.family: button.fontFamily
                 font.pixelSize: button.fontSize

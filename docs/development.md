@@ -132,10 +132,11 @@ Do not overwrite an existing installation without preserving its
 configuration. Installed collection settings use the host's inline plugin
 configuration.
 
-The bar alone samples every 10 seconds. An open panel/window uses the configured
-1–60 second interval. Pause survives view transitions. Removing every registered
-view stops collection; closing the last open view cancels helper downloads and
-city searches. See [architecture](architecture.md).
+The bar alone does not collect data. An open panel/window starts collection at
+the configured 1–60 second interval unless manually paused. Pause survives view
+transitions and reopening. Closing the last open view stops collection, clears
+the connection snapshot and cancels helper downloads and city searches. See
+[architecture](architecture.md).
 
 ## Release
 

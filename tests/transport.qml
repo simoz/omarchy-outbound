@@ -15,7 +15,7 @@ ShellRoot {
         standalone: true
         backendPath: Quickshell.env("OUTBOUND_TEST_BACKEND")
         intervalSeconds: 1
-        Component.onCompleted: setView("first",true)
+        Component.onCompleted: setView("first",root.mode !== "normal")
     }
     function check(value, message) { if (!value) { console.error("OUTBOUND_TEST_FAILED",mode,message); Qt.quit(); throw new Error(message); } }
     function next() { stage++; stageTick=ticks; }
@@ -27,6 +27,11 @@ ShellRoot {
             if (root.ticks > 400) { root.check(false,"deadline"); return; }
             var c=service.collector;
             if (!c) return;
+            if (root.mode === "normal" && !service.openViews && root.stage === 0) {
+                root.check(!c.busy && !(c.processId > 0) && !c.retryWaiting && service.snapshot === null,"bar alone stays idle");
+                if (root.ticks > 8) service.setView("first",true);
+                return;
+            }
             if (root.mode === "normal" || root.mode === "native") {
                 if (root.stage === 0 && service.snapshot && service.snapshot.sequence >= 2) {
                     root.check(service.phase !== "error","collection");
@@ -35,25 +40,27 @@ ShellRoot {
                     service.setView("second",true); service.removeView("first");
                     root.check(service.openViews === 1 && c.processId === root.oldPid,"second monitor survives");
                     service.setView("second",false);
-                    root.check(service.pollInterval === 10000 && c.processId === root.oldPid,"bar-only keeps process");
-                    service.paused=true; root.next();
+                    root.check(!service.demanded && service.snapshot === null && service.rows.length === 0,"last close clears snapshot");
+                    root.next();
                 } else if(root.stage === 1 && !c.busy) {
+                    root.check(!c.retryWaiting && service.status === "IDLE","last close stops collection");
+                    service.paused=true;
                     service.setView("second",true); root.next();
                 } else if(root.stage === 2 && root.ticks-root.stageTick > 8) {
                     root.check(!c.busy && service.paused,"pause survives reopen"); service.paused=false; root.next();
-                } else if(root.stage === 3 && service.snapshot.session !== root.oldSession) {
+                } else if(root.stage === 3 && service.snapshot && service.snapshot.session !== root.oldSession) {
                     service.removeView("second"); root.next();
                 } else if(root.stage === 4 && !c.busy && root.ticks-root.stageTick > 8) {
                     root.check(!service.demanded && !c.retryWaiting,"no orphan or retry"); root.pass();
                 }
             } else if(root.mode === "retry") {
-                if(root.stage === 0 && c.retries >= 2) { service.paused=true; root.next(); }
+                if(root.stage === 0 && c.retries >= 2) { service.setView("first",false); root.next(); }
                 else if(root.stage === 1 && root.ticks-root.stageTick > 85) {
                     root.check(!c.busy && !c.retryWaiting,"retry cancelled"); root.pass();
                 }
             } else if(root.mode === "late") {
-                if(root.stage === 0 && c.pending) { root.oldPid=c.processId; service.paused=true; root.next(); }
-                else if(root.stage === 1 && root.ticks-root.stageTick > 2) { service.paused=false; root.check(c.processId === root.oldPid,"wait for old process exit"); root.next(); }
+                if(root.stage === 0 && c.pending) { root.oldPid=c.processId; service.setView("first",false); root.next(); }
+                else if(root.stage === 1 && root.ticks-root.stageTick > 2) { service.setView("first",true); root.check(c.processId === root.oldPid,"wait for old process exit"); root.next(); }
                 else if(root.stage === 2 && root.ticks-root.stageTick > 13) { root.check(service.snapshot === null,"cancelled output ignored"); root.next(); }
                 else if(root.stage === 3 && service.snapshot) { service.removeView("first"); root.next(); }
                 else if(root.stage === 4 && !c.busy) root.pass();

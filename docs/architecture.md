@@ -20,10 +20,13 @@ compiled with Spinel, with small C adapters for Linux and libmaxminddb.
   orthographic projection. Zoom and rotation update the same projection for
   outlines, arcs and markers. Rendering components do not make network requests.
 
-Registered bar views keep collection active at a 10-second interval. Open
-panels/windows use the configured interval; manual pause stops collection.
-Removing all registered views stops the backend. Helper downloads/searches need
-an open view and are cancelled when the last one closes.
+Collection runs only while at least one panel/window is open, at the configured
+interval; manual pause stops collection and survives closing and reopening.
+Closing the last open view stops the backend and clears the connection snapshot
+from memory. Registered bar views alone do not collect data. Switching between
+compact and expanded surfaces keeps the same open view and backend process.
+Helper downloads/searches need an open view and are cancelled when the last one
+closes.
 
 ## Data flow
 

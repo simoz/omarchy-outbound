@@ -8,6 +8,9 @@ Item {
     TestCase {
         name: "OutboundService"
         function init() {
+            service.views = [];
+            service.paused = false;
+            service.intervalSeconds = 2;
             service.clearFilters();
             service.selection = "";
             service.liveRows = Fixture.connections("sample");
@@ -15,20 +18,49 @@ Item {
         }
         function test_view_demand_counts_all_monitors_and_preserves_pause() {
             service.setView("monitor-a",false);
+            verify(!service.demanded);
+            compare(service.status,"IDLE");
             service.setView("monitor-b",true);
             verify(service.demanded);
             compare(service.openViews,1);
             compare(service.pollInterval,2000);
             service.removeView("monitor-b");
-            verify(service.demanded);
-            compare(service.pollInterval,10000);
+            verify(!service.demanded);
+            compare(service.status,"IDLE");
             service.paused = true;
             verify(!service.demanded);
             service.setView("monitor-a",true);
             verify(!service.demanded);
+            compare(service.status,"PAUSED");
             service.removeView("monitor-a");
             service.paused = false;
             verify(!service.demanded);
+        }
+        function test_snapshot_lives_until_last_open_view_closes() {
+            service.setView("monitor-a",true);
+            service.setView("monitor-b",true);
+            var snapshot = {sequence:1, database:{state:"missing"},
+                coverage:{ipv4:null, ipv6:null, omittedRows:0,
+                    processes:{denied:0, races:0, errors:0, ownersOmitted:0}},
+                aggregates:{unknownOwners:0}};
+            service.snapshot = snapshot;
+            service.selection = "demo-0";
+            service.query = "Browser";
+            service.paused = true;
+            compare(service.snapshot,snapshot);
+            compare(service.rows.length,24);
+            service.setView("monitor-a",false);
+            compare(service.snapshot,snapshot);
+            compare(service.rows.length,24);
+            compare(service.selection,"demo-0");
+            service.removeView("monitor-b");
+            compare(service.snapshot,null);
+            compare(service.rows.length,0);
+            compare(service.selection,"");
+            compare(service.query,"Browser");
+            service.setView("monitor-a",true);
+            verify(!service.demanded);
+            compare(service.snapshot,null);
         }
         function test_configuration_validates_origin_without_inventing_one() {
             compare(service.configure("relative","","","","2"),"Use absolute file paths.");

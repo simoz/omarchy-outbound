@@ -20,9 +20,14 @@ Item {
     property string phase: "idle"
     property string error: ""
     readonly property int openViews: views.filter(function(v) { return v.open; }).length
-    readonly property bool demanded: views.length > 0 && !paused
-    readonly property int pollInterval: openViews > 0 ? intervalSeconds * 1000 : 10000
-    readonly property string status: paused ? "PAUSED" : !views.length ? "IDLE" : phase.toUpperCase()
+    readonly property bool demanded: openViews > 0 && !paused
+    readonly property int pollInterval: intervalSeconds * 1000
+    readonly property string status: !openViews ? "IDLE" : paused ? "PAUSED" : phase.toUpperCase()
+    // Keep a paused snapshot available for inspection until the last view closes.
+    onOpenViewsChanged: if (openViews === 0) {
+        snapshot = null;
+        liveRows = [];
+    }
     readonly property var globeOrigin: origin
     readonly property string geoStatus: !snapshot ? "GeoIP not sampled" : snapshot.database.state !== "ready" ? "GeoIP " + snapshot.database.state : "GeoIP " + snapshot.database.releaseMonth + (snapshot.database.stale ? " · outdated" : "") + (snapshot.database.lookupErrors ? " · lookup errors" : "")
     readonly property string coverageStatus: !snapshot ? "No snapshot" : "IPv4: " + (snapshot.coverage.ipv4 || "ok") + " · IPv6: " + (snapshot.coverage.ipv6 || "ok") + " · Unknown owners: " + snapshot.aggregates.unknownOwners + " · Denied: " + snapshot.coverage.processes.denied + " · Races: " + snapshot.coverage.processes.races + " · Errors: " + snapshot.coverage.processes.errors + " · Omitted sockets: " + snapshot.coverage.omittedRows + " · Omitted owners: " + snapshot.coverage.processes.ownersOmitted + (snapshot.coverage.processes.timedOut ? " · Process scan timed out" : "") + (snapshot.coverage.processes.scanLimited ? " · Process scan limited" : "")

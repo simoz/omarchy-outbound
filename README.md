@@ -87,8 +87,13 @@ The default installed collector path is
 Left-click the bar widget to toggle the compact panel. Right-click it to open
 the expanded window directly, or bring it into focus if it is already open.
 
+Collection starts when a panel or window opens. Closing the last open view
+stops the collector and clears the connection snapshot from memory. The bar
+alone does not collect data and shows “—” until a snapshot is available.
+
 Use **LIVE / PAUSED** in the header to pause or resume collection. The button
 shows **ERROR** if collection fails; details and retry are in Settings → Collection.
+Manual pause survives closing and reopening the view.
 
 Open settings with the gear button:
 
