@@ -63,13 +63,23 @@ ShellRoot {
             }
             check(button && panel, "widget children");
             var counts = null;
+            var icon = null;
             for (var child of button.children) {
                 for (var item of child.children) {
                     if (item.objectName === "outboundBarCounts") counts = item;
+                    if (item.objectName === "outboundBarIcon") icon = item;
                 }
             }
             check(counts && !counts.visible && counts.text === "" && button.dimmed, "closed bar has dim icon and no placeholder");
             check(button.implicitWidth === hostBar.barSize, "idle icon uses one bar slot without counter space");
+            function checkIconCentered() {
+                check(icon && icon.width === 20 && icon.height === 20, "globe keeps its design canvas dimensions");
+                var center = icon.mapToItem(button, icon.width / 2, icon.height / 2);
+                check(Math.abs(center.x - button.width / 2) <= 0.5
+                      && Math.abs(center.y - button.height / 2) <= 0.5,
+                      "idle globe is centered without hidden counter spacing");
+            }
+            checkIconCentered();
             service.paused = false;
             var scene = panel.scene;
             check(scene, "dashboard loaded");
@@ -109,8 +119,16 @@ ShellRoot {
                   "surface switch preserves scene and state");
             button.triggerPress(Qt.LeftButton);
             check(!widget.opened, "left click closes expanded");
-            console.log("PANEL_PASS");
-            Qt.quit();
+            // Positioners update after the visibility changes above have settled.
+            Qt.callLater(function() {
+                checkIconCentered();
+                hostBar.vertical = true;
+                Qt.callLater(function() {
+                    checkIconCentered();
+                    console.log("PANEL_PASS");
+                    Qt.quit();
+                });
+            });
         }
     }
 }

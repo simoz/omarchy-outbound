@@ -44,7 +44,8 @@ UI.BarWidget {
         Grid {
             id: barContents
             anchors.centerIn: parent
-            columns: root.vertical ? 1 : 2
+            // Grid reserves inter-column spacing even when the second item is hidden.
+            columns: root.vertical || !counts.visible ? 1 : 2
             spacing: 6
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter
