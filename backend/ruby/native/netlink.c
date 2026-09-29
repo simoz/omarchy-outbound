@@ -89,7 +89,9 @@ int outbound_dump(int family, int limit) {
     query.header.nlmsg_seq = 1;
     query.request.sdiag_family = family;
     query.request.sdiag_protocol = IPPROTO_TCP;
-    query.request.idiag_states = 0x1ffe;
+    /* TCP states 1-12 except CLOSE (7) and LISTEN (10): the kernel skips sockets
+     * the parser would discard anyway. */
+    query.request.idiag_states = 0x1ffe & ~((1u << 7) | (1u << 10));
     query.request.id.idiag_cookie[0] = INET_DIAG_NOCOOKIE;
     query.request.id.idiag_cookie[1] = INET_DIAG_NOCOOKIE;
     if (sendto(fd, &query, sizeof(query), 0, (struct sockaddr *)&kernel, sizeof(kernel)) != sizeof(query)) {
