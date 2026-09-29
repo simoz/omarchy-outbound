@@ -89,7 +89,9 @@ the expanded window directly, or bring it into focus if it is already open.
 
 Collection starts when a panel or window opens. Closing the last open view
 stops the collector and clears the connection snapshot from memory. The bar
-alone does not collect data and shows “—” until a snapshot is available.
+alone does not collect data. Its globe icon is dimmed with no counters while
+closed or paused; during collection it lights up and shows socket/country counts
+once a snapshot is available.
 
 Use **LIVE / PAUSED** in the header to pause or resume collection. The button
 shows **ERROR** if collection fails; details and retry are in Settings → Collection.

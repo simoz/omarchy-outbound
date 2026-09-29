@@ -37,6 +37,7 @@ UI.BarWidget {
         bar: root.bar
         labelVisible: false
         hasVisualContent: true
+        dimmed: !root.service || !root.service.demanded
         fixedWidth: root.vertical ? barSize : barContents.implicitWidth + scaledHorizontalMargin * 2
         fixedHeight: root.vertical ? barContents.implicitHeight + scaledVerticalPadding * 2 : barSize
         tooltipText: "Outbound · " + (root.service ? root.service.status : "IDLE") + " · Open network globe · Right-click to expand"
@@ -52,7 +53,9 @@ UI.BarWidget {
                 ink: button.foreground
             }
             Text {
-                text: root.service && root.service.snapshot ? root.service.rows.length + " / " + root.service.countryCount : "—"
+                objectName: "outboundBarCounts"
+                visible: !button.dimmed && root.service.snapshot !== null
+                text: visible ? root.service.rows.length + " / " + root.service.countryCount : ""
                 color: button.foreground
                 font.family: button.fontFamily
                 font.pixelSize: button.fontSize
