@@ -225,9 +225,9 @@ cp /tmp/outbound-shots/overview.png preview.png
 cp /tmp/outbound-shots/{country,connections}.png docs/screenshots/
 ```
 
-`DEMO_SCENE=Launch` renders the 28.8 s launch video; pass a soundtrack with
-`DEMO_AUDIO` and its start offset with `DEMO_AUDIO_START`. Audio and rendered
-videos are not versioned.
+Without `DEMO_SCENE`, or with `DEMO_SCENE=Launch`, it renders the 28.8 s launch
+video; pass a soundtrack with `DEMO_AUDIO` and its start offset with
+`DEMO_AUDIO_START`. Audio and rendered videos are not versioned.
 
 ## Performance and manual connections
 

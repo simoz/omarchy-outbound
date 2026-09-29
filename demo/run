@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render the Outbound promo video from fictional fixture data.
+# Render the Outbound launch video or README stills from fictional fixture data.
 # Isolated: temp Quickshell config, temp XDG dirs, offscreen rendering.
 # Does not touch the desktop bar, shell.json or the installed plugin.
 set -euo pipefail
@@ -16,9 +16,9 @@ mkdir -p "$work/shell/plugin" "$work/frames" "$work/config" "$work/data"
 cp "$repository"/*.qml "$repository"/*.js "$work/shell/plugin/"
 cp -r "$repository/ui" "$repository/assets" "$work/shell/plugin/"
 cp -r /usr/share/omarchy/shell/Commons /usr/share/omarchy/shell/Ui "$work/shell/"
-# DEMO_SCENE picks the timeline: Demo (20 s walkthrough), Promo (28 s), Launch (28.8 s beat-cut)
-# or Screenshots (README stills, with DEMO_STILLS).
-cp "$repository/demo/${DEMO_SCENE:-Demo}.qml" "$work/shell/shell.qml"
+# DEMO_SCENE picks the timeline: Launch (28.8 s beat-cut, default) or Screenshots
+# (README stills, with DEMO_STILLS).
+cp "$repository/demo/${DEMO_SCENE:-Launch}.qml" "$work/shell/shell.qml"
 
 export OUTBOUND_BACKEND="$repository/demo/fixtures/outbound-engine"
 export DEMO_FRAMES="$work/frames" DEMO_FPS="${DEMO_FPS:-30}"
