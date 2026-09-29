@@ -60,7 +60,7 @@ class Engine
       else
         family_errors << nil
         # The native adapter replaces its row buffer on the next family dump.
-        count.times { |index| sockets << JSON.parse(Native.outbound_row_json(index)) }
+        count.times { |index| sockets << native_socket(index) }
         omitted_sockets += Native.outbound_omitted
       end
     end
@@ -79,12 +79,26 @@ class Engine
     snapshot(request_id, sockets, process_scan["owners"], coverage)
   end
 
+  # Remote hex is normalized from the kernel bytes, with mapped IPv4 reduced
+  # to eight digits, for scope classification and GeoIP lookup.
+  def native_socket(index)
+    {
+      "family" => Native.outbound_row_family(index),
+      "local" => {"address" => Native.outbound_row_local_address(index), "port" => Native.outbound_row_local_port(index)},
+      "remote" => {"address" => Native.outbound_row_remote_address(index), "port" => Native.outbound_row_remote_port(index)},
+      "state" => Native.outbound_row_state(index),
+      "uid" => Native.outbound_row_uid(index),
+      "inode" => Native.outbound_row_inode(index),
+      "cookie" => Native.outbound_row_cookie(index),
+      "hex" => Native.outbound_row_remote_hex(index)
+    }
+  end
+
   def snapshot(request_id, sockets, owners, coverage)
     @sequence += 1
     next_fallback_ids = {}
     connections = sockets.map do |socket|
-      address = socket["remote"]["address"]
-      hex_address = Native.outbound_ip_hex(address)
+      hex_address = socket["hex"]
       scope = Scope.classify(hex_address)
       {
         "id" => connection_id(socket, next_fallback_ids),
@@ -96,7 +110,7 @@ class Engine
         "owners" => owners[socket["inode"]] || [],
         "scope" => scope,
         "direction" => "unknown",
-        "country" => @geo.lookup(address, hex_address, scope)
+        "country" => @geo.lookup(hex_address, scope)
       }
     end
 
@@ -124,7 +138,9 @@ class Engine
       return "#{@session}:#{socket['family']}:#{socket['cookie']}"
     end
 
-    key = JSON.generate([socket["family"], socket["inode"], socket["local"], socket["remote"]])
+    local = socket["local"]
+    remote = socket["remote"]
+    key = "#{socket['family']}|#{socket['inode']}|#{local['address']}|#{local['port']}|#{remote['address']}|#{remote['port']}"
     id = @fallback_ids[key]
     if id.nil?
       @next_fallback_id += 1

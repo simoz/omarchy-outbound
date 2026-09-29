@@ -114,16 +114,31 @@ done:
 }
 long outbound_geo_epoch(void) { return build_epoch; }
 int outbound_geo_is_country(void) { return country_database; }
-/* Empty = no country, ! = invalid lookup, otherwise two upper-case letters. */
-const char *outbound_geo_lookup(const char *ip) {
+static int nibble(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+/* Input is the collector's address hex: eight digits for IPv4 (mapped IPv6 is
+ * already reduced to IPv4) or 32 for IPv6.
+ * Empty = no country, ! = invalid lookup, otherwise two upper-case letters. */
+const char *outbound_geo_lookup_hex(const char *hex) {
     static char country[3];
     if (!loaded) return "";
+    size_t length = strlen(hex);
+    if (length != 8 && length != 32) return "!";
+    unsigned char bytes[16];
+    for (size_t i = 0; i < length / 2; i++) {
+        int high = nibble(hex[i * 2]), low = nibble(hex[i * 2 + 1]);
+        if (high < 0 || low < 0) return "!";
+        bytes[i] = (unsigned char)(high << 4 | low);
+    }
     struct sockaddr_storage address = {0};
     struct sockaddr_in *v4 = (void *)&address;
     struct sockaddr_in6 *v6 = (void *)&address;
-    if (inet_pton(AF_INET, ip, &v4->sin_addr) == 1) v4->sin_family = AF_INET;
-    else if (inet_pton(AF_INET6, ip, &v6->sin6_addr) == 1) v6->sin6_family = AF_INET6;
-    else return "!";
+    if (length == 8) { v4->sin_family = AF_INET; memcpy(&v4->sin_addr, bytes, 4); }
+    else { v6->sin6_family = AF_INET6; memcpy(&v6->sin6_addr, bytes, 16); }
     int error = 0;
     MMDB_lookup_result_s lookup = MMDB_lookup_sockaddr(&database, (struct sockaddr *)&address, &error);
     if (error != MMDB_SUCCESS) return "!";

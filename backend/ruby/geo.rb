@@ -29,12 +29,12 @@ class Geo
     Native.outbound_geo_is_country == 1
   end
 
-  def lookup(address, hex_address, scope)
+  def lookup(hex_address, scope)
     return nil unless scope == "public" && @status["state"] == "ready"
     # key? distinguishes a cached miss (nil) from an address not yet queried.
     return @cache[hex_address] if @cache.key?(hex_address)
 
-    result = Native.outbound_geo_lookup(Scope.lookup_address(hex_address, address))
+    result = Native.outbound_geo_lookup_hex(hex_address)
     @status["lookupErrors"] += 1 if result == "!"
     country = result == "!" || result == "" ? nil : result
 

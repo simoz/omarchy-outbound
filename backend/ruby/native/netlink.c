@@ -17,7 +17,6 @@
 struct outbound_row { struct inet_diag_msg diag; };
 static struct outbound_row rows[ROW_LIMIT];
 static int row_count, omitted;
-static char row_json[512];
 
 long outbound_monotonic_ms(void) {
     struct timespec t;
@@ -129,30 +128,46 @@ done:
     return result;
 }
 int outbound_omitted(void) { return omitted; }
-const char *outbound_row_json(int index) {
-    struct inet_diag_msg *r = &rows[index].diag;
-    char local[INET6_ADDRSTRLEN], remote[INET6_ADDRSTRLEN];
-    inet_ntop(r->idiag_family, r->id.idiag_src, local, sizeof(local));
-    inet_ntop(r->idiag_family, r->id.idiag_dst, remote, sizeof(remote));
-    snprintf(row_json, sizeof(row_json),
-        "{\"family\":%u,\"local\":{\"address\":\"%s\",\"port\":%u},"
-        "\"remote\":{\"address\":\"%s\",\"port\":%u},\"state\":%u,\"uid\":%u,\"inode\":%u,"
-        "\"cookie\":\"%08x%08x\"}", r->idiag_family, local, ntohs(r->id.idiag_sport), remote,
-        ntohs(r->id.idiag_dport), r->idiag_state, r->idiag_uid, r->idiag_inode,
-        r->id.idiag_cookie[0], r->id.idiag_cookie[1]);
-    return row_json;
+/* Row fields for the rows of the last successful dump. Spinel copies returned
+ * strings immediately, so each accessor may reuse one static buffer. */
+int outbound_row_family(int index) { return rows[index].diag.idiag_family; }
+int outbound_row_state(int index) { return rows[index].diag.idiag_state; }
+long outbound_row_uid(int index) { return rows[index].diag.idiag_uid; }
+long outbound_row_inode(int index) { return rows[index].diag.idiag_inode; }
+int outbound_row_local_port(int index) { return ntohs(rows[index].diag.id.idiag_sport); }
+int outbound_row_remote_port(int index) { return ntohs(rows[index].diag.id.idiag_dport); }
+static const char *address(int index, const void *bytes) {
+    static char text[INET6_ADDRSTRLEN];
+    inet_ntop(rows[index].diag.idiag_family, bytes, text, sizeof(text));
+    return text;
 }
-/* Numeric parsing only; this boundary never resolves hostnames. */
-const char *outbound_ip_hex(const char *ip) {
-    static char hex[33];
-    unsigned char bytes[16];
-    int length = 4;
-    if (inet_pton(AF_INET, ip, bytes) != 1) {
-        if (inet_pton(AF_INET6, ip, bytes) != 1) return "";
-        length = 16;
-        static const unsigned char mapped[12] = {0,0,0,0,0,0,0,0,0,0,255,255};
-        if (!memcmp(bytes, mapped, 12)) { memmove(bytes, bytes + 12, 4); length = 4; }
+const char *outbound_row_local_address(int index) { return address(index, rows[index].diag.id.idiag_src); }
+const char *outbound_row_remote_address(int index) { return address(index, rows[index].diag.id.idiag_dst); }
+const char *outbound_row_cookie(int index) {
+    static char cookie[17];
+    snprintf(cookie, sizeof(cookie), "%08x%08x", rows[index].diag.id.idiag_cookie[0], rows[index].diag.id.idiag_cookie[1]);
+    return cookie;
+}
+/* Lower-case hex: eight digits for IPv4, including IPv4-mapped IPv6, else 32. */
+static const char *hex(const unsigned char *bytes, int length) {
+    static const unsigned char mapped[12] = {0,0,0,0,0,0,0,0,0,0,255,255};
+    static const char digits[] = "0123456789abcdef";
+    static char text[33];
+    if (length == 16 && !memcmp(bytes, mapped, 12)) { bytes += 12; length = 4; }
+    for (int i = 0; i < length; i++) {
+        text[i * 2] = digits[bytes[i] >> 4];
+        text[i * 2 + 1] = digits[bytes[i] & 15];
     }
-    for (int i = 0; i < length; i++) snprintf(hex + i * 2, 3, "%02x", bytes[i]);
-    return hex;
+    text[length * 2] = 0;
+    return text;
+}
+const char *outbound_row_remote_hex(int index) {
+    return hex((const unsigned char *)rows[index].diag.id.idiag_dst, rows[index].diag.idiag_family == AF_INET ? 4 : 16);
+}
+/* Numeric parsing only, for tests of textual addresses; never resolves hostnames. */
+const char *outbound_ip_hex(const char *ip) {
+    unsigned char bytes[16];
+    if (inet_pton(AF_INET, ip, bytes) == 1) return hex(bytes, 4);
+    if (inet_pton(AF_INET6, ip, bytes) == 1) return hex(bytes, 16);
+    return "";
 }

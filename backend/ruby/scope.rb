@@ -56,10 +56,4 @@ module Scope
     end
     prefix(hex, "2", 3) ? "public" : "reserved"
   end
-
-  # Mapped IPv6 must use its IPv4 address when querying an IPv4-only database.
-  def self.lookup_address(hex, original)
-    return original unless hex.length == 8
-    [hex[0, 2].to_i(16), hex[2, 2].to_i(16), hex[4, 2].to_i(16), hex[6, 2].to_i(16)].join(".")
-  end
 end

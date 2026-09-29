@@ -35,7 +35,8 @@ socket = {
   "family" => 2,
   "local" => {"address" => "127.0.0.1", "port" => 10},
   "remote" => {"address" => "192.0.2.1", "port" => 20},
-  "state" => 1, "uid" => 1000, "inode" => 7, "cookie" => "ffffffffffffffff"
+  "state" => 1, "uid" => 1000, "inode" => 7, "cookie" => "ffffffffffffffff",
+  "hex" => "c0000201"
 }
 geo = Geo.new("")
 engine = Engine.new(geo)
@@ -148,20 +149,24 @@ if ARGV.length > 1
   check(geo.status["releaseMonth"] == "2024-01", "database month")
   ["8.8.8.8", "::ffff:8.8.8.8", "2001:4860::8888"].each do |address|
     hex = Native.outbound_ip_hex(address)
-    check(geo.lookup(address, hex, Scope.classify(hex)) == "IT", "synthetic public lookup")
+    check(geo.lookup(hex, Scope.classify(hex)) == "IT", "synthetic public lookup")
   end
   ["127.0.0.1", "192.0.2.1", "fc00::1"].each do |address|
     hex = Native.outbound_ip_hex(address)
-    check(geo.lookup(address, hex, Scope.classify(hex)).nil?, "special-use exclusion")
+    check(geo.lookup(hex, Scope.classify(hex)).nil?, "special-use exclusion")
   end
   # Reloading the path on disk must not alter the retained immutable image.
   File.write(ARGV[1], "invalid")
-  check(geo.lookup("9.9.9.9", Native.outbound_ip_hex("9.9.9.9"), "public") == "IT", "immutable database")
+  check(geo.lookup(Native.outbound_ip_hex("9.9.9.9"), "public") == "IT", "immutable database")
+  ["0909090", "zz090909"].each do |hex|
+    errors = geo.status["lookupErrors"]
+    check(geo.lookup(hex, "public").nil? && geo.status["lookupErrors"] == errors + 1, "malformed hex is a lookup error")
+  end
 end
 if ARGV.length > 2
   ["ZZ", "bad", "type"].each do |code|
     geo = Geo.new("#{ARGV[2]}/#{code}.mmdb")
-    3.times { check(geo.lookup("8.8.8.8", "08080808", "public").nil?, "invalid country excluded") }
+    3.times { check(geo.lookup("08080808", "public").nil?, "invalid country excluded") }
     check(geo.status["lookupErrors"] == (code == "ZZ" ? 0 : 1), "negative cache avoids repeated errors")
   end
 end
