@@ -46,18 +46,27 @@ C.Popup {
                 Repeater {
                     model: [
                         [[], "GENERAL"],
-                        [["F1"], "Open or close this guide"],
+                        [["F1"], "Open or close this guide (outside Settings)"],
                         [["Tab", "Shift+Tab"], "Move to the next / previous control"],
                         [["Enter", "Space"], "Activate the focused button or list row"],
-                        [["Esc"], "Close the open menu or guide; otherwise close Outbound"],
+                        [["Esc"], "Close the open dropdown, Settings or guide; otherwise close Outbound"],
+                        [[], "BUTTONS · FOCUS WITH TAB, THEN ENTER / SPACE"],
+                        [["LIVE", "PAUSED"], "Pause or resume collection"],
+                        [["Refresh"], "Collect once; stay paused if already paused"],
+                        [["Header", "arrows"], "Switch between compact panel and expanded window"],
+                        [["List", "arrows"], "Expand or restore the connection list"],
+                        [["Gear"], "Open Collection, Globe and Credits settings"],
                         [[], "GLOBE · WHEN FOCUSED"],
                         [["←", "↑", "→", "↓"], "Rotate the globe"],
-                        [["+", "−"], "Zoom in / out; scrolling also zooms"],
+                        [["+", "=", "−"], "Zoom in (+ or =) / out (−); scrolling also zooms"],
                         [["Home"], "Reset globe orientation and zoom"],
                         [[], "FILTERS AND CONNECTIONS"],
                         [["↑", "↓"], "Move between rows in the focused country, application or connection list"],
                         [["Enter", "Space"], "Toggle a country/application filter, or select a connection"],
                         [["Space", "↑", "↓", "Enter"], "Open a dropdown, choose an option and confirm"],
+                        [[], "SETTINGS"],
+                        [["Enter"], "Search for a city when the city field is focused"],
+                        [["Tab", "Enter", "Space"], "Focus and choose a city result; the origin is saved immediately"],
                         [[], "THIS GUIDE"],
                         [["↑", "↓", "PgUp", "PgDn"], "Scroll the guide"]
                     ]
@@ -112,7 +121,7 @@ C.Popup {
                     width: parent.width
                     wrapMode: Text.WordWrap
                     color: theme.subdued
-                    text: "Use LIVE / PAUSED to control collection. Refresh updates once, even while paused; focus it with Tab and press Space or Enter. Use Play/Pause inside the globe to rotate.\nType in Search to filter by IP or application. Select a connection, then use Copy IP to copy its address."
+                    text: "Use Play/Pause inside the globe to control rotation independently of collection.\nType in Search to filter by IP or application. Choose a country/application again to clear that filter; the ↺ button clears all filters. Select a connection, then focus Copy IP and press Enter or Space.\nIn Settings, Done saves edited paths, interval and manual coordinates. Esc closes without saving those edits; choosing a city saves its origin immediately.\nThe bar icon opens the compact panel with a left-click and the expanded window with a right-click. Switching views preserves filters, selection and globe position."
                 }
             }
         }

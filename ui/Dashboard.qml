@@ -82,8 +82,6 @@ FocusScope {
                     }
                     hint: root.service.paused ? "Refresh once and stay paused" : "Refresh connections"
                     enabled: !root.service.refreshing && !root.service.engineInstalling && !root.service.geoInstalling
-                    C.ToolTip.visible: hovered
-                    C.ToolTip.text: hint
                     onClicked: root.service.refresh()
                 }
                 ActionButton {

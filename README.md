@@ -98,6 +98,7 @@ shows **ERROR** if collection fails; details and retry are in Settings → Colle
 Manual pause survives closing and reopening the view.
 Use **Refresh** (⟳) beside it to request an immediate snapshot. While paused,
 Refresh collects once and stays paused. Filters and globe position are preserved.
+Refresh is unavailable while a refresh or a collector/GeoIP installation is in progress.
 
 Open settings with the gear button:
 
@@ -106,9 +107,19 @@ Open settings with the gear button:
 - **Globe**: install/update GeoIP, choose a custom MMDB and set the origin.
 - **Credits**: data sources, attribution and licenses.
 
-**Done** saves collection settings and closes the editor. Invalid values or a
-save failure keep it open.
-Glow and scanlines are enabled. Selecting a city saves the origin immediately.
+**Done** saves paths, refresh interval and manual origin coordinates, then closes
+the editor. Invalid values or a save failure keep it open. **Esc** or clicking
+outside closes without saving those edits. To search for an origin, type a city
+and press **Enter** or **Search**, then choose a result; this saves the origin
+immediately. Glow and scanlines are enabled.
+
+The arrow button in the main header switches between compact panel and expanded
+window, preserving filters, selection and globe position.
+
+Filter by application, country and IP family, or type an IP/application name in
+Search. Select the same country or application again to clear that filter; **↺**
+clears all filters. Select a connection, then use **Copy IP** to copy its remote
+address.
 
 The arrow button in the connection list header expands the list to the full
 height, hiding the globe and facets; press it again to restore them.
@@ -116,7 +127,33 @@ height, hiding the globe and facets; press it again to restore them.
 Use Play/Pause inside the globe to toggle rotation independently of collection.
 Drag the globe to rotate it. Use the wheel, touchpad scrolling or **+/−** to
 zoom. With the globe focused, arrow keys rotate, **+/−** zoom and **Home** resets
-the view. The keyboard button or **F1** opens the complete shortcut guide.
+the view. **=** also zooms in.
+
+### Keyboard controls
+
+The keyboard button or **F1** opens the KEYS guide. F1 is inactive while Settings
+is open. Buttons, including Refresh, use **Tab** to focus and **Enter** or
+**Space** to activate.
+
+| Focus / context | Keys | Action |
+| --- | --- | --- |
+| Controls | Tab / Shift+Tab | Move to the next / previous control |
+| Button or list row | Enter / Space | Activate the button, toggle a filter or select a connection |
+| Country, application or connection list | ↑ / ↓ | Move between rows |
+| Dropdown | Space, then ↑ / ↓ and Enter | Open, choose and confirm |
+| Globe | ← / ↑ / → / ↓ | Rotate |
+| Globe | + or = / − | Zoom in / out |
+| Globe | Home | Reset orientation and zoom |
+| Origin city field | Enter | Search for the typed city |
+| KEYS guide | ↑ / ↓ / PgUp / PgDn | Scroll the guide |
+| Dashboard / KEYS guide | F1 | Open / close the guide |
+| Dropdown, Settings or guide | Esc | Close that popup |
+| Dashboard | Esc | Close Outbound |
+
+To pause collection, refresh once, switch panel/window, expand the connection
+list, clear filters or copy an IP, focus the corresponding button and activate
+it. Globe controls apply only while the globe is focused; typing in a text field
+keeps its normal editing behavior.
 
 If geolocation is missing, use **Install GeoIP**. Downloads never start
 automatically. Without an origin, the globe shows destination countries without
