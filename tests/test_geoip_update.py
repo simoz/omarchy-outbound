@@ -91,12 +91,17 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(len(list((self.data / "versions").iterdir())), 1)
         self.assertEqual(list(self.data.glob(".current-*")), [])
 
+    def http_error(self, url, code):
+        error = urllib.error.HTTPError(url, code, "Synthetic", {}, None)
+        self.addCleanup(error.close)
+        return error
+
     def test_unpublished_current_month_falls_back_to_previous_only(self):
         requested = []
         def fetch(url, destination):
             requested.append(url)
             if "2026-01" in url:
-                raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+                raise self.http_error(url, 404)
             self.fetch(url, destination)
         current = updater.install_latest(self.data, Path("/unused"), datetime(2026, 1, 1, tzinfo=timezone.utc), fetch=fetch, check=self.validate)
         self.assertEqual([url.rsplit("-", 2)[-2:] for url in requested], [["2026", "01.mmdb.gz"], ["2025", "12.mmdb.gz"]])
@@ -106,14 +111,14 @@ class UpdateTests(unittest.TestCase):
         requested = []
         def fetch(url, destination):
             requested.append(url)
-            raise urllib.error.HTTPError(url, 503, "Unavailable", {}, None)
+            raise self.http_error(url, 503)
         with self.assertRaises(urllib.error.HTTPError):
             updater.install_latest(self.data, Path("/unused"), datetime(2026, 9, 15, tzinfo=timezone.utc), fetch=fetch, check=self.validate)
         self.assertEqual(len(requested), 1)
 
     def test_explicit_unpublished_month_is_unavailable(self):
         def missing(url, destination):
-            raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+            raise self.http_error(url, 404)
         with patch.object(self, "fetch", missing), self.assertRaises(updater.Unavailable):
             self.install()
         self.assertEqual(list(self.data.glob(".download-*")), [])
