@@ -111,7 +111,7 @@ class Engine
       "session" => @session,
       "sequence" => @sequence,
       "observedAtMs" => (Time.now.to_f * 1000).to_i,
-      "status" => snapshot_status(connections, coverage),
+      "status" => snapshot_status(coverage),
       "coverage" => coverage,
       "database" => @geo.status,
       "connections" => connections,
@@ -134,14 +134,17 @@ class Engine
     id
   end
 
-  def snapshot_status(connections, coverage)
+  def snapshot_status(coverage)
     return "error" if coverage["ipv4"] && coverage["ipv6"]
 
+    # Partial means the collector lost data it could have read. Unknown owners,
+    # denied processes of other users and exiting processes are the normal
+    # state of an unprivileged scan (TIME_WAIT sockets never have an owner),
+    # so they stay visible in coverage without degrading the status.
     processes = coverage["processes"]
     partial = coverage["ipv4"] || coverage["ipv6"] || coverage["truncated"] ||
       processes["timedOut"] || processes["scanLimited"] ||
-      processes["denied"] + processes["races"] + processes["errors"] + processes["ownersOmitted"] > 0 ||
-      connections.any? { |connection| connection["owners"].empty? }
+      processes["errors"] + processes["ownersOmitted"] > 0
     partial ? "partial" : "ok"
   end
 

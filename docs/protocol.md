@@ -61,7 +61,7 @@ the snapshot protocol remains version 1.
 | `session` | Random 128-bit hex ID, newly generated per backend process |
 | `sequence` | Increasing integer starting at 1 |
 | `observedAtMs` | Unix milliseconds at completion of collection; not an atomic kernel timestamp |
-| `status` | `ok`, `partial`, or `error` when both family dumps fail |
+| `status` | `ok`, `partial` when data was lost (see below), or `error` when both family dumps fail |
 | `coverage` | Family/ownership results and truncation; see below |
 | `database` | Independent local GeoIP availability/age/error status |
 | `connections` | Up to 4,096 observed connected TCP sockets |
@@ -111,7 +111,15 @@ represented as a successfully empty family.
 65,536 directory entries and 262,144 fd entries. Small proc files are capped at
 4 KiB. These bounds may cause partial ownership on busy hosts; counters do not
 represent distinct processes in every case. The available proc mount may hide
-processes completely without returning a permission error. `namespace` is
+processes completely without returning a permission error.
+
+`status` is `partial` when one family failed, rows were truncated, the proc scan
+timed out or hit a limit, owners were omitted or proc reads failed with other
+errors. Unknown owners, `denied` and `races` are expected in an unprivileged
+scan (TIME_WAIT sockets never have an owner), so they remain in coverage and
+aggregates without making the snapshot partial.
+
+`namespace` is
 `current`: other network namespaces are never entered.
 
 `coverage.omittedRows` counts known rows excluded by row/byte bounds;

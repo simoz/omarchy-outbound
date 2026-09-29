@@ -80,8 +80,13 @@ check(
 
 # Coverage is independent of GeoIP availability: a missing database alone is not partial.
 check(engine.snapshot("complete", [socket], owners, coverage)["status"] == "ok", "complete coverage")
-check(engine.snapshot("unowned", [socket], {}, coverage)["status"] == "partial", "missing owner")
-["denied", "races", "errors", "ownersOmitted", "timedOut", "scanLimited"].each do |reason|
+check(engine.snapshot("unowned", [socket], {}, coverage)["status"] == "ok", "missing owner is not partial")
+["denied", "races"].each do |reason|
+  expected = coverage
+  expected["processes"][reason] = 1
+  check(engine.snapshot("expected", [socket], owners, expected)["status"] == "ok", reason + " is not partial")
+end
+["errors", "ownersOmitted", "timedOut", "scanLimited"].each do |reason|
   incomplete = coverage
   incomplete["processes"][reason] = ["timedOut", "scanLimited"].include?(reason) ? true : 1
   check(engine.snapshot("partial", [socket], owners, incomplete)["status"] == "partial", reason)
