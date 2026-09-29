@@ -50,10 +50,11 @@ Files live under `${XDG_DATA_HOME:-$HOME/.local/share}/outbound/data/`:
   timestamp, download time, license and compressed/uncompressed SHA-256 hashes.
 - `current`: an atomically replaced relative symlink to a validated version.
 
-Prior versions remain on disk. Failed downloads, decompression, validation or
-publication leave the current version intact. Updates are serialized with a
-local lock. Nothing deletes old versions automatically. The custom MMDB field
-can select an older version directly if needed.
+A successful update keeps the previous version for rollback and removes older
+ones. Failed downloads, decompression, validation or publication leave the
+current version intact. Updates are serialized with a local lock. To pin an
+older release, copy its `country.mmdb` outside `versions/` and select that copy
+in the custom MMDB field.
 
 Downloads use verified HTTPS with HTTPS-only redirects, a 15-second socket
 timeout and a 120-second download deadline checked between reads. Compressed
@@ -72,8 +73,9 @@ and accompanies every installed version.
 
 ## Verification
 
-Offline updater tests cover atomic replacement, retained previous versions,
-checksum mismatch, corrupt gzip, decompression limits and validation failures.
+Offline updater tests cover atomic replacement, retention of the previous
+version, pruning of older ones, checksum mismatch, corrupt gzip, decompression
+limits and validation failures.
 The Ruby backend suite validates synthetic country databases and rejects invalid
 metadata or corruption. Quickshell fixture checks cover installation/reload,
 visible failures and cancellation. See [test commands](development.md#automated-checks).

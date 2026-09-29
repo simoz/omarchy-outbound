@@ -143,6 +143,7 @@ def install(data_dir, backend, month, expected_sha256=None, fetch=download, chec
             archive.unlink()
             versions = data_dir / "versions"
             versions.mkdir(exist_ok=True)
+            previous = (data_dir / "current").resolve() if (data_dir / "current").is_symlink() else None
             version = versions / f"dbip-country-lite-{month}-{uuid.uuid4().hex}"
             # Publish database, notices and provenance as a single directory, then
             # switch one symlink atomically. Old versions remain available.
@@ -155,6 +156,11 @@ def install(data_dir, backend, month, expected_sha256=None, fetch=download, chec
                 link.unlink(missing_ok=True)
                 shutil.rmtree(version)
                 raise
+        # Keep the previous version for rollback; a running collector holds its own
+        # in-memory copy, so older directories can go.
+        for old in versions.iterdir():
+            if old not in (version, previous):
+                shutil.rmtree(old, ignore_errors=True)
     return data_dir / "current" / "country.mmdb"
 
 

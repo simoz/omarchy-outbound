@@ -46,6 +46,14 @@ class UpdateTests(unittest.TestCase):
         self.assertIn("MIT", (current.parent / "NOTICE.txt").read_text())
         self.assertEqual(list(self.data.glob(".download-*")), [])
 
+    def test_update_keeps_previous_version_and_prunes_older(self):
+        first = self.install().resolve().parent
+        second = self.install().resolve().parent
+        third = self.install().resolve().parent
+        self.assertFalse(first.exists())
+        self.assertEqual(sorted((self.data / "versions").iterdir()), sorted([second, third]))
+        self.assertEqual((self.data / "current/country.mmdb").resolve().parent, third)
+
     def test_failed_hash_or_validation_preserves_current(self):
         previous = self.install().resolve()
         with self.assertRaises(ValueError):
