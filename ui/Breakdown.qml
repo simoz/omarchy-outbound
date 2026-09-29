@@ -9,7 +9,8 @@ Item {
     property string subtitle: ""
     property string selectedValue: ""
     property var labelFor: function(value) { return value; }
-    property var badgeFor: function(value) { return value.slice(0, 2).toUpperCase(); }
+    // Optional leading badge, such as a country flag; rows without it start at the edge.
+    property var badgeFor: null
     property bool flags: false
     property int denominator: total
     property color accent: theme.accent
@@ -75,16 +76,17 @@ Item {
             }
             contentItem: Item {
                 Label {
+                    visible: root.badgeFor !== null
                     anchors.verticalCenter: parent.verticalCenter
                     width: 27
-                    text: root.badgeFor(row.modelData.value)
+                    text: visible ? root.badgeFor(row.modelData.value) : ""
                     font.family: root.flags ? "Noto Color Emoji" : theme.font
                     font.pixelSize: root.flags ? 21 : 17
                     color: root.accent
                 }
                 Label {
-                    x: 34
-                    width: parent.width - 34 - numbers.width - 8
+                    x: root.badgeFor !== null ? 34 : 0
+                    width: parent.width - x - numbers.width - 8
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.labelFor(row.modelData.value)
                     font.bold: row.selected
