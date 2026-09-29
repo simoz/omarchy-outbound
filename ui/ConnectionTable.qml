@@ -8,6 +8,8 @@ Item {
     // When true the dashboard hides the globe and facets so the list takes the page height.
     property bool expanded: false
     signal copyRequested(string text)
+    function toggleExpanded() { expanded = !expanded; listToggle.forceActiveFocus(); }
+    function copySelection() { copyRequested(service.selected.ip); }
     readonly property bool narrow: width < 680
     readonly property var proportions: [0.21, 0.27, 0.2, 0.07, 0.17, 0.08]
     function columnX(index, available) {
@@ -37,7 +39,7 @@ Item {
         implicitWidth: 30
         hint: root.expanded ? "Collapse connection list" : "Expand connection list"
         contentItem: Item { VerticalExpandIcon { anchors.centerIn: parent; ink: theme.accent; collapse: root.expanded } }
-        onClicked: root.expanded = !root.expanded
+        onClicked: root.toggleExpanded()
     }
     Item {
         x: 14; y: 38; width: parent.width - 36; height: 23
@@ -134,7 +136,7 @@ Item {
             anchors.right: parent.right
             text: "Copy IP"
             enabled: root.service.selected !== null
-            onClicked: root.copyRequested(root.service.selected.ip)
+            onClicked: root.copySelection()
         }
     }
 }

@@ -19,6 +19,7 @@ Item {
         height: parent.height
         service: service
     }
+    SignalSpy { id: expandSpy; target: dashboard; signalName: "expandRequested" }
     SignalSpy { id: closeSpy; target: dashboard; signalName: "closeRequested" }
     SignalSpy { id: copySpy; target: dashboard; signalName: "copyRequested" }
     TestCase {
@@ -34,6 +35,102 @@ Item {
             dashboard.globe.reset();
             closeSpy.clear();
             copySpy.clear();
+        }
+        function test_action_shortcuts_and_shared_button_behavior() {
+            var listToggle = findChild(dashboard, "connectionListToggleButton");
+            var table = listToggle.parent;
+            var refresh = findChild(dashboard, "refreshButton");
+            table.expanded = false;
+            service.paused = true;
+            service.refreshCount = 0;
+            dashboard.globe.rotating = false;
+            findChild(dashboard, "refreshButton").forceActiveFocus();
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 1);
+            verify(service.paused);
+            refresh.enabled = false;
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 1);
+            refresh.enabled = Qt.binding(function() { return !service.refreshing && !service.engineInstalling && !service.geoInstalling; });
+            keyClick(Qt.Key_P, Qt.ControlModifier);
+            verify(!service.paused);
+            keyClick(Qt.Key_G, Qt.ControlModifier);
+            verify(dashboard.globe.rotating);
+            keyClick(Qt.Key_G, Qt.ControlModifier);
+            verify(!dashboard.globe.rotating);
+            expandSpy.clear();
+            keyClick(Qt.Key_E, Qt.ControlModifier);
+            compare(expandSpy.count, 1);
+            dashboard.surfaceSwitchAvailable = false;
+            keyClick(Qt.Key_E, Qt.ControlModifier);
+            compare(expandSpy.count, 1);
+            dashboard.surfaceSwitchAvailable = true;
+            dashboard.globe.forceActiveFocus();
+            keyClick(Qt.Key_L, Qt.ControlModifier);
+            verify(table.expanded);
+            verify(listToggle.activeFocus);
+            keyClick(Qt.Key_L, Qt.ControlModifier);
+            verify(!table.expanded);
+            keyClick(Qt.Key_L, Qt.ControlModifier);
+            verify(table.expanded);
+            service.query = "Browser";
+            keyClick(Qt.Key_F, Qt.ControlModifier);
+            verify(!table.expanded);
+            verify(dashboard.searchField.activeFocus);
+            compare(dashboard.searchField.selectedText, "Browser");
+            findChild(dashboard, "refreshButton").forceActiveFocus();
+            keyClick(Qt.Key_R, Qt.ControlModifier | Qt.ShiftModifier);
+            compare(service.query, "");
+            service.selection = service.filtered[0].id;
+            keyClick(Qt.Key_C, Qt.ControlModifier);
+            compare(copySpy.count, 1);
+            compare(copySpy.signalArguments[0][0], service.selected.ip);
+            keyClick(Qt.Key_Comma, Qt.ControlModifier);
+            var settings = findChild(dashboard, "outboundSettings");
+            tryCompare(settings, "opened", true);
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 1);
+            settings.close();
+        }
+        function test_shortcuts_preserve_editing_popups_and_desktop_modifiers() {
+            service.refreshCount = 0;
+            service.paused = true;
+            service.query = "Browser";
+            dashboard.searchField.forceActiveFocus();
+            keyClick(Qt.Key_P, Qt.ControlModifier);
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            keyClick(Qt.Key_R, Qt.ControlModifier | Qt.ShiftModifier);
+            verify(service.paused);
+            compare(service.refreshCount, 0);
+            compare(service.query, "Browser");
+            keyClick(Qt.Key_A, Qt.ControlModifier);
+            compare(dashboard.searchField.selectedText, "Browser");
+            keyClick(Qt.Key_C, Qt.ControlModifier);
+            compare(copySpy.count, 0);
+            keyClick(Qt.Key_X);
+            compare(service.query, "x");
+            findChild(dashboard, "refreshButton").forceActiveFocus();
+            keyClick(Qt.Key_R, Qt.ControlModifier | Qt.MetaModifier);
+            keyClick(Qt.Key_R, Qt.ControlModifier | Qt.AltModifier);
+            compare(service.refreshCount, 0);
+            dashboard.active = false;
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 0);
+            dashboard.active = true;
+            keyClick(Qt.Key_F1);
+            var help = findChild(dashboard, "outboundKeyboardHelp");
+            tryCompare(help, "opened", true);
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 0);
+            help.close();
+            var family = findChild(dashboard, "familyFilter");
+            family.forceActiveFocus();
+            family.popup.open();
+            tryCompare(family.popup, "opened", true);
+            keyClick(Qt.Key_R, Qt.ControlModifier);
+            compare(service.refreshCount, 0);
+            family.popup.close();
+            service.paused = false;
         }
         function test_collection_toggle_preserves_rows_and_globe_rotation() {
             var toggle = findChild(dashboard, "collectionToggleButton");

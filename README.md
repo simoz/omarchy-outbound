@@ -131,6 +131,23 @@ the view. **=** also zooms in.
 
 ### Keyboard controls
 
+These shortcuts work inside Outbound while Settings, KEYS and dropdowns are
+closed. They do not register desktop bindings or use Super. When a text field
+has focus, editing keys take priority and action shortcuts are inactive;
+**Ctrl+F** still focuses Search and selects its text.
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+R | Refresh once, preserving manual pause |
+| Ctrl+P | Pause / resume collection |
+| Ctrl+F | Focus Search; restore the overview if the list is expanded |
+| Ctrl+E | Switch compact panel / expanded window |
+| Ctrl+L | Expand / restore the connection list |
+| Ctrl+, | Open Settings |
+| Ctrl+G | Toggle rotation while the globe is visible |
+| Ctrl+Shift+R | Clear all filters |
+| Ctrl+C | Copy the selected connection's remote IP |
+
 The keyboard button or **F1** opens the KEYS guide. F1 is inactive while Settings
 is open. Buttons, including Refresh, use **Tab** to focus and **Enter** or
 **Space** to activate.

@@ -13,6 +13,11 @@ C.Popup {
     closePolicy: C.Popup.CloseOnEscape | C.Popup.CloseOnPressOutside
     property var previousFocus: null
     Theme { id: theme }
+    Component { id: refreshIcon; RefreshIcon { ink: theme.accent } }
+    Component { id: expandIcon; ExpandIcon { ink: theme.accent } }
+    Component { id: expandListIcon; VerticalExpandIcon { ink: theme.accent } }
+    Component { id: collapseListIcon; VerticalExpandIcon { ink: theme.accent; collapse: true } }
+    Component { id: settingsIcon; SettingsIcon { ink: theme.accent } }
     onAboutToShow: {
         previousFocus = root.parent.Window.window.activeFocusItem;
         scroll.contentY = 0;
@@ -50,12 +55,16 @@ C.Popup {
                         [["Tab", "Shift+Tab"], "Move to the next / previous control"],
                         [["Enter", "Space"], "Activate the focused button or list row"],
                         [["Esc"], "Close the open dropdown, Settings or guide; otherwise close Outbound"],
-                        [[], "BUTTONS · FOCUS WITH TAB, THEN ENTER / SPACE"],
-                        [["LIVE", "PAUSED"], "Pause or resume collection"],
-                        [["Refresh"], "Collect once; stay paused if already paused"],
-                        [["Header", "arrows"], "Switch between compact panel and expanded window"],
-                        [["List", "arrows"], "Expand or restore the connection list"],
-                        [["Gear"], "Open Collection, Globe and Credits settings"],
+                        [[], "ACTIONS · SHORTCUTS OR FOCUS BUTTON + ENTER / SPACE"],
+                        [["LIVE", "PAUSED", "Ctrl+P"], "Pause or resume collection"],
+                        [[refreshIcon, "Ctrl+R"], "Collect once; stay paused if already paused"],
+                        [[expandIcon, "Ctrl+E"], "Switch between compact panel and expanded window"],
+                        [[expandListIcon, collapseListIcon, "Ctrl+L"], "Expand or restore the connection list"],
+                        [[settingsIcon, "Ctrl+,"], "Open Collection, Globe and Credits settings"],
+                        [["▷", "Ⅱ", "Ctrl+G"], "Toggle globe rotation while the globe is visible"],
+                        [["Ctrl+F"], "Focus Search and select its text; restore the overview if needed"],
+                        [["↺", "Ctrl+Shift+R"], "Clear all filters"],
+                        [["Ctrl+C"], "Copy the selected connection’s remote IP"],
                         [[], "GLOBE · WHEN FOCUSED"],
                         [["←", "↑", "→", "↓"], "Rotate the globe"],
                         [["+", "=", "−"], "Zoom in (+ or =) / out (−); scrolling also zooms"],
@@ -94,15 +103,20 @@ C.Popup {
                                 Repeater {
                                     model: entry.modelData[0]
                                     Rectangle {
-                                        required property string modelData
+                                        required property var modelData
                                         width: Math.max(24, keyLabel.implicitWidth + 12)
                                         height: Math.max(24, keyLabel.implicitHeight + 8)
                                         color: "transparent"
                                         border.color: theme.subdued
+                                        Loader {
+                                            anchors.centerIn: parent
+                                            width: 18; height: 18
+                                            sourceComponent: typeof parent.modelData === "string" ? null : parent.modelData
+                                        }
                                         Label {
                                             id: keyLabel
                                             anchors.centerIn: parent
-                                            text: parent.modelData
+                                            text: typeof parent.modelData === "string" ? parent.modelData : ""
                                             font.pixelSize: theme.size * 0.85
                                         }
                                     }
@@ -121,7 +135,7 @@ C.Popup {
                     width: parent.width
                     wrapMode: Text.WordWrap
                     color: theme.subdued
-                    text: "Use Play/Pause inside the globe to control rotation independently of collection.\nType in Search to filter by IP or application. Choose a country/application again to clear that filter; the ↺ button clears all filters. Select a connection, then focus Copy IP and press Enter or Space.\nIn Settings, Done saves edited paths, interval and manual coordinates. Esc closes without saving those edits; choosing a city saves its origin immediately.\nThe bar icon opens the compact panel with a left-click and the expanded window with a right-click. Switching views preserves filters, selection and globe position."
+                    text: "Action shortcuts work only in Outbound, with Settings and this guide closed. In text fields, normal editing keys take priority; Ctrl+F still focuses Search. Close dropdowns before using action shortcuts.\nUse Play/Pause inside the globe to control rotation independently of collection.\nType in Search to filter by IP or application. Choose a country/application again to clear that filter; the ↺ button clears all filters. Select a connection, then focus Copy IP and press Enter or Space.\nIn Settings, Done saves edited paths, interval and manual coordinates. Esc closes without saving those edits; choosing a city saves its origin immediately.\nThe bar icon opens the compact panel with a left-click and the expanded window with a right-click. Switching views preserves filters, selection and globe position."
                 }
             }
         }

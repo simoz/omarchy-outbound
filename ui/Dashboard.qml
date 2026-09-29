@@ -25,6 +25,33 @@ FocusScope {
         onActivated: keyboardHelp.visible ? keyboardHelp.close() : keyboardHelp.open()
     }
     KeyboardHelp { id: keyboardHelp; width: Math.min(680, root.width - 24); height: Math.min(580, root.height - 24); x: (root.width - width) / 2; y: (root.height - height) / 2 }
+    // Handle only keys that the focused control did not consume. These bindings
+    // stay inside this dashboard and never register desktop-wide shortcuts.
+    Keys.onPressed: function(event) {
+        if (!root.active || settings.visible || keyboardHelp.visible
+                || applicationFilter.popup.visible || familyFilter.popup.visible) return;
+        if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_F) {
+            table.expanded = false;
+            search.forceActiveFocus();
+            search.selectAll();
+        } else {
+            var focused = root.Window.window.activeFocusItem;
+            if (focused instanceof TextInput || focused instanceof TextEdit) return;
+            if (event.modifiers === (Qt.ControlModifier | Qt.ShiftModifier) && event.key === Qt.Key_R) {
+                clearFiltersButton.clicked();
+            } else if (event.modifiers === Qt.ControlModifier) {
+                if (event.key === Qt.Key_R && refreshButton.enabled) refreshButton.clicked();
+                else if (event.key === Qt.Key_P) collectionToggle.clicked();
+                else if (event.key === Qt.Key_G && !table.expanded) rotationButton.clicked();
+                else if (event.key === Qt.Key_E && root.surfaceSwitchAvailable) surfaceSwitch.clicked();
+                else if (event.key === Qt.Key_L) table.toggleExpanded();
+                else if (event.key === Qt.Key_Comma) settingsButton.clicked();
+                else if (event.key === Qt.Key_C && root.service.selected) table.copySelection();
+                else return;
+            } else return;
+        }
+        event.accepted = true;
+    }
     Keys.onEscapePressed: function(event) { closeRequested(); event.accepted = true; }
     Connections {
         target: root.Window.window
@@ -67,6 +94,7 @@ FocusScope {
                 Item { Layout.fillWidth: true }
                 ActionButton {
                     flat: true
+                    id: collectionToggle
                     objectName: "collectionToggleButton"
                     text: root.service.paused ? "Ⅱ PAUSED" : root.service.error ? "! ERROR" : "● LIVE"
                     hint: root.service.paused ? "Resume collection" : "Pause collection"
@@ -74,6 +102,7 @@ FocusScope {
                 }
                 ActionButton {
                     flat: true
+                    id: refreshButton
                     objectName: "refreshButton"
                     implicitWidth: 30
                     contentItem: Item {
@@ -94,6 +123,7 @@ FocusScope {
                 }
                 ActionButton {
                     flat: true
+                    id: settingsButton
                     objectName: "displaySettingsButton"
                     implicitWidth: 30
                     hint: "Collection and display settings"
@@ -103,6 +133,7 @@ FocusScope {
                 ActionButton {
                     flat: true
                     visible: root.surfaceSwitchAvailable
+                    id: surfaceSwitch
                     objectName: "surfaceSwitchButton"
                     implicitWidth: 30
                     hint: root.expanded ? "Collapse into panel" : "Expand into window"
@@ -133,6 +164,7 @@ FocusScope {
                         width: parent.width - 24
                         spacing: 6
                         Choice {
+                            id: applicationFilter
                             objectName: "applicationFilter"
                             width: Math.min(184, filters.width)
                             description: "Application filter"
@@ -141,6 +173,7 @@ FocusScope {
                             onActivated: root.service.application = currentIndex === 0 ? "" : currentText
                         }
                         Choice {
+                            id: familyFilter
                             objectName: "familyFilter"
                             width: 108
                             description: "IP address family"
@@ -156,7 +189,7 @@ FocusScope {
                             text: root.service.query
                             onTextEdited: root.service.query = text
                         }
-                        ActionButton { text: "↺"; implicitWidth: 30; hint: "Clear filters"; onClicked: root.service.clearFilters() }
+                        ActionButton { id: clearFiltersButton; text: "↺"; implicitWidth: 30; hint: "Clear filters"; onClicked: root.service.clearFilters() }
                     }
                     Globe {
                         onOriginRequested: settings.openOrigin()
@@ -169,6 +202,7 @@ FocusScope {
                         anchors { right: parent.right; bottom: parent.bottom; rightMargin: 12; bottomMargin: parent.width < 650 ? 90 : 47 }
                         spacing: 4
                         ActionButton {
+                            id: rotationButton
                             objectName: "globeRotationButton"
                             text: globe.rotating ? "Ⅱ" : "▷"
                             implicitWidth: 28; implicitHeight: 26
