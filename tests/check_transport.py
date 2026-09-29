@@ -14,16 +14,16 @@ helper.write_text('''#!/usr/bin/env python3
 import json, os, signal, sys, time, uuid
 mode = os.environ['OUTBOUND_TRANSPORT_TEST']
 with open(os.environ['OUTBOUND_TEST_PID_FILE'],'a') as record: record.write(str(os.getpid())+'\\n')
-if mode == 'late': signal.signal(signal.SIGTERM, signal.SIG_IGN)
+if mode in ('late', 'refresh-late'): signal.signal(signal.SIGTERM, signal.SIG_IGN)
 session = uuid.uuid4().hex
 sequence = 0
 for line in sys.stdin:
     request = json.loads(line)
-    if mode == 'retry': sys.exit(1)
+    if mode in ('retry', 'refresh-failure'): sys.exit(1)
     if mode == 'oversized':
         sys.stdout.write('x' * (2 * 1024 * 1024 + 1)); sys.stdout.flush(); continue
     if mode == 'malformed': print('{}', flush=True); continue
-    if mode == 'late': time.sleep(0.35)
+    if mode in ('late', 'refresh-late'): time.sleep(0.35)
     sequence += 1
     result = dict(version=1, kind='snapshot', requestId=request['requestId'], session=session, sequence=sequence,
         observedAtMs=int(time.time()*1000), status='ok',
@@ -38,7 +38,7 @@ for line in sys.stdin:
         sys.stdout.write(payload[offset:offset+101]); sys.stdout.flush()
 ''')
 helper.chmod(0o755)
-for mode in (sys.argv[1:] or ["normal", "missing", "malformed", "incompatible", "oversized", "retry", "late", "native", "crash"]):
+for mode in (sys.argv[1:] or ["normal", "missing", "malformed", "incompatible", "oversized", "retry", "late", "refresh", "refresh-failure", "refresh-late", "native", "crash"]):
     executable = Path(os.environ.get("OUTBOUND_TEST_NATIVE_BACKEND", repository / "backend/ruby/build/outbound-engine")) if mode == "native" else preview / "missing" if mode == "missing" else helper
     pid_file = preview / (mode + "-pids")
     env = dict(os.environ, OUTBOUND_TEST_PID_FILE=str(pid_file), QT_QPA_PLATFORM="offscreen", QT_QPA_PLATFORMTHEME="basic", OUTBOUND_TRANSPORT_TEST=mode, OUTBOUND_TEST_BACKEND=str(executable))

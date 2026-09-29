@@ -74,6 +74,20 @@ FocusScope {
                 }
                 ActionButton {
                     flat: true
+                    objectName: "refreshButton"
+                    implicitWidth: 30
+                    contentItem: Item {
+                        opacity: parent.enabled ? 1 : 0.45
+                        RefreshIcon { anchors.centerIn: parent; ink: theme.accent }
+                    }
+                    hint: root.service.paused ? "Refresh once and stay paused" : "Refresh connections"
+                    enabled: !root.service.refreshing && !root.service.engineInstalling && !root.service.geoInstalling
+                    C.ToolTip.visible: hovered
+                    C.ToolTip.text: hint
+                    onClicked: root.service.refresh()
+                }
+                ActionButton {
+                    flat: true
                     objectName: "keyboardHelpButton"
                     implicitWidth: 30
                     hint: "Keyboard guide (F1)"

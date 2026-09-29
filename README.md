@@ -94,6 +94,8 @@ alone does not collect data and shows “—” until a snapshot is available.
 Use **LIVE / PAUSED** in the header to pause or resume collection. The button
 shows **ERROR** if collection fails; details and retry are in Settings → Collection.
 Manual pause survives closing and reopening the view.
+Use **Refresh** (⟳) beside it to request an immediate snapshot. While paused,
+Refresh collects once and stays paused. Filters and globe position are preserved.
 
 Open settings with the gear button:
 

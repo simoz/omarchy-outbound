@@ -14,7 +14,8 @@ ShellRoot {
         id: service
         standalone: true
         backendPath: Quickshell.env("OUTBOUND_TEST_BACKEND")
-        intervalSeconds: 1
+        intervalSeconds: root.mode === "refresh" ? 60 : 1
+        paused: root.mode.indexOf("refresh-") === 0
         Component.onCompleted: setView("first",root.mode !== "normal")
     }
     function check(value, message) { if (!value) { console.error("OUTBOUND_TEST_FAILED",mode,message); Qt.quit(); throw new Error(message); } }
@@ -52,6 +53,34 @@ ShellRoot {
                     service.removeView("second"); root.next();
                 } else if(root.stage === 4 && !c.busy && root.ticks-root.stageTick > 8) {
                     root.check(!service.demanded && !c.retryWaiting,"no orphan or retry"); root.pass();
+                }
+            } else if(root.mode === "refresh") {
+                if(root.stage === 0 && service.snapshot) {
+                    root.oldPid=c.processId; root.oldSession=service.snapshot.session;
+                    service.query="preserved";
+                    service.refresh(); service.refresh(); root.next();
+                } else if(root.stage === 1 && service.snapshot.sequence === 2) {
+                    root.check(c.processId === root.oldPid && service.snapshot.session === root.oldSession,"refresh reuses live process");
+                    service.paused=true;
+                    // Refresh while the previous process is still shutting down.
+                    service.refresh(); service.refresh(); root.next();
+                } else if(root.stage === 2 && service.snapshot.session !== root.oldSession && !c.busy) {
+                    root.check(service.paused && service.snapshot.sequence === 1,"paused refresh collects once");
+                    root.check(service.query === "preserved" && !service.refreshing,"refresh preserves filters and finishes");
+                    root.oldSession=service.snapshot.session; root.next();
+                } else if(root.stage === 3 && root.ticks-root.stageTick > 45) {
+                    root.check(!c.busy && !c.retryWaiting && service.snapshot.session === root.oldSession,"paused refresh stays stopped");
+                    service.refresh(); service.setView("first",false); root.next();
+                } else if(root.stage === 4 && root.ticks-root.stageTick > 8) {
+                    root.check(!c.busy && !service.refreshing && service.snapshot === null,"close cancels deferred refresh"); root.pass();
+                }
+            } else if(root.mode === "refresh-failure" || root.mode === "refresh-late") {
+                if(root.stage === 0) { service.refresh(); root.next(); }
+                else if(root.stage === 1 && root.mode === "refresh-late" && c.pending) {
+                    service.setView("first",false); root.next();
+                } else if(root.stage === 1 && root.mode === "refresh-failure" && service.error && !c.busy) root.next();
+                else if(root.stage === 2 && root.ticks-root.stageTick > 50) {
+                    root.check(!c.busy && !c.retryWaiting && !service.refreshing && service.paused && service.snapshot === null,"one-shot failure or closure stays stopped"); root.pass();
                 }
             } else if(root.mode === "retry") {
                 if(root.stage === 0 && c.retries >= 2) { service.setView("first",false); root.next(); }

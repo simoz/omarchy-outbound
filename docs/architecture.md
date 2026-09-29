@@ -27,6 +27,9 @@ from memory. Registered bar views alone do not collect data. Switching between
 compact and expanded surfaces keeps the same open view and backend process.
 Helper downloads/searches need an open view and are cancelled when the last one
 closes.
+Refresh requests an immediate snapshot without overlapping a pending request.
+While paused, it starts the collector for one snapshot and then stops it;
+failure or closing the last view cancels that refresh without automatic retries.
 
 ## Data flow
 

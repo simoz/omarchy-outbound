@@ -8,7 +8,11 @@ import "../ui" as Outbound
 Item {
     width: 1000
     height: 900
-    Plugin.Service { id: service }
+    Plugin.Service {
+        id: service
+        property int refreshCount: 0
+        function refresh() { refreshCount++; }
+    }
     Outbound.Dashboard {
         id: dashboard
         width: parent.width
@@ -53,6 +57,29 @@ Item {
             service.error = "";
             service.phase = "idle";
             dashboard.globe.rotating = false;
+        }
+        function test_refresh_mouse_and_keyboard_preserve_view_state() {
+            var refresh = findChild(dashboard, "refreshButton");
+            service.refreshCount = 0;
+            service.paused = true;
+            service.query = "Browser";
+            dashboard.globe.zoom = 2;
+            var rows = service.liveRows;
+            mouseClick(refresh);
+            compare(service.refreshCount,1);
+            refresh.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            compare(service.refreshCount,2);
+            verify(service.paused);
+            compare(service.query,"Browser");
+            compare(service.liveRows,rows);
+            compare(dashboard.globe.zoom,2);
+            dashboard.width = 380;
+            tryVerify(function() { return refresh.mapToItem(dashboard,refresh.width,0).x <= dashboard.width; });
+            var expand = findChild(dashboard,"surfaceSwitchButton");
+            tryVerify(function() { return expand.mapToItem(dashboard,expand.width,0).x <= dashboard.width; });
+            dashboard.width = 1000;
+            service.paused = false;
         }
         function test_globe_rotation_control_remains_available_in_narrow_view() {
             dashboard.width = 380;

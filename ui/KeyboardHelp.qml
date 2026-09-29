@@ -112,7 +112,7 @@ C.Popup {
                     width: parent.width
                     wrapMode: Text.WordWrap
                     color: theme.subdued
-                    text: "Use LIVE / PAUSED to control collection and Play/Pause inside the globe to rotate.\nType in Search to filter by IP or application. Select a connection, then use Copy IP to copy its address."
+                    text: "Use LIVE / PAUSED to control collection. Refresh updates once, even while paused; focus it with Tab and press Space or Enter. Use Play/Pause inside the globe to rotate.\nType in Search to filter by IP or application. Select a connection, then use Copy IP to copy its address."
                 }
             }
         }

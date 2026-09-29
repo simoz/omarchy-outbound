@@ -55,6 +55,8 @@ Item {
     }
     function removeView(token) { views = views.filter(function(v) { return v.token !== token; }); }
     readonly property var collector: transport.item
+    readonly property bool refreshing: collector ? collector.refreshing : false
+    function refresh() { if (collector) collector.refresh(); }
     function retry() { if (collector) collector.retry(); }
     readonly property bool geoInstalling: collector ? collector.geoInstalling : false
     readonly property string geoInstallError: collector ? collector.geoInstallError : ""

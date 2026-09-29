@@ -8,7 +8,9 @@ import "Protocol.js" as Protocol
 Item {
     id: root
     property var service: null
-    readonly property bool wanted: service !== null && service.demanded
+    property bool singleRefresh: false
+    readonly property bool wanted: service !== null && service.openViews > 0 && (service.demanded || singleRefresh)
+    readonly property bool refreshing: singleRefresh || pending !== "" || (busy && !started && !stopping)
     readonly property string executable: service && service.backendPath ? service.backendPath : (Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share") + "/outbound/bin/outbound-engine"
     readonly property string database: service && service.databasePath ? service.databasePath : (Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share") + "/outbound/data/current/country.mmdb"
     property bool ready: false
@@ -67,7 +69,12 @@ Item {
     }
     Connections {
         target: root.service
-        function onOpenViewsChanged() { if (root.service.openViews === 0) root.cancelInstall(); }
+        function onOpenViewsChanged() {
+            if (root.service.openViews === 0) {
+                root.singleRefresh = false;
+                root.cancelInstall();
+            }
+        }
     }
     Timer { id: installDeadline; interval: 165000; onTriggered: root.cancelInstall() }
     Timer { id: installKill; interval: 500; onTriggered: if (installer.processId > 0) installer.signal(9) }
@@ -115,7 +122,7 @@ Item {
     }
     function start() {
         if (!wanted || busy || fatal || destroying || retryTimer.running) return;
-        if (executable[0] !== "/" || (database && database[0] !== "/")) { fatal = true; service.phase = "error"; service.error = "Configure absolute backend and database paths."; return; }
+        if (executable[0] !== "/" || (database && database[0] !== "/")) { failed("Configure absolute backend and database paths.", true); return; }
         generation++; busy = true; accepting = true; stopping = false; started = false; engineMissing = false;
         pending = ""; buffer = ""; session = ""; sequence = 0;
         service.phase = "starting"; service.error = "";
@@ -130,6 +137,7 @@ Item {
         if (busy) { process.stdinEnabled = false; killStage = 0; killTimer.restart(); }
     }
     function failed(message, permanent) {
+        singleRefresh = false;
         service.phase = "error"; service.error = message;
         fatal = permanent;
         stop();
@@ -146,6 +154,13 @@ Item {
     function retry() {
         fatal = false; retries = 0; stop();
         if (!busy) startLater();
+    }
+    function refresh() {
+        if (!service || service.openViews === 0 || refreshing || installTask || destroying) return;
+        fatal = false; retries = 0; retryTimer.stop(); poll.stop();
+        singleRefresh = service.paused;
+        if (started && accepting) request();
+        else startLater();
     }
     function request() {
         if (!wanted || !accepting || !started || pending) return;
@@ -166,7 +181,9 @@ Item {
                 root.service.liveRows = Protocol.rows(snapshot);
                 root.service.phase = snapshot.status === "ok" ? "live" : snapshot.status;
                 root.service.error = snapshot.status === "error" ? "Socket collection failed. See coverage in settings." : "";
-                poll.restart();
+                // A paused refresh owns one response, never a polling session.
+                root.singleRefresh = false;
+                if (root.wanted) poll.restart();
             });
         } catch (e) { failed("Invalid or incompatible backend output. Check the backend version and retry.",true); }
     }
@@ -215,6 +232,7 @@ Item {
             watchdog.stop(); poll.stop(); killTimer.stop();
             if (!root.wanted || root.fatal || root.destroying) return;
             if (intentional) root.startLater();
+            else if (root.singleRefresh) root.failed("Backend exited before refreshing. Try Refresh again.", false);
             else { root.service.error = "Backend exited. Retrying…"; root.scheduleRetry(); }
         }
         // qmllint enable signal-handler-parameters
