@@ -27,8 +27,22 @@ Item {
         snapshot = null;
         liveRows = [];
     }
-    readonly property string geoStatus: !snapshot ? "GeoIP not sampled" : snapshot.database.state !== "ready" ? "GeoIP " + snapshot.database.state : "GeoIP " + snapshot.database.releaseMonth + (snapshot.database.stale ? " · outdated" : "") + (snapshot.database.lookupErrors ? " · lookup errors" : "")
-    readonly property string coverageStatus: !snapshot ? "No snapshot" : "IPv4: " + (snapshot.coverage.ipv4 || "ok") + " · IPv6: " + (snapshot.coverage.ipv6 || "ok") + " · Unknown owners: " + snapshot.aggregates.unknownOwners + " · Denied: " + snapshot.coverage.processes.denied + " · Races: " + snapshot.coverage.processes.races + " · Errors: " + snapshot.coverage.processes.errors + " · Omitted sockets: " + snapshot.coverage.omittedRows + " · Omitted owners: " + snapshot.coverage.processes.ownersOmitted + (snapshot.coverage.processes.timedOut ? " · Process scan timed out" : "") + (snapshot.coverage.processes.scanLimited ? " · Process scan limited" : "")
+    readonly property string geoStatus: {
+        if (!snapshot) return "GeoIP not sampled";
+        var database = snapshot.database;
+        if (database.state !== "ready") return "GeoIP " + database.state;
+        return "GeoIP " + database.releaseMonth + (database.stale ? " · outdated" : "") + (database.lookupErrors ? " · lookup errors" : "");
+    }
+    readonly property string coverageStatus: {
+        if (!snapshot) return "No snapshot";
+        var coverage = snapshot.coverage, processes = coverage.processes;
+        return ["IPv4: " + (coverage.ipv4 || "ok"), "IPv6: " + (coverage.ipv6 || "ok"),
+                "Unknown owners: " + snapshot.aggregates.unknownOwners, "Denied: " + processes.denied,
+                "Races: " + processes.races, "Errors: " + processes.errors,
+                "Omitted sockets: " + coverage.omittedRows, "Omitted owners: " + processes.ownersOmitted]
+            .concat(processes.timedOut ? ["Process scan timed out"] : [], processes.scanLimited ? ["Process scan limited"] : [])
+            .join(" · ");
+    }
     Loader {
         id: transport
         active: root.shell !== null || root.standalone
@@ -68,9 +82,10 @@ Item {
     function installEngine() { if (collector) collector.installEngine(); }
     function configure(backend, database, latitude, longitude, interval, originName) {
         var lat = latitude.trim(), lon = longitude.trim(), seconds = Number(interval);
-        if ((backend && backend[0] !== "/") || (database && database[0] !== "/") || backend.length > 4096 || database.length > 4096 || /[\x00-\x1f]/.test(backend + database)) return "Use absolute file paths.";
-        if ((lat === "") !== (lon === "") || (lat !== "" && (!isFinite(Number(lat)) || !isFinite(Number(lon)) || Math.abs(Number(lat)) > 90 || Math.abs(Number(lon)) > 180))) return "Enter both coordinates: latitude −90…90, longitude −180…180.";
-        if (!Number.isInteger(seconds) || seconds < 1 || seconds > 60) return "Refresh interval must be 1–60 seconds.";
+        if (!validPath(backend) || !validPath(database) || /[\x00-\x1f]/.test(backend + database)) return "Use absolute file paths.";
+        if ((lat === "") !== (lon === "") || (lat !== "" && !validCoordinates(Number(lat), Number(lon))))
+            return "Enter both coordinates: latitude −90…90, longitude −180…180.";
+        if (!validInterval(seconds)) return "Refresh interval must be 1–60 seconds.";
         var name = typeof originName === "string" ? originName.slice(0,240) : origin && origin.lat === Number(lat) && origin.lon === Number(lon) ? origin.name || "" : "";
         var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds});
         // updateEntryInline returns whether shell.json changed, not whether saving
@@ -84,9 +99,15 @@ Item {
         savedConfiguration = config;
         backendPath = typeof config.backendPath === "string" ? config.backendPath : "";
         databasePath = typeof config.databasePath === "string" ? config.databasePath : "";
-        origin = config.origin && typeof config.origin.lat === "number" && typeof config.origin.lon === "number" && isFinite(config.origin.lat) && isFinite(config.origin.lon) && Math.abs(config.origin.lat) <= 90 && Math.abs(config.origin.lon) <= 180 ? config.origin : null;
-        intervalSeconds = Number.isInteger(config.intervalSeconds) && config.intervalSeconds >= 1 && config.intervalSeconds <= 60 ? config.intervalSeconds : 2;
+        origin = config.origin && validCoordinates(config.origin.lat, config.origin.lon) ? config.origin : null;
+        intervalSeconds = validInterval(config.intervalSeconds) ? config.intervalSeconds : 2;
     }
+    // Empty paths select the managed defaults.
+    function validPath(path) { return !path || (path[0] === "/" && path.length <= 4096); }
+    function validCoordinates(lat, lon) {
+        return typeof lat === "number" && typeof lon === "number" && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+    }
+    function validInterval(seconds) { return Number.isInteger(seconds) && seconds >= 1 && seconds <= 60; }
     property string query: ""
     property string application: ""
     property string country: ""
