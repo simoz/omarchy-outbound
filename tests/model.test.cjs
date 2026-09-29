@@ -24,6 +24,16 @@ test('filters combine without losing unknown and local rows', () => {
     assert.equal(model.selected(found, 'demo-1'), null);
 });
 
+test('search matches country names and ports as well as codes', () => {
+    const rows = demo.connections('sample');
+    const germany = model.filter(rows, 'germany', '', '', '', demo.countries);
+    assert.ok(germany.length > 0);
+    assert.ok(germany.every(r => r.country === 'DE'));
+    assert.equal(model.filter(rows, 'local / special', '', '', '', demo.countries).map(r => r.country).join(), 'local');
+    assert.ok(model.filter(rows, '22', '', '', '', []).every(r => r.port === 22 || r.ip.includes('22')));
+    assert.ok(model.filter(rows, '22', '', '', '', []).some(r => r.port === 22));
+});
+
 test('scenario totals and facet counts refer to emitted sockets', () => {
     for (const scenario of ['sample', 'busy', 'empty', 'error']) {
         const rows = demo.connections(scenario);

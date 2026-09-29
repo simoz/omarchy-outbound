@@ -1,9 +1,13 @@
-function filter(rows, query, app, country, family) {
+// Search matches application, remote IP and port, country code and name, and TCP state.
+function filter(rows, query, app, country, family, countries) {
     var needle = query.trim().toLowerCase();
+    var names = Object.create(null);
+    if (needle) (countries || []).forEach(function(item) { names[item.code] = item.name; });
     return rows.filter(function(row) {
         return (!app || row.apps.indexOf(app) >= 0) && (!country || row.country === country)
             && (!family || row.family === family)
-            && (!needle || [row.app, row.ip, row.country, row.state].join(" ").toLowerCase().indexOf(needle) >= 0);
+            && (!needle || [row.app, row.ip, row.port, row.country, names[row.country] || countryName(row.country, []), row.state]
+                .join(" ").toLowerCase().indexOf(needle) >= 0);
     });
 }
 

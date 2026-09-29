@@ -95,12 +95,12 @@ Item {
     property bool reducedMotion: false
     readonly property var countries: Geography.markers
     readonly property var rows: liveRows
-    readonly property var filtered: Model.filter(rows, query, application, country, family)
+    readonly property var filtered: Model.filter(rows, query, application, country, family, countries)
     readonly property var selected: Model.selected(filtered, selection)
     readonly property var applications: Model.groups(rows, "app")
     // Faceted counts ignore their own filter so choosing a country stays reversible.
-    readonly property var destinations: Model.groups(Model.filter(rows, query, application, "", family), "country")
-    readonly property var applicationFacetRows: Model.filter(rows, query, "", country, family)
+    readonly property var destinations: Model.groups(Model.filter(rows, query, application, "", family, countries), "country")
+    readonly property var applicationFacetRows: Model.filter(rows, query, "", country, family, countries)
     readonly property var countryApplications: Model.groups(applicationFacetRows, "app")
     readonly property int countryCount: Model.groups(rows.filter(function(row) {
         return row.country && row.country !== "local" && row.country !== "unknown";

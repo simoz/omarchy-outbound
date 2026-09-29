@@ -185,7 +185,7 @@ FocusScope {
                             id: search
                             objectName: "connectionSearch"
                             width: Math.max(128, Math.min(190, filters.width - 346))
-                            placeholderText: "Search IP / app…"
+                            placeholderText: "Search IP, app, country…"
                             text: root.service.query
                             onTextEdited: root.service.query = text
                         }

@@ -12,7 +12,7 @@ C.TextField {
     selectionColor: theme.text
     selectedTextColor: theme.background
     selectByMouse: true
-    Accessible.name: "Filter connections by application, IP or state"
+    Accessible.name: "Filter connections by application, IP, port, country or state"
     background: Rectangle {
         color: theme.wash
         border.color: root.activeFocus ? theme.text : theme.border

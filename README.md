@@ -116,8 +116,8 @@ immediately.
 The arrow button in the main header switches between compact panel and expanded
 window, preserving filters, selection and globe position.
 
-Filter by application, country and IP family, or type an IP/application name in
-Search. Select the same country or application again to clear that filter; **↺**
+Filter by application, country and IP family, or type an application, IP, port,
+country name or TCP state in Search. Select the same country or application again to clear that filter; **↺**
 clears all filters. Select a connection, then use **Copy IP** to copy its remote
 address.
 
