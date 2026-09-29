@@ -102,7 +102,7 @@ C.Popup {
                     Layout.fillWidth: true
                     spacing: 10
                     Label { text: "Globe & location"; font.bold: true }
-                    Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Configure country lookup and the starting point of connection arcs."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
+                    Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: "Configure country lookup, the starting point of connection arcs and globe effects."; color: theme.subdued; font.pixelSize: theme.size * 0.9 }
                     Label { text:"Country database"; font.bold:true }
                     SearchField { id:database; Layout.fillWidth:true; placeholderText:"Default: managed DB-IP Lite database"; Accessible.name:"Local GeoIP database path" }
                     Label { Layout.fillWidth:true; wrapMode:Text.Wrap; text:"Install from the globe or update below. A custom path overrides the managed database."; font.pixelSize:theme.size*0.85 }
@@ -136,6 +136,24 @@ C.Popup {
                         Layout.fillWidth:true
                         SearchField { id:latitude; objectName:"originLatitude"; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Latitude"; Accessible.name:"Origin latitude"; onTextEdited:root.originName="" }
                         SearchField { id:longitude; objectName:"originLongitude"; Layout.fillWidth:true; Layout.preferredWidth:1; placeholderText:"Longitude"; Accessible.name:"Origin longitude"; onTextEdited:root.originName="" }
+                    }
+                    Label { text:"Display · saved immediately"; font.bold:true; Layout.topMargin:12 }
+                    Repeater {
+                        objectName: "displayOptions"
+                        model: [
+                            {key:"reducedMotion", label:"Reduce motion", detail:"stops the connection pulse and globe rotation"},
+                            {key:"glow", label:"Glow", detail:"halo around arcs, markers and origin"},
+                            {key:"scanlines", label:"Scanlines", detail:"horizontal lines over the globe"}
+                        ]
+                        ActionButton {
+                            required property var modelData
+                            readonly property bool enabledOption: root.service[modelData.key]
+                            Layout.fillWidth: true
+                            text: modelData.label + ": " + (enabledOption ? "On" : "Off")
+                            hint: text + " — " + modelData.detail
+                            selected: enabledOption
+                            onClicked: root.validationError = root.service.setDisplay(modelData.key, !enabledOption)
+                        }
                     }
                 }
                 ColumnLayout {

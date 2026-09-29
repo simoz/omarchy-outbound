@@ -360,6 +360,29 @@ Item {
             verify(!dashboard.globe.linksAnimating);
             verify(dashboard.globe.layers[2].length > 0);
         }
+        function test_reduce_motion_setting_stops_pulse_from_keyboard() {
+            service.paused = false;
+            service.reducedMotion = false;
+            verify(dashboard.globe.linksAnimating);
+            var settings = findChild(dashboard, "outboundSettings");
+            settings.openOrigin();
+            tryCompare(settings, "opened", true);
+            tryVerify(function() { return findChild(settings, "originCityField").activeFocus; });
+            var option = findChild(settings, "displayOptions").itemAt(0);
+            compare(option.text, "Reduce motion: Off");
+            option.forceActiveFocus();
+            keyClick(Qt.Key_Space);
+            verify(service.reducedMotion);
+            compare(option.text, "Reduce motion: On");
+            verify(!dashboard.globe.linksAnimating);
+            compare(service.savedConfiguration.reducedMotion, true);
+            findChild(settings, "displayOptions").itemAt(1).clicked();
+            verify(!service.glow);
+            findChild(settings, "displayOptions").itemAt(1).clicked();
+            verify(service.glow);
+            settings.close();
+            service.setDisplay("reducedMotion", false);
+        }
         function test_play_after_reduced_motion_remains_available() {
             service.reducedMotion = false;
             var play = findChild(dashboard, "globeRotationButton");

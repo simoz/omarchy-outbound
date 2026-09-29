@@ -89,6 +89,26 @@ Item {
             service.saveConfiguration = null;
             compare(service.configure("","","","","2"),"");
         }
+        function test_display_effects_persist_with_other_settings() {
+            var stored = null;
+            service.saveConfiguration = function(config) { stored = config; return true; };
+            compare(service.configure("/tmp/engine","","","","3"),"");
+            verify(!service.reducedMotion && service.glow && service.scanlines);
+            compare(service.setDisplay("reducedMotion",true),"");
+            compare(service.setDisplay("scanlines",false),"");
+            verify(service.reducedMotion && service.glow && !service.scanlines);
+            compare(stored.backendPath,"/tmp/engine");
+            compare(stored.reducedMotion,true);
+            // Later edits keep display choices, and a reload restores them.
+            compare(service.configure("/tmp/engine","","","","4"),"");
+            compare(stored.scanlines,false);
+            service.loadConfiguration({intervalSeconds:2});
+            verify(!service.reducedMotion && service.glow && service.scanlines);
+            service.loadConfiguration(stored);
+            verify(service.reducedMotion && !service.scanlines);
+            service.saveConfiguration = null;
+            service.loadConfiguration({});
+        }
         function test_selection_tracks_combined_filters() {
             compare(service.rows.length, 24);
             compare(service.countryCount, 8);

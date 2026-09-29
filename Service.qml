@@ -72,7 +72,14 @@ Item {
         if ((lat === "") !== (lon === "") || (lat !== "" && (!isFinite(Number(lat)) || !isFinite(Number(lon)) || Math.abs(Number(lat)) > 90 || Math.abs(Number(lon)) > 180))) return "Enter both coordinates: latitude −90…90, longitude −180…180.";
         if (!Number.isInteger(seconds) || seconds < 1 || seconds > 60) return "Refresh interval must be 1–60 seconds.";
         var name = typeof originName === "string" ? originName.slice(0,240) : origin && origin.lat === Number(lat) && origin.lon === Number(lon) ? origin.name || "" : "";
-        var config = Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds});
+        return save(Object.assign({}, savedConfiguration, {backendPath:backend, databasePath:database, origin:lat === "" ? null : {lat:Number(lat),lon:Number(lon),name:name}, intervalSeconds:seconds}));
+    }
+    // Display effects save immediately, like a chosen origin city.
+    function setDisplay(name, enabled) {
+        var change = {}; change[name] = enabled === true;
+        return save(Object.assign({}, savedConfiguration, change));
+    }
+    function save(config) {
         // updateEntryInline returns whether shell.json changed, not whether saving
         // failed: an entry that is already up to date also returns false.
         if (shell) shell.updateEntryInline("io.github.simoz.outbound", config);
@@ -86,6 +93,10 @@ Item {
         databasePath = typeof config.databasePath === "string" ? config.databasePath : "";
         origin = config.origin && typeof config.origin.lat === "number" && typeof config.origin.lon === "number" && isFinite(config.origin.lat) && isFinite(config.origin.lon) && Math.abs(config.origin.lat) <= 90 && Math.abs(config.origin.lon) <= 180 ? config.origin : null;
         intervalSeconds = Number.isInteger(config.intervalSeconds) && config.intervalSeconds >= 1 && config.intervalSeconds <= 60 ? config.intervalSeconds : 2;
+        // The host exposes no reduced-motion preference, so it is a plugin setting.
+        reducedMotion = config.reducedMotion === true;
+        glow = config.glow !== false;
+        scanlines = config.scanlines !== false;
     }
     property string query: ""
     property string application: ""
