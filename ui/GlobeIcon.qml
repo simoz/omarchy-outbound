@@ -1,28 +1,22 @@
 import QtQuick
+import QtQuick.Shapes
 
-// Small vector globe for the bar; independent of icon-font availability.
-Canvas {
+// Render curves at the display resolution, without scaling a Canvas texture.
+Shape {
     id: root
     required property color ink
     implicitWidth: 20
     implicitHeight: 20
-    onInkChanged: requestPaint()
-    onWidthChanged: requestPaint()
-    onHeightChanged: requestPaint()
-    onPaint: {
-        var context = getContext("2d");
-        context.reset();
-        context.scale(width / 24, height / 24);
-        context.strokeStyle = ink;
-        context.lineWidth = 1.6;
-        context.lineCap = "round";
-        context.beginPath();
-        context.arc(12, 12, 9, 0, Math.PI * 2);
-        context.moveTo(3, 12);
-        context.lineTo(21, 12);
-        context.moveTo(12, 3);
-        context.bezierCurveTo(5, 7, 5, 17, 12, 21);
-        context.bezierCurveTo(19, 17, 19, 7, 12, 3);
-        context.stroke();
+    preferredRendererType: Shape.CurveRenderer
+
+    ShapePath {
+        strokeColor: root.ink
+        strokeWidth: 1.25
+        fillColor: "transparent"
+        capStyle: ShapePath.RoundCap
+        PathSvg {
+            path: "M 17.5 10 A 7.5 7.5 0 1 1 2.5 10 A 7.5 7.5 0 1 1 17.5 10 "
+                + "M 2.5 10 H 17.5 M 10 2.5 C 4.2 5.8 4.2 14.2 10 17.5 C 15.8 14.2 15.8 5.8 10 2.5"
+        }
     }
 }

@@ -38,8 +38,8 @@ UI.BarWidget {
         labelVisible: false
         hasVisualContent: true
         dimmed: !root.service || !root.service.demanded
-        fixedWidth: root.vertical ? barSize : barContents.implicitWidth + scaledHorizontalMargin * 2
-        fixedHeight: root.vertical ? barContents.implicitHeight + scaledVerticalPadding * 2 : barSize
+        fixedWidth: root.vertical || !counts.visible ? barSize : barContents.implicitWidth + scaledHorizontalMargin * 2
+        fixedHeight: root.vertical && counts.visible ? barContents.implicitHeight + scaledVerticalPadding * 2 : barSize
         tooltipText: "Outbound · " + (root.service ? root.service.status : "IDLE") + " · Open network globe · Right-click to expand"
         Grid {
             id: barContents
@@ -53,6 +53,7 @@ UI.BarWidget {
                 ink: button.foreground
             }
             Text {
+                id: counts
                 objectName: "outboundBarCounts"
                 visible: !button.dimmed && root.service.snapshot !== null
                 text: visible ? root.service.rows.length + " / " + root.service.countryCount : ""

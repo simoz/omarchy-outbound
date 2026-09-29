@@ -69,6 +69,7 @@ ShellRoot {
                 }
             }
             check(counts && !counts.visible && counts.text === "" && button.dimmed, "closed bar has dim icon and no placeholder");
+            check(button.implicitWidth === hostBar.barSize, "idle icon uses one bar slot without counter space");
             service.paused = false;
             var scene = panel.scene;
             check(scene, "dashboard loaded");
@@ -85,6 +86,7 @@ ShellRoot {
             check(counts.visible && counts.text === "1 / 1", "snapshot shows counts");
             service.paused = true;
             check(button.dimmed && !counts.visible && counts.text === "", "pause dims icon and hides counts");
+            check(button.implicitWidth === hostBar.barSize, "pause removes counter space");
             service.paused = false;
             check(!button.dimmed && counts.visible, "resume restores counts");
             hostBar.vertical = true;
@@ -95,6 +97,10 @@ ShellRoot {
             widget.close();
             check(!widget.opened && !panel.expanded, "close resets surface");
             check(button.dimmed && !counts.visible && counts.text === "", "closing restores icon only");
+            check(button.implicitWidth === hostBar.barSize, "closing removes counter space");
+            hostBar.vertical = true;
+            check(button.implicitHeight === hostBar.barSize, "vertical idle icon uses one bar slot");
+            hostBar.vertical = false;
             button.triggerPress(Qt.LeftButton);
             check(widget.opened && !panel.expanded, "left click opens compact");
             button.triggerPress(Qt.RightButton);
