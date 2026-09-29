@@ -1,4 +1,5 @@
 """Offline collector installer tests; archives are synthetic, never release binaries."""
+import fcntl
 import hashlib
 import importlib.util
 import io
@@ -86,6 +87,14 @@ class InstallTests(unittest.TestCase):
             self.install(release={"version": "0.1.0", "assets": {}})
         with self.assertRaises(installer.Unavailable):
             self.install(machine="riscv64")
+        self.assertEqual(self.fetched, [])
+
+    def test_concurrent_install_is_busy(self):
+        (self.data / "engine").mkdir()
+        with (self.data / "engine/.install.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            with self.assertRaises(installer.Busy):
+                self.install()
         self.assertEqual(self.fetched, [])
 
     def test_checksum_or_validation_failure_preserves_current(self):

@@ -1,9 +1,12 @@
 """Offline updater tests; payloads are synthetic and not GeoIP observations."""
+from datetime import datetime, timezone
+import fcntl
 import gzip
 import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import urllib.error
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -87,6 +90,44 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual((self.data / "current/country.mmdb").resolve(), previous)
         self.assertEqual(len(list((self.data / "versions").iterdir())), 1)
         self.assertEqual(list(self.data.glob(".current-*")), [])
+
+    def test_unpublished_current_month_falls_back_to_previous_only(self):
+        requested = []
+        def fetch(url, destination):
+            requested.append(url)
+            if "2026-01" in url:
+                raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+            self.fetch(url, destination)
+        current = updater.install_latest(self.data, Path("/unused"), datetime(2026, 1, 1, tzinfo=timezone.utc), fetch=fetch, check=self.validate)
+        self.assertEqual([url.rsplit("-", 2)[-2:] for url in requested], [["2026", "01.mmdb.gz"], ["2025", "12.mmdb.gz"]])
+        self.assertEqual(json.loads((current.parent / "provenance.json").read_text())["releaseMonth"], "2025-12")
+
+    def test_other_download_errors_do_not_fall_back(self):
+        requested = []
+        def fetch(url, destination):
+            requested.append(url)
+            raise urllib.error.HTTPError(url, 503, "Unavailable", {}, None)
+        with self.assertRaises(urllib.error.HTTPError):
+            updater.install_latest(self.data, Path("/unused"), datetime(2026, 9, 15, tzinfo=timezone.utc), fetch=fetch, check=self.validate)
+        self.assertEqual(len(requested), 1)
+
+    def test_explicit_unpublished_month_is_unavailable(self):
+        def missing(url, destination):
+            raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+        with patch.object(self, "fetch", missing), self.assertRaises(updater.Unavailable):
+            self.install()
+        self.assertEqual(list(self.data.glob(".download-*")), [])
+
+    def test_concurrent_update_is_busy(self):
+        self.data.mkdir(exist_ok=True)
+        with (self.data / ".update.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            with self.assertRaises(updater.Busy):
+                self.install()
+
+    def test_missing_collector_is_reported(self):
+        with self.assertRaises(updater.NoCollector):
+            updater.validate(self.data / "missing-engine", self.data / "country.mmdb")
 
     def test_invalid_release_never_downloads(self):
         with self.assertRaises(ValueError):

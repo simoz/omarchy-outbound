@@ -37,6 +37,7 @@ database += b"\xab\xcd\xefMaxMind.com" + mapping([
 pathlib.Path(os.environ['GEO_PID']).write_text(str(os.getpid()))
 mode=os.environ['GEO_MODE']
 if mode == 'failure': sys.exit(1)
+if mode == 'unavailable': sys.exit(3)
 if mode == 'cancel': time.sleep(30)
 folder=pathlib.Path(os.environ['XDG_DATA_HOME'])/'outbound/data/current'
 folder.mkdir(parents=True,exist_ok=True)
@@ -76,6 +77,8 @@ ShellRoot {
                 if(root.mode === "cancel" && root.ticks > 30) { service.setView("test",false); root.stage=2; }
                 else if(root.mode === "failure" && !service.geoInstalling) {
                     root.check(service.geoInstallError !== "" && service.needsGeoIp,"failure visible"); root.pass();
+                } else if(root.mode === "unavailable" && !service.geoInstalling) {
+                    root.check(service.geoInstallError.indexOf("not published") >= 0 && service.needsGeoIp,"unpublished release explained"); root.pass();
                 } else if((root.mode === "success" || root.mode === "custom") && service.snapshot.database.state === "ready") {
                     root.check(service.databasePath === "","managed path selected");
                     root.check(!service.geoInstalling && !service.needsGeoIp && service.geoInstallError === "","ready UI");
@@ -89,7 +92,7 @@ ShellRoot {
 }
 ''')
 try:
-    for mode in ["success", "custom", "failure", "cancel"]:
+    for mode in ["success", "custom", "failure", "unavailable", "cancel"]:
         with tempfile.TemporaryDirectory(prefix="outbound-geoip-test-") as data:
             pid = Path(data) / "pid"
             env = dict(os.environ, XDG_DATA_HOME=data, GEO_MODE=mode, GEO_PID=str(pid),

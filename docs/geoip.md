@@ -31,8 +31,12 @@ download alive. The ordinary collector makes no GeoIP network requests.
 ```
 
 The wrapper builds the validator before invoking the Python installer. By
-default it requests the current UTC month; unavailable releases produce an
-error without falling back silently. CLI updates require restarting Outbound
+default it requests the current UTC month and, only if DB-IP has not published
+it yet (HTTP 404), the previous month; the installed release appears in
+`provenance.json` and in the Outbound status line. An explicit `--month` never
+falls back, and `--sha256` requires it. Exit status 3 means no requested
+release is published, 4 that another update is running and 5 that the
+collector could not run to validate the database. CLI updates require restarting Outbound
 or pressing **Retry** in settings to reload an already running collector.
 Use `--data-dir /absolute/path` for an isolated installation. The UI uses the
 standard managed location unless a custom MMDB path is configured.

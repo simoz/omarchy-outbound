@@ -23,11 +23,16 @@ RELEASES = "https://github.com/simoz/omarchy-outbound/releases/download"
 RELEASE_FILE = Path(__file__).resolve().with_name("engine-release.json")
 # `uname -m` spellings mapped to the architecture names used by release assets.
 ARCHITECTURES = {"x86_64": "x86_64", "amd64": "x86_64", "aarch64": "aarch64", "arm64": "aarch64"}
-# Exit status reserved for "no pinned asset", so the UI can explain it without reading stderr.
-UNAVAILABLE = 3
+# Exit statuses the UI explains without reading stderr: no pinned asset for this
+# version and machine, or another installation holding the lock.
+UNAVAILABLE, BUSY = 3, 4
 
 
 class Unavailable(ValueError):
+    pass
+
+
+class Busy(Exception):
     pass
 
 
@@ -113,7 +118,10 @@ def install(data_dir, release, machine, fetch=download, check=validate):
     (data_dir / "bin").mkdir(exist_ok=True)
     # Serialize explicit installs so a slower download cannot overwrite a newer one.
     with (engines / ".install.lock").open("a") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Busy("Another collector installation is running") from None
         with tempfile.TemporaryDirectory(prefix=".download-", dir=engines) as temporary:
             stage = Path(temporary)
             archive = stage / "download.tar.gz"
@@ -163,6 +171,8 @@ def main():
         path, version = install(args.data_dir, release, platform.machine())
     except Unavailable as error:
         parser.exit(UNAVAILABLE, f"{error}\n")
+    except Busy as error:
+        parser.exit(BUSY, f"Collector installation not started: {error}\n")
     except KeyboardInterrupt:
         parser.exit(1, "Collector installation cancelled; the previous collector is unchanged.\n")
     except (OSError, ValueError, KeyError, EOFError, http.client.HTTPException, tarfile.TarError, subprocess.SubprocessError) as error:

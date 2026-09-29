@@ -67,6 +67,20 @@ Item {
         if (installTask === "geoip") geoInstallError = message; else engineInstallError = message;
         installTask = ""; installDeadline.stop(); installKill.stop();
     }
+    // Helper exit statuses: 3 nothing published (no pinned collector asset, or no
+    // DB-IP release for this or the previous month), 4 another install holds the
+    // lock, 5 the collector cannot run to validate GeoIP. Anything else is generic.
+    function installFailure(task, exitCode) {
+        if (task === "geoip") {
+            if (exitCode === 3) return "DB-IP has not published this month's database yet, nor last month's. Try again later.";
+            if (exitCode === 4) return "Another GeoIP update is running. Try again when it finishes.";
+            if (exitCode === 5) return "The collector could not run to validate the database. Install the collector or check its path, then retry.";
+            return "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details.";
+        }
+        if (exitCode === 3) return "No prebuilt collector is published yet for this version and architecture. Update the plugin later, or build the collector from source.";
+        if (exitCode === 4) return "Another collector installation is running. Try again when it finishes.";
+        return "Collector installation failed. Check your connection and retry, or build it from source.";
+    }
     Connections {
         target: root.service
         function onOpenViewsChanged() {
@@ -94,15 +108,7 @@ Item {
             var name = task === "geoip" ? "GeoIP" : "Collector";
             if (root.destroying) { root.installTask = ""; return; }
             if (root.installCancelled) { root.installFinished(name + " installation cancelled."); return; }
-            if (exitCode !== 0) {
-                // install_engine.py exits with 3 when no asset is pinned for this version and machine.
-                root.installFinished(task === "geoip"
-                    ? "GeoIP installation failed. Check your connection and retry, or run update-geoip.sh for details."
-                    : exitCode === 3
-                    ? "No prebuilt collector is published yet for this version and architecture. Update the plugin later, or build the collector from source."
-                    : "Collector installation failed. Check your connection and retry, or build it from source.");
-                return;
-            }
+            if (exitCode !== 0) { root.installFinished(root.installFailure(task, exitCode)); return; }
             root.installFinished("");
             // Switch to the managed file unless the user chose another path meanwhile.
             var origin = root.service.origin;

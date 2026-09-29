@@ -90,7 +90,8 @@ leave the previous collector unchanged. Success selects the default path (unless
 the backend field changed meanwhile) and restarts collection. Closing the last
 panel/window cancels the download. Without an asset for the machine, the helper
 exits with status 3 and the interface says that no prebuilt collector is
-published yet, pointing to a plugin update or the source build. From a terminal:
+published yet, pointing to a plugin update or the source build; status 4 means
+another installation is already running. From a terminal:
 `python3 -B tools/install_engine.py [--data-dir /absolute/path]`.
 
 ### Reinstall from scratch

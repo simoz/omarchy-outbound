@@ -1,7 +1,7 @@
 """Explicit DB-IP Lite installation; Python is an installation tool only."""
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import fcntl
 import gzip
 import hashlib
@@ -13,6 +13,7 @@ import re
 import shutil
 import signal
 import time
+import urllib.error
 import urllib.request
 import subprocess
 import tempfile
@@ -22,6 +23,20 @@ import zlib
 MAX_BYTES = 64 * 1024 * 1024
 PROVIDER = "https://db-ip.com/db/lite.php"
 LICENSE = "https://creativecommons.org/licenses/by/4.0/"
+# Exit statuses the UI explains without reading stderr; 1 is any other failure.
+UNAVAILABLE, BUSY, NO_COLLECTOR = 3, 4, 5
+
+
+class Unavailable(Exception):
+    """DB-IP has not published the requested month."""
+
+
+class Busy(Exception):
+    """Another explicit update holds the lock."""
+
+
+class NoCollector(Exception):
+    """The collector that validates the database cannot be executed."""
 
 
 class HttpsRedirect(urllib.request.HTTPRedirectHandler):
@@ -64,10 +79,13 @@ def digest(path):
 
 
 def validate(backend, database):
-    result = subprocess.run(
-        [str(backend), "--check-database", "--database", str(database)],
-        check=True, capture_output=True, text=True, timeout=30,
-    )
+    try:
+        result = subprocess.run(
+            [str(backend), "--check-database", "--database", str(database)],
+            check=True, capture_output=True, text=True, timeout=30,
+        )
+    except (FileNotFoundError, PermissionError) as error:
+        raise NoCollector(f"Cannot run the collector to validate the database: {error}") from None
     return json.loads(result.stdout)
 
 
@@ -81,11 +99,19 @@ def install(data_dir, backend, month, expected_sha256=None, fetch=download, chec
     url = f"https://download.db-ip.com/free/dbip-country-lite-{month}.mmdb.gz"
     # Serialize explicit updates so a slower download cannot overwrite a newer one.
     with (data_dir / ".update.lock").open("a") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Busy("Another GeoIP update is running") from None
         with tempfile.TemporaryDirectory(prefix=".download-", dir=data_dir) as temporary:
             stage = Path(temporary)
             archive = stage / "download.gz"
-            fetch(url, archive)
+            try:
+                fetch(url, archive)
+            except urllib.error.HTTPError as error:
+                if error.code == 404:
+                    raise Unavailable(f"DB-IP has not published release {month}") from None
+                raise
             if archive.stat().st_size > MAX_BYTES:
                 raise ValueError("Compressed database exceeds 64 MiB")
             archive_hash = digest(archive)
@@ -132,18 +158,38 @@ def install(data_dir, backend, month, expected_sha256=None, fetch=download, chec
     return data_dir / "current" / "country.mmdb"
 
 
+def install_latest(data_dir, backend, now, fetch=download, check=validate):
+    """Install the current UTC month, or the previous one while DB-IP has not published it yet."""
+    previous = now.replace(day=1) - timedelta(days=1)
+    try:
+        return install(data_dir, backend, now.strftime("%Y-%m"), fetch=fetch, check=check)
+    except Unavailable:
+        return install(data_dir, backend, previous.strftime("%Y-%m"), fetch=fetch, check=check)
+
+
 def main():
     def cancelled(signum, frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, cancelled)
     parser = argparse.ArgumentParser(description="Download and validate DB-IP Country Lite (CC BY 4.0). No scheduled updates.")
     parser.add_argument("--backend", type=Path, required=True)
-    parser.add_argument("--month", default=datetime.now(timezone.utc).strftime("%Y-%m"))
+    parser.add_argument("--month", help="Release YYYY-MM; default: current UTC month, else the previous one")
     parser.add_argument("--sha256", help="Expected SHA-256 of the compressed archive, if independently obtained")
     parser.add_argument("--data-dir", type=Path, default=Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "outbound/data")
     args = parser.parse_args()
+    if args.sha256 and not args.month:
+        parser.error("--sha256 identifies one archive; pass its --month too")
     try:
-        path = install(args.data_dir, args.backend.resolve(), args.month, args.sha256)
+        if args.month:
+            path = install(args.data_dir, args.backend.resolve(), args.month, args.sha256)
+        else:
+            path = install_latest(args.data_dir, args.backend.resolve(), datetime.now(timezone.utc))
+    except Unavailable as error:
+        parser.exit(UNAVAILABLE, f"GeoIP update unavailable; the previous database is unchanged: {error}\n")
+    except Busy as error:
+        parser.exit(BUSY, f"GeoIP update not started: {error}\n")
+    except NoCollector as error:
+        parser.exit(NO_COLLECTOR, f"GeoIP update failed; the previous database is unchanged: {error}\n")
     except KeyboardInterrupt:
         parser.exit(1, "GeoIP update cancelled; the previous database is unchanged.\n")
     except (OSError, ValueError, KeyError, EOFError, http.client.HTTPException, zlib.error, subprocess.SubprocessError) as error:
