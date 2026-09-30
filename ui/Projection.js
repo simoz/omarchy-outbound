@@ -67,8 +67,67 @@ function arc(from, to) {
 
 function paths(lines, lon, lat, radius, cx, cy) {
     var result = [];
-    lines.forEach(function(line) { result = result.concat(path(line, lon, lat, radius, cx, cy)); });
+    lines.forEach(function(line) {
+        path(line, lon, lat, radius, cx, cy).forEach(function(segment) { result.push(segment); });
+    });
     return result;
+}
+
+// Static geometry is converted once; per-frame work then avoids per-point allocations.
+function prepare(lines) {
+    return lines.map(function(line) {
+        var count = line.length;
+        var lon = new Float64Array(count), sinPhi = new Float64Array(count), cosPhi = new Float64Array(count);
+        for (var i = 0; i < count; i++) {
+            var phi = line[i][1] * radians;
+            lon[i] = line[i][0];
+            sinPhi[i] = Math.sin(phi);
+            cosPhi[i] = Math.cos(phi);
+        }
+        return {count: count, lon: lon, sinPhi: sinPhi, cosPhi: cosPhi};
+    });
+}
+
+// Same projection and limb clipping as path(), traced straight into a Canvas context.
+function trace(ctx, prepared, centerLon, centerLat, radius, cx, cy) {
+    var center = centerLat * radians;
+    var sinCenter = Math.sin(center), cosCenter = Math.cos(center);
+    for (var k = 0; k < prepared.length; k++) {
+        var line = prepared[k], pen = false, px = 0, py = 0, pz = 0;
+        for (var i = 0; i < line.count; i++) {
+            var lambda = (line.lon[i] - centerLon) * radians, cosLambda = Math.cos(lambda);
+            var sinPhi = line.sinPhi[i], cosPhi = line.cosPhi[i];
+            var x = cosPhi * Math.sin(lambda);
+            var y = cosCenter * sinPhi - sinCenter * cosPhi * cosLambda;
+            var z = sinCenter * sinPhi + cosCenter * cosPhi * cosLambda;
+            if (i > 0 && (pz >= 0) !== (z >= 0)) {
+                var t = pz / (pz - z);
+                var ex = px + (x - px) * t, ey = py + (y - py) * t, length = Math.hypot(ex, ey);
+                if (pen) ctx.lineTo(cx + radius * ex / length, cy - radius * ey / length);
+                else ctx.moveTo(cx + radius * ex / length, cy - radius * ey / length);
+                pen = z >= 0;
+            }
+            if (z >= 0) {
+                if (pen) ctx.lineTo(cx + radius * x, cy - radius * y);
+                else ctx.moveTo(cx + radius * x, cy - radius * y);
+                pen = true;
+            } else pen = false;
+            px = x; py = y; pz = z;
+        }
+    }
+}
+
+// Adds the visible front-hemisphere points as small squares to the current path.
+function dots(ctx, prepared, centerLon, centerLat, radius, cx, cy, size) {
+    var center = centerLat * radians;
+    var sinCenter = Math.sin(center), cosCenter = Math.cos(center);
+    for (var i = 0; i < prepared.count; i++) {
+        var lambda = (prepared.lon[i] - centerLon) * radians, cosLambda = Math.cos(lambda);
+        var sinPhi = prepared.sinPhi[i], cosPhi = prepared.cosPhi[i];
+        if (sinCenter * sinPhi + cosCenter * cosPhi * cosLambda <= 0) continue;
+        ctx.rect(cx + radius * cosPhi * Math.sin(lambda),
+                 cy - radius * (cosCenter * sinPhi - sinCenter * cosPhi * cosLambda), size, size);
+    }
 }
 
 function svg(points) {

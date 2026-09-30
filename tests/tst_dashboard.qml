@@ -264,11 +264,11 @@ Item {
             service.liveRows = [{id:"live-1", app:"Test", apps:["Test"], country:"IT", family:"IPv4", ip:"1.1.1.1"}];
             service.origin = null;
             compare(dashboard.globe.destinations.length, 1);
-            compare(dashboard.globe.layers[2].length, 0);
+            compare(dashboard.globe.arcPaths.length, 0);
             service.origin = {lon:0, lat:45};
-            verify(dashboard.globe.layers[2].length > 0);
+            verify(dashboard.globe.arcPaths.length > 0);
             service.origin = null;
-            compare(dashboard.globe.layers[2].length, 0);
+            compare(dashboard.globe.arcPaths.length, 0);
             service.liveRows = [];
         }
         function test_settings_sections_preserve_drafts_and_footer() {
@@ -358,7 +358,7 @@ Item {
             dashboard.active = true;
             service.reducedMotion = true;
             verify(!dashboard.globe.linksAnimating);
-            verify(dashboard.globe.layers[2].length > 0);
+            verify(dashboard.globe.arcPaths.length > 0);
         }
         function test_nearby_marker_labels_stack_without_overlap() {
             service.liveRows = ["NL", "BE", "LU"].map(function(code) {

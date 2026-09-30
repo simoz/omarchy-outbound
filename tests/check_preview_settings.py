@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix="outbound-settings-test-") as config:
             check(service.origin && service.origin.name === "Test origin" && service.origin.lat === 41.9 && service.origin.lon === 12.5, "origin restored");
             check(service.intervalSeconds === 3, "interval restored");
             service.liveRows=[{id:"test",app:"Test",country:"US",family:"IPv4",ip:"192.0.2.1"}];
-            check(dashboard.globe.layers[2].length > 0, "restored origin produces arcs");
+            check(dashboard.globe.arcPaths.length > 0, "restored origin produces arcs");
             check(dashboard.globe.linksAnimating, "arcs animate");
             console.log("SETTINGS_PASS read"); Qt.quit(); return;
             var palette = Quickshell.env("OUTBOUND_THEME");''')

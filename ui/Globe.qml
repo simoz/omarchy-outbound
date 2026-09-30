@@ -16,10 +16,15 @@ FocusScope {
     property real zoom: 1
     readonly property real maximumZoom: 4
     signal originRequested()
-    readonly property bool linksAnimating: active && visible && originPoint !== null && layers[2].length > 0 && !service.reducedMotion && !service.paused
+    readonly property bool linksAnimating: active && visible && originPoint !== null && arcPaths.length > 0 && !service.reducedMotion && !service.paused
     readonly property real radius: Math.max(1, Math.min(width - 44, height - 40) * 0.48) * zoom
     readonly property var originPoint: service.origin
-    readonly property var grid: Projection.graticule()
+    // Converted once: the geography canvas projects these straight into its path every paint.
+    readonly property var geometry: ({
+        grid: Projection.prepare(Projection.graticule()),
+        outlines: Projection.prepare(Geography.outlines),
+        dots: Projection.prepare([Geography.landDots])[0]
+    })
     // Keep other destinations visible when a country is selected; its arc and
     // marker carry the emphasis while the table shows the filtered sockets.
     readonly property var destinations: service.countries.filter(function(c) {
@@ -30,12 +35,10 @@ FocusScope {
     readonly property var arcs: originPoint ? destinations.map(function(c) {
         return {code: c.code, points: Projection.arc([originPoint.lon, originPoint.lat], [c.lon, c.lat])};
     }) : []
-    readonly property var layers: active ? [
-        Projection.paths(grid, longitude, latitude, radius, width/2, height/2),
-        Projection.paths(Geography.outlines, longitude, latitude, radius, width/2, height/2),
-        Projection.paths(arcs.map(function(a) { return a.points; }), longitude, latitude, radius, width/2, height/2)
-    ] : [[], [], []]
-    readonly property var pulsePaths: !service.country ? layers[2] : Projection.paths(
+    readonly property var arcPaths: active
+        ? Projection.paths(arcs.map(function(a) { return a.points; }), longitude, latitude, radius, width/2, height/2)
+        : []
+    readonly property var pulsePaths: !service.country ? arcPaths : Projection.paths(
         active ? arcs.filter(function(a) { return a.code === root.service.country; }).map(function(a) { return a.points; }) : [],
         longitude, latitude, radius, width/2, height/2)
     readonly property real labelHeight: width > 550 ? 26 : 14
@@ -76,7 +79,7 @@ FocusScope {
     }
     Connections {
         target: root.service
-        function onCountryChanged() { root.focusCountry(); canvas.redraw(); }
+        function onCountryChanged() { root.focusCountry(); overlay.redraw(); }
         // Stop existing motion, but allow a subsequent explicit Play request.
         function onReducedMotionChanged() { if (root.service.reducedMotion) root.rotating = false; }
     }
@@ -100,8 +103,9 @@ FocusScope {
         color: "transparent"
         border.color: root.activeFocus ? theme.accent : "transparent"
     }
+    // Halo, rim and compass depend only on size and theme, so rotation skips them.
     Canvas {
-        id: canvas
+        id: frame
         anchors.fill: parent
         onPaint: {
             var ctx = getContext("2d");
@@ -128,11 +132,67 @@ FocusScope {
                 ctx.lineTo(cx + Math.cos(angle)*(r+10+extent), cy + Math.sin(angle)*(r+10+extent));
             }
             ctx.strokeStyle = theme.fade(theme.accent, 0.45); ctx.stroke();
-            ctx.fillStyle = theme.fade(theme.accent, 0.56);
-            Geography.landDots.forEach(function(p) {
-                var point = Projection.project(p[0], p[1], root.longitude, root.latitude);
-                if (point.z > 0) ctx.fillRect(cx + point.x*r, cy - point.y*r, 1.25, 1.25);
-            });
+            root.paintCount++;
+        }
+        function redraw() { if (root.active) requestPaint(); }
+        Connections {
+            target: root
+            function onRadiusChanged() { frame.redraw(); }
+            function onWidthChanged() { frame.redraw(); }
+            function onHeightChanged() { frame.redraw(); }
+            function onActiveChanged() { frame.redraw(); }
+        }
+        Connections {
+            target: theme
+            function onAccentChanged() { frame.redraw(); }
+        }
+    }
+    // Land dots, graticule and outlines repaint on every rotation step. Antialiasing
+    // thousands of hairline segments dominates software rasterisation, so it is off.
+    Canvas {
+        id: geography
+        anchors.fill: parent
+        antialiasing: false
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.reset();
+            if (!root.active) return;
+            var cx = width/2, cy = height/2, r = root.radius;
+            ctx.beginPath();
+            Projection.dots(ctx, root.geometry.dots, root.longitude, root.latitude, r, cx, cy, 1.25);
+            ctx.fillStyle = theme.fade(theme.accent, 0.56); ctx.fill();
+            ctx.beginPath();
+            Projection.trace(ctx, root.geometry.grid, root.longitude, root.latitude, r, cx, cy);
+            ctx.strokeStyle = theme.fade(theme.accent, 0.16); ctx.lineWidth = 0.6; ctx.stroke();
+            ctx.beginPath();
+            Projection.trace(ctx, root.geometry.outlines, root.longitude, root.latitude, r, cx, cy);
+            ctx.strokeStyle = theme.fade(theme.accent, 0.5); ctx.lineWidth = 0.7; ctx.stroke();
+            root.paintCount++;
+        }
+        function redraw() { if (root.active) requestPaint(); }
+        Connections {
+            target: root
+            function onLongitudeChanged() { geography.redraw(); }
+            function onLatitudeChanged() { geography.redraw(); }
+            function onRadiusChanged() { geography.redraw(); }
+            function onWidthChanged() { geography.redraw(); }
+            function onHeightChanged() { geography.redraw(); }
+            function onActiveChanged() { geography.redraw(); }
+        }
+        Connections {
+            target: theme
+            function onAccentChanged() { geography.redraw(); }
+        }
+    }
+    // Destination arcs and the origin marker follow live data on a separate, cheap layer.
+    Canvas {
+        id: overlay
+        anchors.fill: parent
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.reset();
+            if (!root.active) return;
+            var cx = width/2, cy = height/2, r = root.radius;
             function stroke(points, color, weight) {
                 ctx.beginPath();
                 points.forEach(function(p) {
@@ -141,8 +201,6 @@ FocusScope {
                 });
                 ctx.strokeStyle = color; ctx.lineWidth = weight; ctx.stroke();
             }
-            stroke(root.layers[0], theme.fade(theme.accent, 0.16), 0.6);
-            stroke(root.layers[1], theme.fade(theme.accent, 0.5), 0.7);
             root.arcs.forEach(function(a) {
                 var selected = !root.service.country || root.service.country === a.code;
                 var arc = Projection.path(a.points, root.longitude, root.latitude, r, cx, cy);
@@ -168,13 +226,17 @@ FocusScope {
         function redraw() { if (root.active) requestPaint(); }
         Connections {
             target: root
-            function onLayersChanged() { canvas.redraw(); }
-            function onActiveChanged() { canvas.redraw(); }
+            function onArcPathsChanged() { overlay.redraw(); }
+            // The origin marker moves with the view even when there are no arcs.
+            function onLongitudeChanged() { overlay.redraw(); }
+            function onLatitudeChanged() { overlay.redraw(); }
+            function onRadiusChanged() { overlay.redraw(); }
+            function onActiveChanged() { overlay.redraw(); }
         }
         Connections {
             target: theme
-            function onTextChanged() { canvas.redraw(); }
-            function onAccentChanged() { canvas.redraw(); }
+            function onTextChanged() { overlay.redraw(); }
+            function onAccentChanged() { overlay.redraw(); }
         }
     }
     // Animate only a cached vector overlay: geography stays event-driven.
